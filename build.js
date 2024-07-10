@@ -14,3 +14,12 @@ esbuild
         plugins: []
     })
     .catch(() => process.exit(1));
+
+esbuild
+    .build({
+        entryPoints: ["src/index.js"],
+        bundle: true,
+        outfile: "build/dcmjs.es.js",
+        format: "esm"
+    })
+    .catch(() => process.exit(1));
