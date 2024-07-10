@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "jest --testTimeout 60000 .",
-    "build": "rollup -c",
+    "build": "node build.js",
     "build:examples": "npm run build && npx cpx 'build/**/*.{js,map}' examples/js",
     "start": "rollup -c -w",
     "format": "prettier --write 'src/**/*.js' 'test/**/*.js'",
@@ -36,6 +36,7 @@
     "@rollup/plugin-node-resolve": "^15.2.3",
     "acorn": "^7.1.0",
     "acorn-jsx": "^5.2.0",
+    "esbuild": "^0.23.0",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "follow-redirects": "^1.10.0",
