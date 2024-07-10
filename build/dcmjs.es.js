@@ -516,6 +516,4506 @@ var require_ndarray = __commonJS((exports, module) => {
   module.exports = wrappedNDArrayCtor;
 });
 
+// node_modules/gl-matrix/cjs/common.js
+var require_common = __commonJS((exports) => {
+  "use strict";
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.setMatrixArrayType = setMatrixArrayType;
+  exports.toRadian = toRadian;
+  exports.equals = equals;
+  exports.RANDOM = exports.ARRAY_TYPE = exports.EPSILON = void 0;
+  var EPSILON2 = 1e-6;
+  exports.EPSILON = EPSILON2;
+  var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
+  exports.ARRAY_TYPE = ARRAY_TYPE;
+  var RANDOM = Math.random;
+  exports.RANDOM = RANDOM;
+  function setMatrixArrayType(type) {
+    exports.ARRAY_TYPE = ARRAY_TYPE = type;
+  }
+  var degree = Math.PI / 180;
+  function toRadian(a) {
+    return a * degree;
+  }
+  function equals(a, b) {
+    return Math.abs(a - b) <= EPSILON2 * Math.max(1, Math.abs(a), Math.abs(b));
+  }
+  if (!Math.hypot)
+    Math.hypot = function() {
+      var y = 0, i = arguments.length;
+      while (i--) {
+        y += arguments[i] * arguments[i];
+      }
+      return Math.sqrt(y);
+    };
+});
+
+// node_modules/gl-matrix/cjs/mat2.js
+var require_mat2 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.copy = copy;
+  exports.identity = identity;
+  exports.fromValues = fromValues;
+  exports.set = set;
+  exports.transpose = transpose;
+  exports.invert = invert;
+  exports.adjoint = adjoint;
+  exports.determinant = determinant;
+  exports.multiply = multiply;
+  exports.rotate = rotate;
+  exports.scale = scale;
+  exports.fromRotation = fromRotation;
+  exports.fromScaling = fromScaling;
+  exports.str = str;
+  exports.frob = frob;
+  exports.LDU = LDU;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.multiplyScalar = multiplyScalar;
+  exports.multiplyScalarAndAdd = multiplyScalarAndAdd;
+  exports.sub = exports.mul = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[1] = 0;
+      out[2] = 0;
+    }
+    out[0] = 1;
+    out[3] = 1;
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    return out;
+  }
+  function identity(out) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    return out;
+  }
+  function fromValues(m00, m01, m10, m11) {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m10;
+    out[3] = m11;
+    return out;
+  }
+  function set(out, m00, m01, m10, m11) {
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m10;
+    out[3] = m11;
+    return out;
+  }
+  function transpose(out, a) {
+    if (out === a) {
+      var a1 = a[1];
+      out[1] = a[2];
+      out[2] = a1;
+    } else {
+      out[0] = a[0];
+      out[1] = a[2];
+      out[2] = a[1];
+      out[3] = a[3];
+    }
+    return out;
+  }
+  function invert(out, a) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var det = a0 * a3 - a2 * a1;
+    if (!det) {
+      return null;
+    }
+    det = 1 / det;
+    out[0] = a3 * det;
+    out[1] = -a1 * det;
+    out[2] = -a2 * det;
+    out[3] = a0 * det;
+    return out;
+  }
+  function adjoint(out, a) {
+    var a0 = a[0];
+    out[0] = a[3];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    out[3] = a0;
+    return out;
+  }
+  function determinant(a) {
+    return a[0] * a[3] - a[2] * a[1];
+  }
+  function multiply(out, a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    out[0] = a0 * b0 + a2 * b1;
+    out[1] = a1 * b0 + a3 * b1;
+    out[2] = a0 * b2 + a2 * b3;
+    out[3] = a1 * b2 + a3 * b3;
+    return out;
+  }
+  function rotate(out, a, rad) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = a0 * c + a2 * s;
+    out[1] = a1 * c + a3 * s;
+    out[2] = a0 * -s + a2 * c;
+    out[3] = a1 * -s + a3 * c;
+    return out;
+  }
+  function scale(out, a, v2) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var v0 = v2[0], v1 = v2[1];
+    out[0] = a0 * v0;
+    out[1] = a1 * v0;
+    out[2] = a2 * v1;
+    out[3] = a3 * v1;
+    return out;
+  }
+  function fromRotation(out, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = c;
+    out[1] = s;
+    out[2] = -s;
+    out[3] = c;
+    return out;
+  }
+  function fromScaling(out, v2) {
+    out[0] = v2[0];
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = v2[1];
+    return out;
+  }
+  function str(a) {
+    return "mat2(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ")";
+  }
+  function frob(a) {
+    return Math.hypot(a[0], a[1], a[2], a[3]);
+  }
+  function LDU(L, D, U, a) {
+    L[2] = a[2] / a[0];
+    U[0] = a[0];
+    U[1] = a[1];
+    U[3] = a[3] - L[2] * U[1];
+    return [L, D, U];
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    out[3] = a[3] - b[3];
+    return out;
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3));
+  }
+  function multiplyScalar(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    return out;
+  }
+  function multiplyScalarAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    out[3] = a[3] + b[3] * scale2;
+    return out;
+  }
+  var mul = multiply;
+  exports.mul = mul;
+  var sub = subtract2;
+  exports.sub = sub;
+});
+
+// node_modules/gl-matrix/cjs/mat2d.js
+var require_mat2d = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.copy = copy;
+  exports.identity = identity;
+  exports.fromValues = fromValues;
+  exports.set = set;
+  exports.invert = invert;
+  exports.determinant = determinant;
+  exports.multiply = multiply;
+  exports.rotate = rotate;
+  exports.scale = scale;
+  exports.translate = translate;
+  exports.fromRotation = fromRotation;
+  exports.fromScaling = fromScaling;
+  exports.fromTranslation = fromTranslation;
+  exports.str = str;
+  exports.frob = frob;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiplyScalar = multiplyScalar;
+  exports.multiplyScalarAndAdd = multiplyScalarAndAdd;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.sub = exports.mul = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(6);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[1] = 0;
+      out[2] = 0;
+      out[4] = 0;
+      out[5] = 0;
+    }
+    out[0] = 1;
+    out[3] = 1;
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(6);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    return out;
+  }
+  function identity(out) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    out[4] = 0;
+    out[5] = 0;
+    return out;
+  }
+  function fromValues(a, b, c, d, tx, ty) {
+    var out = new glMatrix.ARRAY_TYPE(6);
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+    out[3] = d;
+    out[4] = tx;
+    out[5] = ty;
+    return out;
+  }
+  function set(out, a, b, c, d, tx, ty) {
+    out[0] = a;
+    out[1] = b;
+    out[2] = c;
+    out[3] = d;
+    out[4] = tx;
+    out[5] = ty;
+    return out;
+  }
+  function invert(out, a) {
+    var aa = a[0], ab = a[1], ac = a[2], ad = a[3];
+    var atx = a[4], aty = a[5];
+    var det = aa * ad - ab * ac;
+    if (!det) {
+      return null;
+    }
+    det = 1 / det;
+    out[0] = ad * det;
+    out[1] = -ab * det;
+    out[2] = -ac * det;
+    out[3] = aa * det;
+    out[4] = (ac * aty - ad * atx) * det;
+    out[5] = (ab * atx - aa * aty) * det;
+    return out;
+  }
+  function determinant(a) {
+    return a[0] * a[3] - a[1] * a[2];
+  }
+  function multiply(out, a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5];
+    out[0] = a0 * b0 + a2 * b1;
+    out[1] = a1 * b0 + a3 * b1;
+    out[2] = a0 * b2 + a2 * b3;
+    out[3] = a1 * b2 + a3 * b3;
+    out[4] = a0 * b4 + a2 * b5 + a4;
+    out[5] = a1 * b4 + a3 * b5 + a5;
+    return out;
+  }
+  function rotate(out, a, rad) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = a0 * c + a2 * s;
+    out[1] = a1 * c + a3 * s;
+    out[2] = a0 * -s + a2 * c;
+    out[3] = a1 * -s + a3 * c;
+    out[4] = a4;
+    out[5] = a5;
+    return out;
+  }
+  function scale(out, a, v2) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    var v0 = v2[0], v1 = v2[1];
+    out[0] = a0 * v0;
+    out[1] = a1 * v0;
+    out[2] = a2 * v1;
+    out[3] = a3 * v1;
+    out[4] = a4;
+    out[5] = a5;
+    return out;
+  }
+  function translate(out, a, v2) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    var v0 = v2[0], v1 = v2[1];
+    out[0] = a0;
+    out[1] = a1;
+    out[2] = a2;
+    out[3] = a3;
+    out[4] = a0 * v0 + a2 * v1 + a4;
+    out[5] = a1 * v0 + a3 * v1 + a5;
+    return out;
+  }
+  function fromRotation(out, rad) {
+    var s = Math.sin(rad), c = Math.cos(rad);
+    out[0] = c;
+    out[1] = s;
+    out[2] = -s;
+    out[3] = c;
+    out[4] = 0;
+    out[5] = 0;
+    return out;
+  }
+  function fromScaling(out, v2) {
+    out[0] = v2[0];
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = v2[1];
+    out[4] = 0;
+    out[5] = 0;
+    return out;
+  }
+  function fromTranslation(out, v2) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    out[4] = v2[0];
+    out[5] = v2[1];
+    return out;
+  }
+  function str(a) {
+    return "mat2d(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ")";
+  }
+  function frob(a) {
+    return Math.hypot(a[0], a[1], a[2], a[3], a[4], a[5], 1);
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    out[4] = a[4] + b[4];
+    out[5] = a[5] + b[5];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    out[3] = a[3] - b[3];
+    out[4] = a[4] - b[4];
+    out[5] = a[5] - b[5];
+    return out;
+  }
+  function multiplyScalar(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    out[4] = a[4] * b;
+    out[5] = a[5] * b;
+    return out;
+  }
+  function multiplyScalarAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    out[3] = a[3] + b[3] * scale2;
+    out[4] = a[4] + b[4] * scale2;
+    out[5] = a[5] + b[5] * scale2;
+    return out;
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3)) && Math.abs(a4 - b4) <= glMatrix.EPSILON * Math.max(1, Math.abs(a4), Math.abs(b4)) && Math.abs(a5 - b5) <= glMatrix.EPSILON * Math.max(1, Math.abs(a5), Math.abs(b5));
+  }
+  var mul = multiply;
+  exports.mul = mul;
+  var sub = subtract2;
+  exports.sub = sub;
+});
+
+// node_modules/gl-matrix/cjs/mat3.js
+var require_mat3 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.fromMat4 = fromMat4;
+  exports.clone = clone;
+  exports.copy = copy;
+  exports.fromValues = fromValues;
+  exports.set = set;
+  exports.identity = identity;
+  exports.transpose = transpose;
+  exports.invert = invert;
+  exports.adjoint = adjoint;
+  exports.determinant = determinant;
+  exports.multiply = multiply;
+  exports.translate = translate;
+  exports.rotate = rotate;
+  exports.scale = scale;
+  exports.fromTranslation = fromTranslation;
+  exports.fromRotation = fromRotation;
+  exports.fromScaling = fromScaling;
+  exports.fromMat2d = fromMat2d;
+  exports.fromQuat = fromQuat;
+  exports.normalFromMat4 = normalFromMat4;
+  exports.projection = projection;
+  exports.str = str;
+  exports.frob = frob;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiplyScalar = multiplyScalar;
+  exports.multiplyScalarAndAdd = multiplyScalarAndAdd;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.sub = exports.mul = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(9);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[1] = 0;
+      out[2] = 0;
+      out[3] = 0;
+      out[5] = 0;
+      out[6] = 0;
+      out[7] = 0;
+    }
+    out[0] = 1;
+    out[4] = 1;
+    out[8] = 1;
+    return out;
+  }
+  function fromMat4(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[4];
+    out[4] = a[5];
+    out[5] = a[6];
+    out[6] = a[8];
+    out[7] = a[9];
+    out[8] = a[10];
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(9);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    return out;
+  }
+  function fromValues(m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    var out = new glMatrix.ARRAY_TYPE(9);
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m02;
+    out[3] = m10;
+    out[4] = m11;
+    out[5] = m12;
+    out[6] = m20;
+    out[7] = m21;
+    out[8] = m22;
+    return out;
+  }
+  function set(out, m00, m01, m02, m10, m11, m12, m20, m21, m22) {
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m02;
+    out[3] = m10;
+    out[4] = m11;
+    out[5] = m12;
+    out[6] = m20;
+    out[7] = m21;
+    out[8] = m22;
+    return out;
+  }
+  function identity(out) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 1;
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 1;
+    return out;
+  }
+  function transpose(out, a) {
+    if (out === a) {
+      var a01 = a[1], a02 = a[2], a12 = a[5];
+      out[1] = a[3];
+      out[2] = a[6];
+      out[3] = a01;
+      out[5] = a[7];
+      out[6] = a02;
+      out[7] = a12;
+    } else {
+      out[0] = a[0];
+      out[1] = a[3];
+      out[2] = a[6];
+      out[3] = a[1];
+      out[4] = a[4];
+      out[5] = a[7];
+      out[6] = a[2];
+      out[7] = a[5];
+      out[8] = a[8];
+    }
+    return out;
+  }
+  function invert(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2];
+    var a10 = a[3], a11 = a[4], a12 = a[5];
+    var a20 = a[6], a21 = a[7], a22 = a[8];
+    var b01 = a22 * a11 - a12 * a21;
+    var b11 = -a22 * a10 + a12 * a20;
+    var b21 = a21 * a10 - a11 * a20;
+    var det = a00 * b01 + a01 * b11 + a02 * b21;
+    if (!det) {
+      return null;
+    }
+    det = 1 / det;
+    out[0] = b01 * det;
+    out[1] = (-a22 * a01 + a02 * a21) * det;
+    out[2] = (a12 * a01 - a02 * a11) * det;
+    out[3] = b11 * det;
+    out[4] = (a22 * a00 - a02 * a20) * det;
+    out[5] = (-a12 * a00 + a02 * a10) * det;
+    out[6] = b21 * det;
+    out[7] = (-a21 * a00 + a01 * a20) * det;
+    out[8] = (a11 * a00 - a01 * a10) * det;
+    return out;
+  }
+  function adjoint(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2];
+    var a10 = a[3], a11 = a[4], a12 = a[5];
+    var a20 = a[6], a21 = a[7], a22 = a[8];
+    out[0] = a11 * a22 - a12 * a21;
+    out[1] = a02 * a21 - a01 * a22;
+    out[2] = a01 * a12 - a02 * a11;
+    out[3] = a12 * a20 - a10 * a22;
+    out[4] = a00 * a22 - a02 * a20;
+    out[5] = a02 * a10 - a00 * a12;
+    out[6] = a10 * a21 - a11 * a20;
+    out[7] = a01 * a20 - a00 * a21;
+    out[8] = a00 * a11 - a01 * a10;
+    return out;
+  }
+  function determinant(a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2];
+    var a10 = a[3], a11 = a[4], a12 = a[5];
+    var a20 = a[6], a21 = a[7], a22 = a[8];
+    return a00 * (a22 * a11 - a12 * a21) + a01 * (-a22 * a10 + a12 * a20) + a02 * (a21 * a10 - a11 * a20);
+  }
+  function multiply(out, a, b) {
+    var a00 = a[0], a01 = a[1], a02 = a[2];
+    var a10 = a[3], a11 = a[4], a12 = a[5];
+    var a20 = a[6], a21 = a[7], a22 = a[8];
+    var b00 = b[0], b01 = b[1], b02 = b[2];
+    var b10 = b[3], b11 = b[4], b12 = b[5];
+    var b20 = b[6], b21 = b[7], b22 = b[8];
+    out[0] = b00 * a00 + b01 * a10 + b02 * a20;
+    out[1] = b00 * a01 + b01 * a11 + b02 * a21;
+    out[2] = b00 * a02 + b01 * a12 + b02 * a22;
+    out[3] = b10 * a00 + b11 * a10 + b12 * a20;
+    out[4] = b10 * a01 + b11 * a11 + b12 * a21;
+    out[5] = b10 * a02 + b11 * a12 + b12 * a22;
+    out[6] = b20 * a00 + b21 * a10 + b22 * a20;
+    out[7] = b20 * a01 + b21 * a11 + b22 * a21;
+    out[8] = b20 * a02 + b21 * a12 + b22 * a22;
+    return out;
+  }
+  function translate(out, a, v2) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a10 = a[3], a11 = a[4], a12 = a[5], a20 = a[6], a21 = a[7], a22 = a[8], x = v2[0], y = v2[1];
+    out[0] = a00;
+    out[1] = a01;
+    out[2] = a02;
+    out[3] = a10;
+    out[4] = a11;
+    out[5] = a12;
+    out[6] = x * a00 + y * a10 + a20;
+    out[7] = x * a01 + y * a11 + a21;
+    out[8] = x * a02 + y * a12 + a22;
+    return out;
+  }
+  function rotate(out, a, rad) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a10 = a[3], a11 = a[4], a12 = a[5], a20 = a[6], a21 = a[7], a22 = a[8], s = Math.sin(rad), c = Math.cos(rad);
+    out[0] = c * a00 + s * a10;
+    out[1] = c * a01 + s * a11;
+    out[2] = c * a02 + s * a12;
+    out[3] = c * a10 - s * a00;
+    out[4] = c * a11 - s * a01;
+    out[5] = c * a12 - s * a02;
+    out[6] = a20;
+    out[7] = a21;
+    out[8] = a22;
+    return out;
+  }
+  function scale(out, a, v2) {
+    var x = v2[0], y = v2[1];
+    out[0] = x * a[0];
+    out[1] = x * a[1];
+    out[2] = x * a[2];
+    out[3] = y * a[3];
+    out[4] = y * a[4];
+    out[5] = y * a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    return out;
+  }
+  function fromTranslation(out, v2) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 1;
+    out[5] = 0;
+    out[6] = v2[0];
+    out[7] = v2[1];
+    out[8] = 1;
+    return out;
+  }
+  function fromRotation(out, rad) {
+    var s = Math.sin(rad), c = Math.cos(rad);
+    out[0] = c;
+    out[1] = s;
+    out[2] = 0;
+    out[3] = -s;
+    out[4] = c;
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 1;
+    return out;
+  }
+  function fromScaling(out, v2) {
+    out[0] = v2[0];
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = v2[1];
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 1;
+    return out;
+  }
+  function fromMat2d(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = 0;
+    out[3] = a[2];
+    out[4] = a[3];
+    out[5] = 0;
+    out[6] = a[4];
+    out[7] = a[5];
+    out[8] = 1;
+    return out;
+  }
+  function fromQuat(out, q) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var yx = y * x2;
+    var yy = y * y2;
+    var zx = z * x2;
+    var zy = z * y2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    out[0] = 1 - yy - zz;
+    out[3] = yx - wz;
+    out[6] = zx + wy;
+    out[1] = yx + wz;
+    out[4] = 1 - xx - zz;
+    out[7] = zy - wx;
+    out[2] = zx - wy;
+    out[5] = zy + wx;
+    out[8] = 1 - xx - yy;
+    return out;
+  }
+  function normalFromMat4(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32;
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!det) {
+      return null;
+    }
+    det = 1 / det;
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    out[1] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    out[2] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    out[3] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    out[4] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    out[5] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    out[6] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    out[7] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    out[8] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    return out;
+  }
+  function projection(out, width, height) {
+    out[0] = 2 / width;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = -2 / height;
+    out[5] = 0;
+    out[6] = -1;
+    out[7] = 1;
+    out[8] = 1;
+    return out;
+  }
+  function str(a) {
+    return "mat3(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + ")";
+  }
+  function frob(a) {
+    return Math.hypot(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    out[4] = a[4] + b[4];
+    out[5] = a[5] + b[5];
+    out[6] = a[6] + b[6];
+    out[7] = a[7] + b[7];
+    out[8] = a[8] + b[8];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    out[3] = a[3] - b[3];
+    out[4] = a[4] - b[4];
+    out[5] = a[5] - b[5];
+    out[6] = a[6] - b[6];
+    out[7] = a[7] - b[7];
+    out[8] = a[8] - b[8];
+    return out;
+  }
+  function multiplyScalar(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    out[4] = a[4] * b;
+    out[5] = a[5] * b;
+    out[6] = a[6] * b;
+    out[7] = a[7] * b;
+    out[8] = a[8] * b;
+    return out;
+  }
+  function multiplyScalarAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    out[3] = a[3] + b[3] * scale2;
+    out[4] = a[4] + b[4] * scale2;
+    out[5] = a[5] + b[5] * scale2;
+    out[6] = a[6] + b[6] * scale2;
+    out[7] = a[7] + b[7] * scale2;
+    out[8] = a[8] + b[8] * scale2;
+    return out;
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7], a8 = a[8];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7], b8 = b[8];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3)) && Math.abs(a4 - b4) <= glMatrix.EPSILON * Math.max(1, Math.abs(a4), Math.abs(b4)) && Math.abs(a5 - b5) <= glMatrix.EPSILON * Math.max(1, Math.abs(a5), Math.abs(b5)) && Math.abs(a6 - b6) <= glMatrix.EPSILON * Math.max(1, Math.abs(a6), Math.abs(b6)) && Math.abs(a7 - b7) <= glMatrix.EPSILON * Math.max(1, Math.abs(a7), Math.abs(b7)) && Math.abs(a8 - b8) <= glMatrix.EPSILON * Math.max(1, Math.abs(a8), Math.abs(b8));
+  }
+  var mul = multiply;
+  exports.mul = mul;
+  var sub = subtract2;
+  exports.sub = sub;
+});
+
+// node_modules/gl-matrix/cjs/mat4.js
+var require_mat4 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.copy = copy;
+  exports.fromValues = fromValues;
+  exports.set = set;
+  exports.identity = identity;
+  exports.transpose = transpose;
+  exports.invert = invert;
+  exports.adjoint = adjoint;
+  exports.determinant = determinant;
+  exports.multiply = multiply;
+  exports.translate = translate;
+  exports.scale = scale;
+  exports.rotate = rotate;
+  exports.rotateX = rotateX;
+  exports.rotateY = rotateY;
+  exports.rotateZ = rotateZ;
+  exports.fromTranslation = fromTranslation;
+  exports.fromScaling = fromScaling;
+  exports.fromRotation = fromRotation;
+  exports.fromXRotation = fromXRotation;
+  exports.fromYRotation = fromYRotation;
+  exports.fromZRotation = fromZRotation;
+  exports.fromRotationTranslation = fromRotationTranslation;
+  exports.fromQuat2 = fromQuat2;
+  exports.getTranslation = getTranslation;
+  exports.getScaling = getScaling;
+  exports.getRotation = getRotation;
+  exports.fromRotationTranslationScale = fromRotationTranslationScale;
+  exports.fromRotationTranslationScaleOrigin = fromRotationTranslationScaleOrigin;
+  exports.fromQuat = fromQuat;
+  exports.frustum = frustum;
+  exports.perspectiveNO = perspectiveNO;
+  exports.perspectiveZO = perspectiveZO;
+  exports.perspectiveFromFieldOfView = perspectiveFromFieldOfView;
+  exports.orthoNO = orthoNO;
+  exports.orthoZO = orthoZO;
+  exports.lookAt = lookAt;
+  exports.targetTo = targetTo;
+  exports.str = str;
+  exports.frob = frob;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiplyScalar = multiplyScalar;
+  exports.multiplyScalarAndAdd = multiplyScalarAndAdd;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.sub = exports.mul = exports.ortho = exports.perspective = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(16);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[1] = 0;
+      out[2] = 0;
+      out[3] = 0;
+      out[4] = 0;
+      out[6] = 0;
+      out[7] = 0;
+      out[8] = 0;
+      out[9] = 0;
+      out[11] = 0;
+      out[12] = 0;
+      out[13] = 0;
+      out[14] = 0;
+    }
+    out[0] = 1;
+    out[5] = 1;
+    out[10] = 1;
+    out[15] = 1;
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(16);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    out[9] = a[9];
+    out[10] = a[10];
+    out[11] = a[11];
+    out[12] = a[12];
+    out[13] = a[13];
+    out[14] = a[14];
+    out[15] = a[15];
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    out[8] = a[8];
+    out[9] = a[9];
+    out[10] = a[10];
+    out[11] = a[11];
+    out[12] = a[12];
+    out[13] = a[13];
+    out[14] = a[14];
+    out[15] = a[15];
+    return out;
+  }
+  function fromValues(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+    var out = new glMatrix.ARRAY_TYPE(16);
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m02;
+    out[3] = m03;
+    out[4] = m10;
+    out[5] = m11;
+    out[6] = m12;
+    out[7] = m13;
+    out[8] = m20;
+    out[9] = m21;
+    out[10] = m22;
+    out[11] = m23;
+    out[12] = m30;
+    out[13] = m31;
+    out[14] = m32;
+    out[15] = m33;
+    return out;
+  }
+  function set(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+    out[0] = m00;
+    out[1] = m01;
+    out[2] = m02;
+    out[3] = m03;
+    out[4] = m10;
+    out[5] = m11;
+    out[6] = m12;
+    out[7] = m13;
+    out[8] = m20;
+    out[9] = m21;
+    out[10] = m22;
+    out[11] = m23;
+    out[12] = m30;
+    out[13] = m31;
+    out[14] = m32;
+    out[15] = m33;
+    return out;
+  }
+  function identity(out) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = 1;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 1;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function transpose(out, a) {
+    if (out === a) {
+      var a01 = a[1], a02 = a[2], a03 = a[3];
+      var a12 = a[6], a13 = a[7];
+      var a23 = a[11];
+      out[1] = a[4];
+      out[2] = a[8];
+      out[3] = a[12];
+      out[4] = a01;
+      out[6] = a[9];
+      out[7] = a[13];
+      out[8] = a02;
+      out[9] = a12;
+      out[11] = a[14];
+      out[12] = a03;
+      out[13] = a13;
+      out[14] = a23;
+    } else {
+      out[0] = a[0];
+      out[1] = a[4];
+      out[2] = a[8];
+      out[3] = a[12];
+      out[4] = a[1];
+      out[5] = a[5];
+      out[6] = a[9];
+      out[7] = a[13];
+      out[8] = a[2];
+      out[9] = a[6];
+      out[10] = a[10];
+      out[11] = a[14];
+      out[12] = a[3];
+      out[13] = a[7];
+      out[14] = a[11];
+      out[15] = a[15];
+    }
+    return out;
+  }
+  function invert(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32;
+    var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+    if (!det) {
+      return null;
+    }
+    det = 1 / det;
+    out[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+    out[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+    out[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+    out[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+    out[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+    out[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+    out[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+    out[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+    out[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+    out[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+    out[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+    out[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+    out[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+    out[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+    out[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+    out[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+    return out;
+  }
+  function adjoint(out, a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    out[0] = a11 * (a22 * a33 - a23 * a32) - a21 * (a12 * a33 - a13 * a32) + a31 * (a12 * a23 - a13 * a22);
+    out[1] = -(a01 * (a22 * a33 - a23 * a32) - a21 * (a02 * a33 - a03 * a32) + a31 * (a02 * a23 - a03 * a22));
+    out[2] = a01 * (a12 * a33 - a13 * a32) - a11 * (a02 * a33 - a03 * a32) + a31 * (a02 * a13 - a03 * a12);
+    out[3] = -(a01 * (a12 * a23 - a13 * a22) - a11 * (a02 * a23 - a03 * a22) + a21 * (a02 * a13 - a03 * a12));
+    out[4] = -(a10 * (a22 * a33 - a23 * a32) - a20 * (a12 * a33 - a13 * a32) + a30 * (a12 * a23 - a13 * a22));
+    out[5] = a00 * (a22 * a33 - a23 * a32) - a20 * (a02 * a33 - a03 * a32) + a30 * (a02 * a23 - a03 * a22);
+    out[6] = -(a00 * (a12 * a33 - a13 * a32) - a10 * (a02 * a33 - a03 * a32) + a30 * (a02 * a13 - a03 * a12));
+    out[7] = a00 * (a12 * a23 - a13 * a22) - a10 * (a02 * a23 - a03 * a22) + a20 * (a02 * a13 - a03 * a12);
+    out[8] = a10 * (a21 * a33 - a23 * a31) - a20 * (a11 * a33 - a13 * a31) + a30 * (a11 * a23 - a13 * a21);
+    out[9] = -(a00 * (a21 * a33 - a23 * a31) - a20 * (a01 * a33 - a03 * a31) + a30 * (a01 * a23 - a03 * a21));
+    out[10] = a00 * (a11 * a33 - a13 * a31) - a10 * (a01 * a33 - a03 * a31) + a30 * (a01 * a13 - a03 * a11);
+    out[11] = -(a00 * (a11 * a23 - a13 * a21) - a10 * (a01 * a23 - a03 * a21) + a20 * (a01 * a13 - a03 * a11));
+    out[12] = -(a10 * (a21 * a32 - a22 * a31) - a20 * (a11 * a32 - a12 * a31) + a30 * (a11 * a22 - a12 * a21));
+    out[13] = a00 * (a21 * a32 - a22 * a31) - a20 * (a01 * a32 - a02 * a31) + a30 * (a01 * a22 - a02 * a21);
+    out[14] = -(a00 * (a11 * a32 - a12 * a31) - a10 * (a01 * a32 - a02 * a31) + a30 * (a01 * a12 - a02 * a11));
+    out[15] = a00 * (a11 * a22 - a12 * a21) - a10 * (a01 * a22 - a02 * a21) + a20 * (a01 * a12 - a02 * a11);
+    return out;
+  }
+  function determinant(a) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    var b00 = a00 * a11 - a01 * a10;
+    var b01 = a00 * a12 - a02 * a10;
+    var b02 = a00 * a13 - a03 * a10;
+    var b03 = a01 * a12 - a02 * a11;
+    var b04 = a01 * a13 - a03 * a11;
+    var b05 = a02 * a13 - a03 * a12;
+    var b06 = a20 * a31 - a21 * a30;
+    var b07 = a20 * a32 - a22 * a30;
+    var b08 = a20 * a33 - a23 * a30;
+    var b09 = a21 * a32 - a22 * a31;
+    var b10 = a21 * a33 - a23 * a31;
+    var b11 = a22 * a33 - a23 * a32;
+    return b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+  }
+  function multiply(out, a, b) {
+    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
+    var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
+    var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
+    var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    out[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+    b0 = b[4];
+    b1 = b[5];
+    b2 = b[6];
+    b3 = b[7];
+    out[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+    b0 = b[8];
+    b1 = b[9];
+    b2 = b[10];
+    b3 = b[11];
+    out[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+    b0 = b[12];
+    b1 = b[13];
+    b2 = b[14];
+    b3 = b[15];
+    out[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+    return out;
+  }
+  function translate(out, a, v2) {
+    var x = v2[0], y = v2[1], z = v2[2];
+    var a00, a01, a02, a03;
+    var a10, a11, a12, a13;
+    var a20, a21, a22, a23;
+    if (a === out) {
+      out[12] = a[0] * x + a[4] * y + a[8] * z + a[12];
+      out[13] = a[1] * x + a[5] * y + a[9] * z + a[13];
+      out[14] = a[2] * x + a[6] * y + a[10] * z + a[14];
+      out[15] = a[3] * x + a[7] * y + a[11] * z + a[15];
+    } else {
+      a00 = a[0];
+      a01 = a[1];
+      a02 = a[2];
+      a03 = a[3];
+      a10 = a[4];
+      a11 = a[5];
+      a12 = a[6];
+      a13 = a[7];
+      a20 = a[8];
+      a21 = a[9];
+      a22 = a[10];
+      a23 = a[11];
+      out[0] = a00;
+      out[1] = a01;
+      out[2] = a02;
+      out[3] = a03;
+      out[4] = a10;
+      out[5] = a11;
+      out[6] = a12;
+      out[7] = a13;
+      out[8] = a20;
+      out[9] = a21;
+      out[10] = a22;
+      out[11] = a23;
+      out[12] = a00 * x + a10 * y + a20 * z + a[12];
+      out[13] = a01 * x + a11 * y + a21 * z + a[13];
+      out[14] = a02 * x + a12 * y + a22 * z + a[14];
+      out[15] = a03 * x + a13 * y + a23 * z + a[15];
+    }
+    return out;
+  }
+  function scale(out, a, v2) {
+    var x = v2[0], y = v2[1], z = v2[2];
+    out[0] = a[0] * x;
+    out[1] = a[1] * x;
+    out[2] = a[2] * x;
+    out[3] = a[3] * x;
+    out[4] = a[4] * y;
+    out[5] = a[5] * y;
+    out[6] = a[6] * y;
+    out[7] = a[7] * y;
+    out[8] = a[8] * z;
+    out[9] = a[9] * z;
+    out[10] = a[10] * z;
+    out[11] = a[11] * z;
+    out[12] = a[12];
+    out[13] = a[13];
+    out[14] = a[14];
+    out[15] = a[15];
+    return out;
+  }
+  function rotate(out, a, rad, axis) {
+    var x = axis[0], y = axis[1], z = axis[2];
+    var len = Math.hypot(x, y, z);
+    var s, c, t;
+    var a00, a01, a02, a03;
+    var a10, a11, a12, a13;
+    var a20, a21, a22, a23;
+    var b00, b01, b02;
+    var b10, b11, b12;
+    var b20, b21, b22;
+    if (len < glMatrix.EPSILON) {
+      return null;
+    }
+    len = 1 / len;
+    x *= len;
+    y *= len;
+    z *= len;
+    s = Math.sin(rad);
+    c = Math.cos(rad);
+    t = 1 - c;
+    a00 = a[0];
+    a01 = a[1];
+    a02 = a[2];
+    a03 = a[3];
+    a10 = a[4];
+    a11 = a[5];
+    a12 = a[6];
+    a13 = a[7];
+    a20 = a[8];
+    a21 = a[9];
+    a22 = a[10];
+    a23 = a[11];
+    b00 = x * x * t + c;
+    b01 = y * x * t + z * s;
+    b02 = z * x * t - y * s;
+    b10 = x * y * t - z * s;
+    b11 = y * y * t + c;
+    b12 = z * y * t + x * s;
+    b20 = x * z * t + y * s;
+    b21 = y * z * t - x * s;
+    b22 = z * z * t + c;
+    out[0] = a00 * b00 + a10 * b01 + a20 * b02;
+    out[1] = a01 * b00 + a11 * b01 + a21 * b02;
+    out[2] = a02 * b00 + a12 * b01 + a22 * b02;
+    out[3] = a03 * b00 + a13 * b01 + a23 * b02;
+    out[4] = a00 * b10 + a10 * b11 + a20 * b12;
+    out[5] = a01 * b10 + a11 * b11 + a21 * b12;
+    out[6] = a02 * b10 + a12 * b11 + a22 * b12;
+    out[7] = a03 * b10 + a13 * b11 + a23 * b12;
+    out[8] = a00 * b20 + a10 * b21 + a20 * b22;
+    out[9] = a01 * b20 + a11 * b21 + a21 * b22;
+    out[10] = a02 * b20 + a12 * b21 + a22 * b22;
+    out[11] = a03 * b20 + a13 * b21 + a23 * b22;
+    if (a !== out) {
+      out[12] = a[12];
+      out[13] = a[13];
+      out[14] = a[14];
+      out[15] = a[15];
+    }
+    return out;
+  }
+  function rotateX(out, a, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a10 = a[4];
+    var a11 = a[5];
+    var a12 = a[6];
+    var a13 = a[7];
+    var a20 = a[8];
+    var a21 = a[9];
+    var a22 = a[10];
+    var a23 = a[11];
+    if (a !== out) {
+      out[0] = a[0];
+      out[1] = a[1];
+      out[2] = a[2];
+      out[3] = a[3];
+      out[12] = a[12];
+      out[13] = a[13];
+      out[14] = a[14];
+      out[15] = a[15];
+    }
+    out[4] = a10 * c + a20 * s;
+    out[5] = a11 * c + a21 * s;
+    out[6] = a12 * c + a22 * s;
+    out[7] = a13 * c + a23 * s;
+    out[8] = a20 * c - a10 * s;
+    out[9] = a21 * c - a11 * s;
+    out[10] = a22 * c - a12 * s;
+    out[11] = a23 * c - a13 * s;
+    return out;
+  }
+  function rotateY(out, a, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a00 = a[0];
+    var a01 = a[1];
+    var a02 = a[2];
+    var a03 = a[3];
+    var a20 = a[8];
+    var a21 = a[9];
+    var a22 = a[10];
+    var a23 = a[11];
+    if (a !== out) {
+      out[4] = a[4];
+      out[5] = a[5];
+      out[6] = a[6];
+      out[7] = a[7];
+      out[12] = a[12];
+      out[13] = a[13];
+      out[14] = a[14];
+      out[15] = a[15];
+    }
+    out[0] = a00 * c - a20 * s;
+    out[1] = a01 * c - a21 * s;
+    out[2] = a02 * c - a22 * s;
+    out[3] = a03 * c - a23 * s;
+    out[8] = a00 * s + a20 * c;
+    out[9] = a01 * s + a21 * c;
+    out[10] = a02 * s + a22 * c;
+    out[11] = a03 * s + a23 * c;
+    return out;
+  }
+  function rotateZ(out, a, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    var a00 = a[0];
+    var a01 = a[1];
+    var a02 = a[2];
+    var a03 = a[3];
+    var a10 = a[4];
+    var a11 = a[5];
+    var a12 = a[6];
+    var a13 = a[7];
+    if (a !== out) {
+      out[8] = a[8];
+      out[9] = a[9];
+      out[10] = a[10];
+      out[11] = a[11];
+      out[12] = a[12];
+      out[13] = a[13];
+      out[14] = a[14];
+      out[15] = a[15];
+    }
+    out[0] = a00 * c + a10 * s;
+    out[1] = a01 * c + a11 * s;
+    out[2] = a02 * c + a12 * s;
+    out[3] = a03 * c + a13 * s;
+    out[4] = a10 * c - a00 * s;
+    out[5] = a11 * c - a01 * s;
+    out[6] = a12 * c - a02 * s;
+    out[7] = a13 * c - a03 * s;
+    return out;
+  }
+  function fromTranslation(out, v2) {
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = 1;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 1;
+    out[11] = 0;
+    out[12] = v2[0];
+    out[13] = v2[1];
+    out[14] = v2[2];
+    out[15] = 1;
+    return out;
+  }
+  function fromScaling(out, v2) {
+    out[0] = v2[0];
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = v2[1];
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = v2[2];
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function fromRotation(out, rad, axis) {
+    var x = axis[0], y = axis[1], z = axis[2];
+    var len = Math.hypot(x, y, z);
+    var s, c, t;
+    if (len < glMatrix.EPSILON) {
+      return null;
+    }
+    len = 1 / len;
+    x *= len;
+    y *= len;
+    z *= len;
+    s = Math.sin(rad);
+    c = Math.cos(rad);
+    t = 1 - c;
+    out[0] = x * x * t + c;
+    out[1] = y * x * t + z * s;
+    out[2] = z * x * t - y * s;
+    out[3] = 0;
+    out[4] = x * y * t - z * s;
+    out[5] = y * y * t + c;
+    out[6] = z * y * t + x * s;
+    out[7] = 0;
+    out[8] = x * z * t + y * s;
+    out[9] = y * z * t - x * s;
+    out[10] = z * z * t + c;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function fromXRotation(out, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = c;
+    out[6] = s;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = -s;
+    out[10] = c;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function fromYRotation(out, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = c;
+    out[1] = 0;
+    out[2] = -s;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = 1;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = s;
+    out[9] = 0;
+    out[10] = c;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function fromZRotation(out, rad) {
+    var s = Math.sin(rad);
+    var c = Math.cos(rad);
+    out[0] = c;
+    out[1] = s;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = -s;
+    out[5] = c;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 1;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function fromRotationTranslation(out, q, v2) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    out[0] = 1 - (yy + zz);
+    out[1] = xy + wz;
+    out[2] = xz - wy;
+    out[3] = 0;
+    out[4] = xy - wz;
+    out[5] = 1 - (xx + zz);
+    out[6] = yz + wx;
+    out[7] = 0;
+    out[8] = xz + wy;
+    out[9] = yz - wx;
+    out[10] = 1 - (xx + yy);
+    out[11] = 0;
+    out[12] = v2[0];
+    out[13] = v2[1];
+    out[14] = v2[2];
+    out[15] = 1;
+    return out;
+  }
+  function fromQuat2(out, a) {
+    var translation = new glMatrix.ARRAY_TYPE(3);
+    var bx = -a[0], by = -a[1], bz = -a[2], bw = a[3], ax = a[4], ay = a[5], az = a[6], aw = a[7];
+    var magnitude = bx * bx + by * by + bz * bz + bw * bw;
+    if (magnitude > 0) {
+      translation[0] = (ax * bw + aw * bx + ay * bz - az * by) * 2 / magnitude;
+      translation[1] = (ay * bw + aw * by + az * bx - ax * bz) * 2 / magnitude;
+      translation[2] = (az * bw + aw * bz + ax * by - ay * bx) * 2 / magnitude;
+    } else {
+      translation[0] = (ax * bw + aw * bx + ay * bz - az * by) * 2;
+      translation[1] = (ay * bw + aw * by + az * bx - ax * bz) * 2;
+      translation[2] = (az * bw + aw * bz + ax * by - ay * bx) * 2;
+    }
+    fromRotationTranslation(out, a, translation);
+    return out;
+  }
+  function getTranslation(out, mat) {
+    out[0] = mat[12];
+    out[1] = mat[13];
+    out[2] = mat[14];
+    return out;
+  }
+  function getScaling(out, mat) {
+    var m11 = mat[0];
+    var m12 = mat[1];
+    var m13 = mat[2];
+    var m21 = mat[4];
+    var m22 = mat[5];
+    var m23 = mat[6];
+    var m31 = mat[8];
+    var m32 = mat[9];
+    var m33 = mat[10];
+    out[0] = Math.hypot(m11, m12, m13);
+    out[1] = Math.hypot(m21, m22, m23);
+    out[2] = Math.hypot(m31, m32, m33);
+    return out;
+  }
+  function getRotation(out, mat) {
+    var scaling = new glMatrix.ARRAY_TYPE(3);
+    getScaling(scaling, mat);
+    var is1 = 1 / scaling[0];
+    var is2 = 1 / scaling[1];
+    var is3 = 1 / scaling[2];
+    var sm11 = mat[0] * is1;
+    var sm12 = mat[1] * is2;
+    var sm13 = mat[2] * is3;
+    var sm21 = mat[4] * is1;
+    var sm22 = mat[5] * is2;
+    var sm23 = mat[6] * is3;
+    var sm31 = mat[8] * is1;
+    var sm32 = mat[9] * is2;
+    var sm33 = mat[10] * is3;
+    var trace = sm11 + sm22 + sm33;
+    var S = 0;
+    if (trace > 0) {
+      S = Math.sqrt(trace + 1) * 2;
+      out[3] = 0.25 * S;
+      out[0] = (sm23 - sm32) / S;
+      out[1] = (sm31 - sm13) / S;
+      out[2] = (sm12 - sm21) / S;
+    } else if (sm11 > sm22 && sm11 > sm33) {
+      S = Math.sqrt(1 + sm11 - sm22 - sm33) * 2;
+      out[3] = (sm23 - sm32) / S;
+      out[0] = 0.25 * S;
+      out[1] = (sm12 + sm21) / S;
+      out[2] = (sm31 + sm13) / S;
+    } else if (sm22 > sm33) {
+      S = Math.sqrt(1 + sm22 - sm11 - sm33) * 2;
+      out[3] = (sm31 - sm13) / S;
+      out[0] = (sm12 + sm21) / S;
+      out[1] = 0.25 * S;
+      out[2] = (sm23 + sm32) / S;
+    } else {
+      S = Math.sqrt(1 + sm33 - sm11 - sm22) * 2;
+      out[3] = (sm12 - sm21) / S;
+      out[0] = (sm31 + sm13) / S;
+      out[1] = (sm23 + sm32) / S;
+      out[2] = 0.25 * S;
+    }
+    return out;
+  }
+  function fromRotationTranslationScale(out, q, v2, s) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    var sx = s[0];
+    var sy = s[1];
+    var sz = s[2];
+    out[0] = (1 - (yy + zz)) * sx;
+    out[1] = (xy + wz) * sx;
+    out[2] = (xz - wy) * sx;
+    out[3] = 0;
+    out[4] = (xy - wz) * sy;
+    out[5] = (1 - (xx + zz)) * sy;
+    out[6] = (yz + wx) * sy;
+    out[7] = 0;
+    out[8] = (xz + wy) * sz;
+    out[9] = (yz - wx) * sz;
+    out[10] = (1 - (xx + yy)) * sz;
+    out[11] = 0;
+    out[12] = v2[0];
+    out[13] = v2[1];
+    out[14] = v2[2];
+    out[15] = 1;
+    return out;
+  }
+  function fromRotationTranslationScaleOrigin(out, q, v2, s, o) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var xy = x * y2;
+    var xz = x * z2;
+    var yy = y * y2;
+    var yz = y * z2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    var sx = s[0];
+    var sy = s[1];
+    var sz = s[2];
+    var ox = o[0];
+    var oy = o[1];
+    var oz = o[2];
+    var out0 = (1 - (yy + zz)) * sx;
+    var out1 = (xy + wz) * sx;
+    var out2 = (xz - wy) * sx;
+    var out4 = (xy - wz) * sy;
+    var out5 = (1 - (xx + zz)) * sy;
+    var out6 = (yz + wx) * sy;
+    var out8 = (xz + wy) * sz;
+    var out9 = (yz - wx) * sz;
+    var out10 = (1 - (xx + yy)) * sz;
+    out[0] = out0;
+    out[1] = out1;
+    out[2] = out2;
+    out[3] = 0;
+    out[4] = out4;
+    out[5] = out5;
+    out[6] = out6;
+    out[7] = 0;
+    out[8] = out8;
+    out[9] = out9;
+    out[10] = out10;
+    out[11] = 0;
+    out[12] = v2[0] + ox - (out0 * ox + out4 * oy + out8 * oz);
+    out[13] = v2[1] + oy - (out1 * ox + out5 * oy + out9 * oz);
+    out[14] = v2[2] + oz - (out2 * ox + out6 * oy + out10 * oz);
+    out[15] = 1;
+    return out;
+  }
+  function fromQuat(out, q) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+    var x2 = x + x;
+    var y2 = y + y;
+    var z2 = z + z;
+    var xx = x * x2;
+    var yx = y * x2;
+    var yy = y * y2;
+    var zx = z * x2;
+    var zy = z * y2;
+    var zz = z * z2;
+    var wx = w * x2;
+    var wy = w * y2;
+    var wz = w * z2;
+    out[0] = 1 - yy - zz;
+    out[1] = yx + wz;
+    out[2] = zx - wy;
+    out[3] = 0;
+    out[4] = yx - wz;
+    out[5] = 1 - xx - zz;
+    out[6] = zy + wx;
+    out[7] = 0;
+    out[8] = zx + wy;
+    out[9] = zy - wx;
+    out[10] = 1 - xx - yy;
+    out[11] = 0;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = 0;
+    out[15] = 1;
+    return out;
+  }
+  function frustum(out, left, right, bottom, top, near, far) {
+    var rl = 1 / (right - left);
+    var tb = 1 / (top - bottom);
+    var nf = 1 / (near - far);
+    out[0] = near * 2 * rl;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = near * 2 * tb;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = (right + left) * rl;
+    out[9] = (top + bottom) * tb;
+    out[10] = (far + near) * nf;
+    out[11] = -1;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = far * near * 2 * nf;
+    out[15] = 0;
+    return out;
+  }
+  function perspectiveNO(out, fovy, aspect, near, far) {
+    var f = 1 / Math.tan(fovy / 2), nf;
+    out[0] = f / aspect;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = f;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[11] = -1;
+    out[12] = 0;
+    out[13] = 0;
+    out[15] = 0;
+    if (far != null && far !== Infinity) {
+      nf = 1 / (near - far);
+      out[10] = (far + near) * nf;
+      out[14] = 2 * far * near * nf;
+    } else {
+      out[10] = -1;
+      out[14] = -2 * near;
+    }
+    return out;
+  }
+  var perspective = perspectiveNO;
+  exports.perspective = perspective;
+  function perspectiveZO(out, fovy, aspect, near, far) {
+    var f = 1 / Math.tan(fovy / 2), nf;
+    out[0] = f / aspect;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = f;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[11] = -1;
+    out[12] = 0;
+    out[13] = 0;
+    out[15] = 0;
+    if (far != null && far !== Infinity) {
+      nf = 1 / (near - far);
+      out[10] = far * nf;
+      out[14] = far * near * nf;
+    } else {
+      out[10] = -1;
+      out[14] = -near;
+    }
+    return out;
+  }
+  function perspectiveFromFieldOfView(out, fov, near, far) {
+    var upTan = Math.tan(fov.upDegrees * Math.PI / 180);
+    var downTan = Math.tan(fov.downDegrees * Math.PI / 180);
+    var leftTan = Math.tan(fov.leftDegrees * Math.PI / 180);
+    var rightTan = Math.tan(fov.rightDegrees * Math.PI / 180);
+    var xScale = 2 / (leftTan + rightTan);
+    var yScale = 2 / (upTan + downTan);
+    out[0] = xScale;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = yScale;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = -((leftTan - rightTan) * xScale * 0.5);
+    out[9] = (upTan - downTan) * yScale * 0.5;
+    out[10] = far / (near - far);
+    out[11] = -1;
+    out[12] = 0;
+    out[13] = 0;
+    out[14] = far * near / (near - far);
+    out[15] = 0;
+    return out;
+  }
+  function orthoNO(out, left, right, bottom, top, near, far) {
+    var lr = 1 / (left - right);
+    var bt = 1 / (bottom - top);
+    var nf = 1 / (near - far);
+    out[0] = -2 * lr;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = -2 * bt;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = 2 * nf;
+    out[11] = 0;
+    out[12] = (left + right) * lr;
+    out[13] = (top + bottom) * bt;
+    out[14] = (far + near) * nf;
+    out[15] = 1;
+    return out;
+  }
+  var ortho = orthoNO;
+  exports.ortho = ortho;
+  function orthoZO(out, left, right, bottom, top, near, far) {
+    var lr = 1 / (left - right);
+    var bt = 1 / (bottom - top);
+    var nf = 1 / (near - far);
+    out[0] = -2 * lr;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    out[4] = 0;
+    out[5] = -2 * bt;
+    out[6] = 0;
+    out[7] = 0;
+    out[8] = 0;
+    out[9] = 0;
+    out[10] = nf;
+    out[11] = 0;
+    out[12] = (left + right) * lr;
+    out[13] = (top + bottom) * bt;
+    out[14] = near * nf;
+    out[15] = 1;
+    return out;
+  }
+  function lookAt(out, eye, center, up) {
+    var x0, x1, x2, y0, y1, y2, z0, z1, z2, len;
+    var eyex = eye[0];
+    var eyey = eye[1];
+    var eyez = eye[2];
+    var upx = up[0];
+    var upy = up[1];
+    var upz = up[2];
+    var centerx = center[0];
+    var centery = center[1];
+    var centerz = center[2];
+    if (Math.abs(eyex - centerx) < glMatrix.EPSILON && Math.abs(eyey - centery) < glMatrix.EPSILON && Math.abs(eyez - centerz) < glMatrix.EPSILON) {
+      return identity(out);
+    }
+    z0 = eyex - centerx;
+    z1 = eyey - centery;
+    z2 = eyez - centerz;
+    len = 1 / Math.hypot(z0, z1, z2);
+    z0 *= len;
+    z1 *= len;
+    z2 *= len;
+    x0 = upy * z2 - upz * z1;
+    x1 = upz * z0 - upx * z2;
+    x2 = upx * z1 - upy * z0;
+    len = Math.hypot(x0, x1, x2);
+    if (!len) {
+      x0 = 0;
+      x1 = 0;
+      x2 = 0;
+    } else {
+      len = 1 / len;
+      x0 *= len;
+      x1 *= len;
+      x2 *= len;
+    }
+    y0 = z1 * x2 - z2 * x1;
+    y1 = z2 * x0 - z0 * x2;
+    y2 = z0 * x1 - z1 * x0;
+    len = Math.hypot(y0, y1, y2);
+    if (!len) {
+      y0 = 0;
+      y1 = 0;
+      y2 = 0;
+    } else {
+      len = 1 / len;
+      y0 *= len;
+      y1 *= len;
+      y2 *= len;
+    }
+    out[0] = x0;
+    out[1] = y0;
+    out[2] = z0;
+    out[3] = 0;
+    out[4] = x1;
+    out[5] = y1;
+    out[6] = z1;
+    out[7] = 0;
+    out[8] = x2;
+    out[9] = y2;
+    out[10] = z2;
+    out[11] = 0;
+    out[12] = -(x0 * eyex + x1 * eyey + x2 * eyez);
+    out[13] = -(y0 * eyex + y1 * eyey + y2 * eyez);
+    out[14] = -(z0 * eyex + z1 * eyey + z2 * eyez);
+    out[15] = 1;
+    return out;
+  }
+  function targetTo(out, eye, target, up) {
+    var eyex = eye[0], eyey = eye[1], eyez = eye[2], upx = up[0], upy = up[1], upz = up[2];
+    var z0 = eyex - target[0], z1 = eyey - target[1], z2 = eyez - target[2];
+    var len = z0 * z0 + z1 * z1 + z2 * z2;
+    if (len > 0) {
+      len = 1 / Math.sqrt(len);
+      z0 *= len;
+      z1 *= len;
+      z2 *= len;
+    }
+    var x0 = upy * z2 - upz * z1, x1 = upz * z0 - upx * z2, x2 = upx * z1 - upy * z0;
+    len = x0 * x0 + x1 * x1 + x2 * x2;
+    if (len > 0) {
+      len = 1 / Math.sqrt(len);
+      x0 *= len;
+      x1 *= len;
+      x2 *= len;
+    }
+    out[0] = x0;
+    out[1] = x1;
+    out[2] = x2;
+    out[3] = 0;
+    out[4] = z1 * x2 - z2 * x1;
+    out[5] = z2 * x0 - z0 * x2;
+    out[6] = z0 * x1 - z1 * x0;
+    out[7] = 0;
+    out[8] = z0;
+    out[9] = z1;
+    out[10] = z2;
+    out[11] = 0;
+    out[12] = eyex;
+    out[13] = eyey;
+    out[14] = eyez;
+    out[15] = 1;
+    return out;
+  }
+  function str(a) {
+    return "mat4(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " + a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] + ")";
+  }
+  function frob(a) {
+    return Math.hypot(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    out[4] = a[4] + b[4];
+    out[5] = a[5] + b[5];
+    out[6] = a[6] + b[6];
+    out[7] = a[7] + b[7];
+    out[8] = a[8] + b[8];
+    out[9] = a[9] + b[9];
+    out[10] = a[10] + b[10];
+    out[11] = a[11] + b[11];
+    out[12] = a[12] + b[12];
+    out[13] = a[13] + b[13];
+    out[14] = a[14] + b[14];
+    out[15] = a[15] + b[15];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    out[3] = a[3] - b[3];
+    out[4] = a[4] - b[4];
+    out[5] = a[5] - b[5];
+    out[6] = a[6] - b[6];
+    out[7] = a[7] - b[7];
+    out[8] = a[8] - b[8];
+    out[9] = a[9] - b[9];
+    out[10] = a[10] - b[10];
+    out[11] = a[11] - b[11];
+    out[12] = a[12] - b[12];
+    out[13] = a[13] - b[13];
+    out[14] = a[14] - b[14];
+    out[15] = a[15] - b[15];
+    return out;
+  }
+  function multiplyScalar(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    out[4] = a[4] * b;
+    out[5] = a[5] * b;
+    out[6] = a[6] * b;
+    out[7] = a[7] * b;
+    out[8] = a[8] * b;
+    out[9] = a[9] * b;
+    out[10] = a[10] * b;
+    out[11] = a[11] * b;
+    out[12] = a[12] * b;
+    out[13] = a[13] * b;
+    out[14] = a[14] * b;
+    out[15] = a[15] * b;
+    return out;
+  }
+  function multiplyScalarAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    out[3] = a[3] + b[3] * scale2;
+    out[4] = a[4] + b[4] * scale2;
+    out[5] = a[5] + b[5] * scale2;
+    out[6] = a[6] + b[6] * scale2;
+    out[7] = a[7] + b[7] * scale2;
+    out[8] = a[8] + b[8] * scale2;
+    out[9] = a[9] + b[9] * scale2;
+    out[10] = a[10] + b[10] * scale2;
+    out[11] = a[11] + b[11] * scale2;
+    out[12] = a[12] + b[12] * scale2;
+    out[13] = a[13] + b[13] * scale2;
+    out[14] = a[14] + b[14] * scale2;
+    out[15] = a[15] + b[15] * scale2;
+    return out;
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8] && a[9] === b[9] && a[10] === b[10] && a[11] === b[11] && a[12] === b[12] && a[13] === b[13] && a[14] === b[14] && a[15] === b[15];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7];
+    var a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11];
+    var a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    var b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7];
+    var b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11];
+    var b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3)) && Math.abs(a4 - b4) <= glMatrix.EPSILON * Math.max(1, Math.abs(a4), Math.abs(b4)) && Math.abs(a5 - b5) <= glMatrix.EPSILON * Math.max(1, Math.abs(a5), Math.abs(b5)) && Math.abs(a6 - b6) <= glMatrix.EPSILON * Math.max(1, Math.abs(a6), Math.abs(b6)) && Math.abs(a7 - b7) <= glMatrix.EPSILON * Math.max(1, Math.abs(a7), Math.abs(b7)) && Math.abs(a8 - b8) <= glMatrix.EPSILON * Math.max(1, Math.abs(a8), Math.abs(b8)) && Math.abs(a9 - b9) <= glMatrix.EPSILON * Math.max(1, Math.abs(a9), Math.abs(b9)) && Math.abs(a10 - b10) <= glMatrix.EPSILON * Math.max(1, Math.abs(a10), Math.abs(b10)) && Math.abs(a11 - b11) <= glMatrix.EPSILON * Math.max(1, Math.abs(a11), Math.abs(b11)) && Math.abs(a12 - b12) <= glMatrix.EPSILON * Math.max(1, Math.abs(a12), Math.abs(b12)) && Math.abs(a13 - b13) <= glMatrix.EPSILON * Math.max(1, Math.abs(a13), Math.abs(b13)) && Math.abs(a14 - b14) <= glMatrix.EPSILON * Math.max(1, Math.abs(a14), Math.abs(b14)) && Math.abs(a15 - b15) <= glMatrix.EPSILON * Math.max(1, Math.abs(a15), Math.abs(b15));
+  }
+  var mul = multiply;
+  exports.mul = mul;
+  var sub = subtract2;
+  exports.sub = sub;
+});
+
+// node_modules/gl-matrix/cjs/vec3.js
+var require_vec3 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.length = length;
+  exports.fromValues = fromValues;
+  exports.copy = copy;
+  exports.set = set;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiply = multiply;
+  exports.divide = divide;
+  exports.ceil = ceil;
+  exports.floor = floor;
+  exports.min = min;
+  exports.max = max;
+  exports.round = round;
+  exports.scale = scale;
+  exports.scaleAndAdd = scaleAndAdd;
+  exports.distance = distance;
+  exports.squaredDistance = squaredDistance;
+  exports.squaredLength = squaredLength;
+  exports.negate = negate;
+  exports.inverse = inverse;
+  exports.normalize = normalize2;
+  exports.dot = dot;
+  exports.cross = cross2;
+  exports.lerp = lerp;
+  exports.hermite = hermite;
+  exports.bezier = bezier;
+  exports.random = random;
+  exports.transformMat4 = transformMat4;
+  exports.transformMat3 = transformMat3;
+  exports.transformQuat = transformQuat;
+  exports.rotateX = rotateX;
+  exports.rotateY = rotateY;
+  exports.rotateZ = rotateZ;
+  exports.angle = angle;
+  exports.zero = zero2;
+  exports.str = str;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.forEach = exports.sqrLen = exports.len = exports.sqrDist = exports.dist = exports.div = exports.mul = exports.sub = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(3);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[0] = 0;
+      out[1] = 0;
+      out[2] = 0;
+    }
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(3);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    return out;
+  }
+  function length(a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    return Math.hypot(x, y, z);
+  }
+  function fromValues(x, y, z) {
+    var out = new glMatrix.ARRAY_TYPE(3);
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    return out;
+  }
+  function set(out, x, y, z) {
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    return out;
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    return out;
+  }
+  function multiply(out, a, b) {
+    out[0] = a[0] * b[0];
+    out[1] = a[1] * b[1];
+    out[2] = a[2] * b[2];
+    return out;
+  }
+  function divide(out, a, b) {
+    out[0] = a[0] / b[0];
+    out[1] = a[1] / b[1];
+    out[2] = a[2] / b[2];
+    return out;
+  }
+  function ceil(out, a) {
+    out[0] = Math.ceil(a[0]);
+    out[1] = Math.ceil(a[1]);
+    out[2] = Math.ceil(a[2]);
+    return out;
+  }
+  function floor(out, a) {
+    out[0] = Math.floor(a[0]);
+    out[1] = Math.floor(a[1]);
+    out[2] = Math.floor(a[2]);
+    return out;
+  }
+  function min(out, a, b) {
+    out[0] = Math.min(a[0], b[0]);
+    out[1] = Math.min(a[1], b[1]);
+    out[2] = Math.min(a[2], b[2]);
+    return out;
+  }
+  function max(out, a, b) {
+    out[0] = Math.max(a[0], b[0]);
+    out[1] = Math.max(a[1], b[1]);
+    out[2] = Math.max(a[2], b[2]);
+    return out;
+  }
+  function round(out, a) {
+    out[0] = Math.round(a[0]);
+    out[1] = Math.round(a[1]);
+    out[2] = Math.round(a[2]);
+    return out;
+  }
+  function scale(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    return out;
+  }
+  function scaleAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    return out;
+  }
+  function distance(a, b) {
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    return Math.hypot(x, y, z);
+  }
+  function squaredDistance(a, b) {
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    return x * x + y * y + z * z;
+  }
+  function squaredLength(a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    return x * x + y * y + z * z;
+  }
+  function negate(out, a) {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    return out;
+  }
+  function inverse(out, a) {
+    out[0] = 1 / a[0];
+    out[1] = 1 / a[1];
+    out[2] = 1 / a[2];
+    return out;
+  }
+  function normalize2(out, a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var len2 = x * x + y * y + z * z;
+    if (len2 > 0) {
+      len2 = 1 / Math.sqrt(len2);
+    }
+    out[0] = a[0] * len2;
+    out[1] = a[1] * len2;
+    out[2] = a[2] * len2;
+    return out;
+  }
+  function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+  function cross2(out, a, b) {
+    var ax = a[0], ay = a[1], az = a[2];
+    var bx = b[0], by = b[1], bz = b[2];
+    out[0] = ay * bz - az * by;
+    out[1] = az * bx - ax * bz;
+    out[2] = ax * by - ay * bx;
+    return out;
+  }
+  function lerp(out, a, b, t) {
+    var ax = a[0];
+    var ay = a[1];
+    var az = a[2];
+    out[0] = ax + t * (b[0] - ax);
+    out[1] = ay + t * (b[1] - ay);
+    out[2] = az + t * (b[2] - az);
+    return out;
+  }
+  function hermite(out, a, b, c, d, t) {
+    var factorTimes2 = t * t;
+    var factor1 = factorTimes2 * (2 * t - 3) + 1;
+    var factor2 = factorTimes2 * (t - 2) + t;
+    var factor3 = factorTimes2 * (t - 1);
+    var factor4 = factorTimes2 * (3 - 2 * t);
+    out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
+    out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
+    out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
+    return out;
+  }
+  function bezier(out, a, b, c, d, t) {
+    var inverseFactor = 1 - t;
+    var inverseFactorTimesTwo = inverseFactor * inverseFactor;
+    var factorTimes2 = t * t;
+    var factor1 = inverseFactorTimesTwo * inverseFactor;
+    var factor2 = 3 * t * inverseFactorTimesTwo;
+    var factor3 = 3 * factorTimes2 * inverseFactor;
+    var factor4 = factorTimes2 * t;
+    out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
+    out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
+    out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
+    return out;
+  }
+  function random(out, scale2) {
+    scale2 = scale2 || 1;
+    var r = glMatrix.RANDOM() * 2 * Math.PI;
+    var z = glMatrix.RANDOM() * 2 - 1;
+    var zScale = Math.sqrt(1 - z * z) * scale2;
+    out[0] = Math.cos(r) * zScale;
+    out[1] = Math.sin(r) * zScale;
+    out[2] = z * scale2;
+    return out;
+  }
+  function transformMat4(out, a, m) {
+    var x = a[0], y = a[1], z = a[2];
+    var w = m[3] * x + m[7] * y + m[11] * z + m[15];
+    w = w || 1;
+    out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
+    out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
+    out[2] = (m[2] * x + m[6] * y + m[10] * z + m[14]) / w;
+    return out;
+  }
+  function transformMat3(out, a, m) {
+    var x = a[0], y = a[1], z = a[2];
+    out[0] = x * m[0] + y * m[3] + z * m[6];
+    out[1] = x * m[1] + y * m[4] + z * m[7];
+    out[2] = x * m[2] + y * m[5] + z * m[8];
+    return out;
+  }
+  function transformQuat(out, a, q) {
+    var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+    var x = a[0], y = a[1], z = a[2];
+    var uvx = qy * z - qz * y, uvy = qz * x - qx * z, uvz = qx * y - qy * x;
+    var uuvx = qy * uvz - qz * uvy, uuvy = qz * uvx - qx * uvz, uuvz = qx * uvy - qy * uvx;
+    var w2 = qw * 2;
+    uvx *= w2;
+    uvy *= w2;
+    uvz *= w2;
+    uuvx *= 2;
+    uuvy *= 2;
+    uuvz *= 2;
+    out[0] = x + uvx + uuvx;
+    out[1] = y + uvy + uuvy;
+    out[2] = z + uvz + uuvz;
+    return out;
+  }
+  function rotateX(out, a, b, rad) {
+    var p = [], r = [];
+    p[0] = a[0] - b[0];
+    p[1] = a[1] - b[1];
+    p[2] = a[2] - b[2];
+    r[0] = p[0];
+    r[1] = p[1] * Math.cos(rad) - p[2] * Math.sin(rad);
+    r[2] = p[1] * Math.sin(rad) + p[2] * Math.cos(rad);
+    out[0] = r[0] + b[0];
+    out[1] = r[1] + b[1];
+    out[2] = r[2] + b[2];
+    return out;
+  }
+  function rotateY(out, a, b, rad) {
+    var p = [], r = [];
+    p[0] = a[0] - b[0];
+    p[1] = a[1] - b[1];
+    p[2] = a[2] - b[2];
+    r[0] = p[2] * Math.sin(rad) + p[0] * Math.cos(rad);
+    r[1] = p[1];
+    r[2] = p[2] * Math.cos(rad) - p[0] * Math.sin(rad);
+    out[0] = r[0] + b[0];
+    out[1] = r[1] + b[1];
+    out[2] = r[2] + b[2];
+    return out;
+  }
+  function rotateZ(out, a, b, rad) {
+    var p = [], r = [];
+    p[0] = a[0] - b[0];
+    p[1] = a[1] - b[1];
+    p[2] = a[2] - b[2];
+    r[0] = p[0] * Math.cos(rad) - p[1] * Math.sin(rad);
+    r[1] = p[0] * Math.sin(rad) + p[1] * Math.cos(rad);
+    r[2] = p[2];
+    out[0] = r[0] + b[0];
+    out[1] = r[1] + b[1];
+    out[2] = r[2] + b[2];
+    return out;
+  }
+  function angle(a, b) {
+    var ax = a[0], ay = a[1], az = a[2], bx = b[0], by = b[1], bz = b[2], mag1 = Math.sqrt(ax * ax + ay * ay + az * az), mag2 = Math.sqrt(bx * bx + by * by + bz * bz), mag = mag1 * mag2, cosine = mag && dot(a, b) / mag;
+    return Math.acos(Math.min(Math.max(cosine, -1), 1));
+  }
+  function zero2(out) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    return out;
+  }
+  function str(a) {
+    return "vec3(" + a[0] + ", " + a[1] + ", " + a[2] + ")";
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2];
+    var b0 = b[0], b1 = b[1], b2 = b[2];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2));
+  }
+  var sub = subtract2;
+  exports.sub = sub;
+  var mul = multiply;
+  exports.mul = mul;
+  var div = divide;
+  exports.div = div;
+  var dist = distance;
+  exports.dist = dist;
+  var sqrDist = squaredDistance;
+  exports.sqrDist = sqrDist;
+  var len = length;
+  exports.len = len;
+  var sqrLen = squaredLength;
+  exports.sqrLen = sqrLen;
+  var forEach = function() {
+    var vec = create();
+    return function(a, stride, offset, count, fn, arg) {
+      var i, l;
+      if (!stride) {
+        stride = 3;
+      }
+      if (!offset) {
+        offset = 0;
+      }
+      if (count) {
+        l = Math.min(count * stride + offset, a.length);
+      } else {
+        l = a.length;
+      }
+      for (i = offset; i < l; i += stride) {
+        vec[0] = a[i];
+        vec[1] = a[i + 1];
+        vec[2] = a[i + 2];
+        fn(vec, vec, arg);
+        a[i] = vec[0];
+        a[i + 1] = vec[1];
+        a[i + 2] = vec[2];
+      }
+      return a;
+    };
+  }();
+  exports.forEach = forEach;
+});
+
+// node_modules/gl-matrix/cjs/vec4.js
+var require_vec4 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.fromValues = fromValues;
+  exports.copy = copy;
+  exports.set = set;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiply = multiply;
+  exports.divide = divide;
+  exports.ceil = ceil;
+  exports.floor = floor;
+  exports.min = min;
+  exports.max = max;
+  exports.round = round;
+  exports.scale = scale;
+  exports.scaleAndAdd = scaleAndAdd;
+  exports.distance = distance;
+  exports.squaredDistance = squaredDistance;
+  exports.length = length;
+  exports.squaredLength = squaredLength;
+  exports.negate = negate;
+  exports.inverse = inverse;
+  exports.normalize = normalize2;
+  exports.dot = dot;
+  exports.cross = cross2;
+  exports.lerp = lerp;
+  exports.random = random;
+  exports.transformMat4 = transformMat4;
+  exports.transformQuat = transformQuat;
+  exports.zero = zero2;
+  exports.str = str;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.forEach = exports.sqrLen = exports.len = exports.sqrDist = exports.dist = exports.div = exports.mul = exports.sub = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[0] = 0;
+      out[1] = 0;
+      out[2] = 0;
+      out[3] = 0;
+    }
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    return out;
+  }
+  function fromValues(x, y, z, w) {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    return out;
+  }
+  function set(out, x, y, z, w) {
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = w;
+    return out;
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    out[2] = a[2] - b[2];
+    out[3] = a[3] - b[3];
+    return out;
+  }
+  function multiply(out, a, b) {
+    out[0] = a[0] * b[0];
+    out[1] = a[1] * b[1];
+    out[2] = a[2] * b[2];
+    out[3] = a[3] * b[3];
+    return out;
+  }
+  function divide(out, a, b) {
+    out[0] = a[0] / b[0];
+    out[1] = a[1] / b[1];
+    out[2] = a[2] / b[2];
+    out[3] = a[3] / b[3];
+    return out;
+  }
+  function ceil(out, a) {
+    out[0] = Math.ceil(a[0]);
+    out[1] = Math.ceil(a[1]);
+    out[2] = Math.ceil(a[2]);
+    out[3] = Math.ceil(a[3]);
+    return out;
+  }
+  function floor(out, a) {
+    out[0] = Math.floor(a[0]);
+    out[1] = Math.floor(a[1]);
+    out[2] = Math.floor(a[2]);
+    out[3] = Math.floor(a[3]);
+    return out;
+  }
+  function min(out, a, b) {
+    out[0] = Math.min(a[0], b[0]);
+    out[1] = Math.min(a[1], b[1]);
+    out[2] = Math.min(a[2], b[2]);
+    out[3] = Math.min(a[3], b[3]);
+    return out;
+  }
+  function max(out, a, b) {
+    out[0] = Math.max(a[0], b[0]);
+    out[1] = Math.max(a[1], b[1]);
+    out[2] = Math.max(a[2], b[2]);
+    out[3] = Math.max(a[3], b[3]);
+    return out;
+  }
+  function round(out, a) {
+    out[0] = Math.round(a[0]);
+    out[1] = Math.round(a[1]);
+    out[2] = Math.round(a[2]);
+    out[3] = Math.round(a[3]);
+    return out;
+  }
+  function scale(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    return out;
+  }
+  function scaleAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    out[2] = a[2] + b[2] * scale2;
+    out[3] = a[3] + b[3] * scale2;
+    return out;
+  }
+  function distance(a, b) {
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    var w = b[3] - a[3];
+    return Math.hypot(x, y, z, w);
+  }
+  function squaredDistance(a, b) {
+    var x = b[0] - a[0];
+    var y = b[1] - a[1];
+    var z = b[2] - a[2];
+    var w = b[3] - a[3];
+    return x * x + y * y + z * z + w * w;
+  }
+  function length(a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
+    return Math.hypot(x, y, z, w);
+  }
+  function squaredLength(a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
+    return x * x + y * y + z * z + w * w;
+  }
+  function negate(out, a) {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    out[3] = -a[3];
+    return out;
+  }
+  function inverse(out, a) {
+    out[0] = 1 / a[0];
+    out[1] = 1 / a[1];
+    out[2] = 1 / a[2];
+    out[3] = 1 / a[3];
+    return out;
+  }
+  function normalize2(out, a) {
+    var x = a[0];
+    var y = a[1];
+    var z = a[2];
+    var w = a[3];
+    var len2 = x * x + y * y + z * z + w * w;
+    if (len2 > 0) {
+      len2 = 1 / Math.sqrt(len2);
+    }
+    out[0] = x * len2;
+    out[1] = y * len2;
+    out[2] = z * len2;
+    out[3] = w * len2;
+    return out;
+  }
+  function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
+  }
+  function cross2(out, u, v2, w) {
+    var A = v2[0] * w[1] - v2[1] * w[0], B = v2[0] * w[2] - v2[2] * w[0], C = v2[0] * w[3] - v2[3] * w[0], D = v2[1] * w[2] - v2[2] * w[1], E = v2[1] * w[3] - v2[3] * w[1], F = v2[2] * w[3] - v2[3] * w[2];
+    var G = u[0];
+    var H = u[1];
+    var I = u[2];
+    var J = u[3];
+    out[0] = H * F - I * E + J * D;
+    out[1] = -(G * F) + I * C - J * B;
+    out[2] = G * E - H * C + J * A;
+    out[3] = -(G * D) + H * B - I * A;
+    return out;
+  }
+  function lerp(out, a, b, t) {
+    var ax = a[0];
+    var ay = a[1];
+    var az = a[2];
+    var aw = a[3];
+    out[0] = ax + t * (b[0] - ax);
+    out[1] = ay + t * (b[1] - ay);
+    out[2] = az + t * (b[2] - az);
+    out[3] = aw + t * (b[3] - aw);
+    return out;
+  }
+  function random(out, scale2) {
+    scale2 = scale2 || 1;
+    var v1, v2, v3, v4;
+    var s1, s2;
+    do {
+      v1 = glMatrix.RANDOM() * 2 - 1;
+      v2 = glMatrix.RANDOM() * 2 - 1;
+      s1 = v1 * v1 + v2 * v2;
+    } while (s1 >= 1);
+    do {
+      v3 = glMatrix.RANDOM() * 2 - 1;
+      v4 = glMatrix.RANDOM() * 2 - 1;
+      s2 = v3 * v3 + v4 * v4;
+    } while (s2 >= 1);
+    var d = Math.sqrt((1 - s1) / s2);
+    out[0] = scale2 * v1;
+    out[1] = scale2 * v2;
+    out[2] = scale2 * v3 * d;
+    out[3] = scale2 * v4 * d;
+    return out;
+  }
+  function transformMat4(out, a, m) {
+    var x = a[0], y = a[1], z = a[2], w = a[3];
+    out[0] = m[0] * x + m[4] * y + m[8] * z + m[12] * w;
+    out[1] = m[1] * x + m[5] * y + m[9] * z + m[13] * w;
+    out[2] = m[2] * x + m[6] * y + m[10] * z + m[14] * w;
+    out[3] = m[3] * x + m[7] * y + m[11] * z + m[15] * w;
+    return out;
+  }
+  function transformQuat(out, a, q) {
+    var x = a[0], y = a[1], z = a[2];
+    var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+    var ix = qw * x + qy * z - qz * y;
+    var iy = qw * y + qz * x - qx * z;
+    var iz = qw * z + qx * y - qy * x;
+    var iw = -qx * x - qy * y - qz * z;
+    out[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+    out[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+    out[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+    out[3] = a[3];
+    return out;
+  }
+  function zero2(out) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
+    return out;
+  }
+  function str(a) {
+    return "vec4(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ")";
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3));
+  }
+  var sub = subtract2;
+  exports.sub = sub;
+  var mul = multiply;
+  exports.mul = mul;
+  var div = divide;
+  exports.div = div;
+  var dist = distance;
+  exports.dist = dist;
+  var sqrDist = squaredDistance;
+  exports.sqrDist = sqrDist;
+  var len = length;
+  exports.len = len;
+  var sqrLen = squaredLength;
+  exports.sqrLen = sqrLen;
+  var forEach = function() {
+    var vec = create();
+    return function(a, stride, offset, count, fn, arg) {
+      var i, l;
+      if (!stride) {
+        stride = 4;
+      }
+      if (!offset) {
+        offset = 0;
+      }
+      if (count) {
+        l = Math.min(count * stride + offset, a.length);
+      } else {
+        l = a.length;
+      }
+      for (i = offset; i < l; i += stride) {
+        vec[0] = a[i];
+        vec[1] = a[i + 1];
+        vec[2] = a[i + 2];
+        vec[3] = a[i + 3];
+        fn(vec, vec, arg);
+        a[i] = vec[0];
+        a[i + 1] = vec[1];
+        a[i + 2] = vec[2];
+        a[i + 3] = vec[3];
+      }
+      return a;
+    };
+  }();
+  exports.forEach = forEach;
+});
+
+// node_modules/gl-matrix/cjs/quat.js
+var require_quat = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.identity = identity;
+  exports.setAxisAngle = setAxisAngle;
+  exports.getAxisAngle = getAxisAngle;
+  exports.getAngle = getAngle;
+  exports.multiply = multiply;
+  exports.rotateX = rotateX;
+  exports.rotateY = rotateY;
+  exports.rotateZ = rotateZ;
+  exports.calculateW = calculateW;
+  exports.exp = exp;
+  exports.ln = ln;
+  exports.pow = pow;
+  exports.slerp = slerp;
+  exports.random = random;
+  exports.invert = invert;
+  exports.conjugate = conjugate;
+  exports.fromMat3 = fromMat3;
+  exports.fromEuler = fromEuler;
+  exports.str = str;
+  exports.setAxes = exports.sqlerp = exports.rotationTo = exports.equals = exports.exactEquals = exports.normalize = exports.sqrLen = exports.squaredLength = exports.len = exports.length = exports.lerp = exports.dot = exports.scale = exports.mul = exports.add = exports.set = exports.copy = exports.fromValues = exports.clone = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  var mat3 = _interopRequireWildcard(require_mat3());
+  var vec33 = _interopRequireWildcard(require_vec3());
+  var vec4 = _interopRequireWildcard(require_vec4());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(4);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[0] = 0;
+      out[1] = 0;
+      out[2] = 0;
+    }
+    out[3] = 1;
+    return out;
+  }
+  function identity(out) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    return out;
+  }
+  function setAxisAngle(out, axis, rad) {
+    rad = rad * 0.5;
+    var s = Math.sin(rad);
+    out[0] = s * axis[0];
+    out[1] = s * axis[1];
+    out[2] = s * axis[2];
+    out[3] = Math.cos(rad);
+    return out;
+  }
+  function getAxisAngle(out_axis, q) {
+    var rad = Math.acos(q[3]) * 2;
+    var s = Math.sin(rad / 2);
+    if (s > glMatrix.EPSILON) {
+      out_axis[0] = q[0] / s;
+      out_axis[1] = q[1] / s;
+      out_axis[2] = q[2] / s;
+    } else {
+      out_axis[0] = 1;
+      out_axis[1] = 0;
+      out_axis[2] = 0;
+    }
+    return rad;
+  }
+  function getAngle(a, b) {
+    var dotproduct = dot(a, b);
+    return Math.acos(2 * dotproduct * dotproduct - 1);
+  }
+  function multiply(out, a, b) {
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    var bx = b[0], by = b[1], bz = b[2], bw = b[3];
+    out[0] = ax * bw + aw * bx + ay * bz - az * by;
+    out[1] = ay * bw + aw * by + az * bx - ax * bz;
+    out[2] = az * bw + aw * bz + ax * by - ay * bx;
+    out[3] = aw * bw - ax * bx - ay * by - az * bz;
+    return out;
+  }
+  function rotateX(out, a, rad) {
+    rad *= 0.5;
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    var bx = Math.sin(rad), bw = Math.cos(rad);
+    out[0] = ax * bw + aw * bx;
+    out[1] = ay * bw + az * bx;
+    out[2] = az * bw - ay * bx;
+    out[3] = aw * bw - ax * bx;
+    return out;
+  }
+  function rotateY(out, a, rad) {
+    rad *= 0.5;
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    var by = Math.sin(rad), bw = Math.cos(rad);
+    out[0] = ax * bw - az * by;
+    out[1] = ay * bw + aw * by;
+    out[2] = az * bw + ax * by;
+    out[3] = aw * bw - ay * by;
+    return out;
+  }
+  function rotateZ(out, a, rad) {
+    rad *= 0.5;
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    var bz = Math.sin(rad), bw = Math.cos(rad);
+    out[0] = ax * bw + ay * bz;
+    out[1] = ay * bw - ax * bz;
+    out[2] = az * bw + aw * bz;
+    out[3] = aw * bw - az * bz;
+    return out;
+  }
+  function calculateW(out, a) {
+    var x = a[0], y = a[1], z = a[2];
+    out[0] = x;
+    out[1] = y;
+    out[2] = z;
+    out[3] = Math.sqrt(Math.abs(1 - x * x - y * y - z * z));
+    return out;
+  }
+  function exp(out, a) {
+    var x = a[0], y = a[1], z = a[2], w = a[3];
+    var r = Math.sqrt(x * x + y * y + z * z);
+    var et = Math.exp(w);
+    var s = r > 0 ? et * Math.sin(r) / r : 0;
+    out[0] = x * s;
+    out[1] = y * s;
+    out[2] = z * s;
+    out[3] = et * Math.cos(r);
+    return out;
+  }
+  function ln(out, a) {
+    var x = a[0], y = a[1], z = a[2], w = a[3];
+    var r = Math.sqrt(x * x + y * y + z * z);
+    var t = r > 0 ? Math.atan2(r, w) / r : 0;
+    out[0] = x * t;
+    out[1] = y * t;
+    out[2] = z * t;
+    out[3] = 0.5 * Math.log(x * x + y * y + z * z + w * w);
+    return out;
+  }
+  function pow(out, a, b) {
+    ln(out, a);
+    scale(out, out, b);
+    exp(out, out);
+    return out;
+  }
+  function slerp(out, a, b, t) {
+    var ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    var bx = b[0], by = b[1], bz = b[2], bw = b[3];
+    var omega, cosom, sinom, scale0, scale1;
+    cosom = ax * bx + ay * by + az * bz + aw * bw;
+    if (cosom < 0) {
+      cosom = -cosom;
+      bx = -bx;
+      by = -by;
+      bz = -bz;
+      bw = -bw;
+    }
+    if (1 - cosom > glMatrix.EPSILON) {
+      omega = Math.acos(cosom);
+      sinom = Math.sin(omega);
+      scale0 = Math.sin((1 - t) * omega) / sinom;
+      scale1 = Math.sin(t * omega) / sinom;
+    } else {
+      scale0 = 1 - t;
+      scale1 = t;
+    }
+    out[0] = scale0 * ax + scale1 * bx;
+    out[1] = scale0 * ay + scale1 * by;
+    out[2] = scale0 * az + scale1 * bz;
+    out[3] = scale0 * aw + scale1 * bw;
+    return out;
+  }
+  function random(out) {
+    var u1 = glMatrix.RANDOM();
+    var u2 = glMatrix.RANDOM();
+    var u3 = glMatrix.RANDOM();
+    var sqrt1MinusU1 = Math.sqrt(1 - u1);
+    var sqrtU1 = Math.sqrt(u1);
+    out[0] = sqrt1MinusU1 * Math.sin(2 * Math.PI * u2);
+    out[1] = sqrt1MinusU1 * Math.cos(2 * Math.PI * u2);
+    out[2] = sqrtU1 * Math.sin(2 * Math.PI * u3);
+    out[3] = sqrtU1 * Math.cos(2 * Math.PI * u3);
+    return out;
+  }
+  function invert(out, a) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3];
+    var dot2 = a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+    var invDot = dot2 ? 1 / dot2 : 0;
+    out[0] = -a0 * invDot;
+    out[1] = -a1 * invDot;
+    out[2] = -a2 * invDot;
+    out[3] = a3 * invDot;
+    return out;
+  }
+  function conjugate(out, a) {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    out[3] = a[3];
+    return out;
+  }
+  function fromMat3(out, m) {
+    var fTrace = m[0] + m[4] + m[8];
+    var fRoot;
+    if (fTrace > 0) {
+      fRoot = Math.sqrt(fTrace + 1);
+      out[3] = 0.5 * fRoot;
+      fRoot = 0.5 / fRoot;
+      out[0] = (m[5] - m[7]) * fRoot;
+      out[1] = (m[6] - m[2]) * fRoot;
+      out[2] = (m[1] - m[3]) * fRoot;
+    } else {
+      var i = 0;
+      if (m[4] > m[0])
+        i = 1;
+      if (m[8] > m[i * 3 + i])
+        i = 2;
+      var j = (i + 1) % 3;
+      var k = (i + 2) % 3;
+      fRoot = Math.sqrt(m[i * 3 + i] - m[j * 3 + j] - m[k * 3 + k] + 1);
+      out[i] = 0.5 * fRoot;
+      fRoot = 0.5 / fRoot;
+      out[3] = (m[j * 3 + k] - m[k * 3 + j]) * fRoot;
+      out[j] = (m[j * 3 + i] + m[i * 3 + j]) * fRoot;
+      out[k] = (m[k * 3 + i] + m[i * 3 + k]) * fRoot;
+    }
+    return out;
+  }
+  function fromEuler(out, x, y, z) {
+    var halfToRad = 0.5 * Math.PI / 180;
+    x *= halfToRad;
+    y *= halfToRad;
+    z *= halfToRad;
+    var sx = Math.sin(x);
+    var cx = Math.cos(x);
+    var sy = Math.sin(y);
+    var cy = Math.cos(y);
+    var sz = Math.sin(z);
+    var cz = Math.cos(z);
+    out[0] = sx * cy * cz - cx * sy * sz;
+    out[1] = cx * sy * cz + sx * cy * sz;
+    out[2] = cx * cy * sz - sx * sy * cz;
+    out[3] = cx * cy * cz + sx * sy * sz;
+    return out;
+  }
+  function str(a) {
+    return "quat(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ")";
+  }
+  var clone = vec4.clone;
+  exports.clone = clone;
+  var fromValues = vec4.fromValues;
+  exports.fromValues = fromValues;
+  var copy = vec4.copy;
+  exports.copy = copy;
+  var set = vec4.set;
+  exports.set = set;
+  var add = vec4.add;
+  exports.add = add;
+  var mul = multiply;
+  exports.mul = mul;
+  var scale = vec4.scale;
+  exports.scale = scale;
+  var dot = vec4.dot;
+  exports.dot = dot;
+  var lerp = vec4.lerp;
+  exports.lerp = lerp;
+  var length = vec4.length;
+  exports.length = length;
+  var len = length;
+  exports.len = len;
+  var squaredLength = vec4.squaredLength;
+  exports.squaredLength = squaredLength;
+  var sqrLen = squaredLength;
+  exports.sqrLen = sqrLen;
+  var normalize2 = vec4.normalize;
+  exports.normalize = normalize2;
+  var exactEquals = vec4.exactEquals;
+  exports.exactEquals = exactEquals;
+  var equals = vec4.equals;
+  exports.equals = equals;
+  var rotationTo = function() {
+    var tmpvec3 = vec33.create();
+    var xUnitVec3 = vec33.fromValues(1, 0, 0);
+    var yUnitVec3 = vec33.fromValues(0, 1, 0);
+    return function(out, a, b) {
+      var dot2 = vec33.dot(a, b);
+      if (dot2 < -0.999999) {
+        vec33.cross(tmpvec3, xUnitVec3, a);
+        if (vec33.len(tmpvec3) < 1e-6)
+          vec33.cross(tmpvec3, yUnitVec3, a);
+        vec33.normalize(tmpvec3, tmpvec3);
+        setAxisAngle(out, tmpvec3, Math.PI);
+        return out;
+      } else if (dot2 > 0.999999) {
+        out[0] = 0;
+        out[1] = 0;
+        out[2] = 0;
+        out[3] = 1;
+        return out;
+      } else {
+        vec33.cross(tmpvec3, a, b);
+        out[0] = tmpvec3[0];
+        out[1] = tmpvec3[1];
+        out[2] = tmpvec3[2];
+        out[3] = 1 + dot2;
+        return normalize2(out, out);
+      }
+    };
+  }();
+  exports.rotationTo = rotationTo;
+  var sqlerp = function() {
+    var temp1 = create();
+    var temp2 = create();
+    return function(out, a, b, c, d, t) {
+      slerp(temp1, a, d, t);
+      slerp(temp2, b, c, t);
+      slerp(out, temp1, temp2, 2 * t * (1 - t));
+      return out;
+    };
+  }();
+  exports.sqlerp = sqlerp;
+  var setAxes = function() {
+    var matr = mat3.create();
+    return function(out, view, right, up) {
+      matr[0] = right[0];
+      matr[3] = right[1];
+      matr[6] = right[2];
+      matr[1] = up[0];
+      matr[4] = up[1];
+      matr[7] = up[2];
+      matr[2] = -view[0];
+      matr[5] = -view[1];
+      matr[8] = -view[2];
+      return normalize2(out, fromMat3(out, matr));
+    };
+  }();
+  exports.setAxes = setAxes;
+});
+
+// node_modules/gl-matrix/cjs/quat2.js
+var require_quat2 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.fromValues = fromValues;
+  exports.fromRotationTranslationValues = fromRotationTranslationValues;
+  exports.fromRotationTranslation = fromRotationTranslation;
+  exports.fromTranslation = fromTranslation;
+  exports.fromRotation = fromRotation;
+  exports.fromMat4 = fromMat4;
+  exports.copy = copy;
+  exports.identity = identity;
+  exports.set = set;
+  exports.getDual = getDual;
+  exports.setDual = setDual;
+  exports.getTranslation = getTranslation;
+  exports.translate = translate;
+  exports.rotateX = rotateX;
+  exports.rotateY = rotateY;
+  exports.rotateZ = rotateZ;
+  exports.rotateByQuatAppend = rotateByQuatAppend;
+  exports.rotateByQuatPrepend = rotateByQuatPrepend;
+  exports.rotateAroundAxis = rotateAroundAxis;
+  exports.add = add;
+  exports.multiply = multiply;
+  exports.scale = scale;
+  exports.lerp = lerp;
+  exports.invert = invert;
+  exports.conjugate = conjugate;
+  exports.normalize = normalize2;
+  exports.str = str;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.sqrLen = exports.squaredLength = exports.len = exports.length = exports.dot = exports.mul = exports.setReal = exports.getReal = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  var quat = _interopRequireWildcard(require_quat());
+  var mat4 = _interopRequireWildcard(require_mat4());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var dq = new glMatrix.ARRAY_TYPE(8);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      dq[0] = 0;
+      dq[1] = 0;
+      dq[2] = 0;
+      dq[4] = 0;
+      dq[5] = 0;
+      dq[6] = 0;
+      dq[7] = 0;
+    }
+    dq[3] = 1;
+    return dq;
+  }
+  function clone(a) {
+    var dq = new glMatrix.ARRAY_TYPE(8);
+    dq[0] = a[0];
+    dq[1] = a[1];
+    dq[2] = a[2];
+    dq[3] = a[3];
+    dq[4] = a[4];
+    dq[5] = a[5];
+    dq[6] = a[6];
+    dq[7] = a[7];
+    return dq;
+  }
+  function fromValues(x1, y1, z1, w1, x2, y2, z2, w2) {
+    var dq = new glMatrix.ARRAY_TYPE(8);
+    dq[0] = x1;
+    dq[1] = y1;
+    dq[2] = z1;
+    dq[3] = w1;
+    dq[4] = x2;
+    dq[5] = y2;
+    dq[6] = z2;
+    dq[7] = w2;
+    return dq;
+  }
+  function fromRotationTranslationValues(x1, y1, z1, w1, x2, y2, z2) {
+    var dq = new glMatrix.ARRAY_TYPE(8);
+    dq[0] = x1;
+    dq[1] = y1;
+    dq[2] = z1;
+    dq[3] = w1;
+    var ax = x2 * 0.5, ay = y2 * 0.5, az = z2 * 0.5;
+    dq[4] = ax * w1 + ay * z1 - az * y1;
+    dq[5] = ay * w1 + az * x1 - ax * z1;
+    dq[6] = az * w1 + ax * y1 - ay * x1;
+    dq[7] = -ax * x1 - ay * y1 - az * z1;
+    return dq;
+  }
+  function fromRotationTranslation(out, q, t) {
+    var ax = t[0] * 0.5, ay = t[1] * 0.5, az = t[2] * 0.5, bx = q[0], by = q[1], bz = q[2], bw = q[3];
+    out[0] = bx;
+    out[1] = by;
+    out[2] = bz;
+    out[3] = bw;
+    out[4] = ax * bw + ay * bz - az * by;
+    out[5] = ay * bw + az * bx - ax * bz;
+    out[6] = az * bw + ax * by - ay * bx;
+    out[7] = -ax * bx - ay * by - az * bz;
+    return out;
+  }
+  function fromTranslation(out, t) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    out[4] = t[0] * 0.5;
+    out[5] = t[1] * 0.5;
+    out[6] = t[2] * 0.5;
+    out[7] = 0;
+    return out;
+  }
+  function fromRotation(out, q) {
+    out[0] = q[0];
+    out[1] = q[1];
+    out[2] = q[2];
+    out[3] = q[3];
+    out[4] = 0;
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    return out;
+  }
+  function fromMat4(out, a) {
+    var outer = quat.create();
+    mat4.getRotation(outer, a);
+    var t = new glMatrix.ARRAY_TYPE(3);
+    mat4.getTranslation(t, a);
+    fromRotationTranslation(out, outer, t);
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    out[2] = a[2];
+    out[3] = a[3];
+    out[4] = a[4];
+    out[5] = a[5];
+    out[6] = a[6];
+    out[7] = a[7];
+    return out;
+  }
+  function identity(out) {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 1;
+    out[4] = 0;
+    out[5] = 0;
+    out[6] = 0;
+    out[7] = 0;
+    return out;
+  }
+  function set(out, x1, y1, z1, w1, x2, y2, z2, w2) {
+    out[0] = x1;
+    out[1] = y1;
+    out[2] = z1;
+    out[3] = w1;
+    out[4] = x2;
+    out[5] = y2;
+    out[6] = z2;
+    out[7] = w2;
+    return out;
+  }
+  var getReal = quat.copy;
+  exports.getReal = getReal;
+  function getDual(out, a) {
+    out[0] = a[4];
+    out[1] = a[5];
+    out[2] = a[6];
+    out[3] = a[7];
+    return out;
+  }
+  var setReal = quat.copy;
+  exports.setReal = setReal;
+  function setDual(out, q) {
+    out[4] = q[0];
+    out[5] = q[1];
+    out[6] = q[2];
+    out[7] = q[3];
+    return out;
+  }
+  function getTranslation(out, a) {
+    var ax = a[4], ay = a[5], az = a[6], aw = a[7], bx = -a[0], by = -a[1], bz = -a[2], bw = a[3];
+    out[0] = (ax * bw + aw * bx + ay * bz - az * by) * 2;
+    out[1] = (ay * bw + aw * by + az * bx - ax * bz) * 2;
+    out[2] = (az * bw + aw * bz + ax * by - ay * bx) * 2;
+    return out;
+  }
+  function translate(out, a, v2) {
+    var ax1 = a[0], ay1 = a[1], az1 = a[2], aw1 = a[3], bx1 = v2[0] * 0.5, by1 = v2[1] * 0.5, bz1 = v2[2] * 0.5, ax2 = a[4], ay2 = a[5], az2 = a[6], aw2 = a[7];
+    out[0] = ax1;
+    out[1] = ay1;
+    out[2] = az1;
+    out[3] = aw1;
+    out[4] = aw1 * bx1 + ay1 * bz1 - az1 * by1 + ax2;
+    out[5] = aw1 * by1 + az1 * bx1 - ax1 * bz1 + ay2;
+    out[6] = aw1 * bz1 + ax1 * by1 - ay1 * bx1 + az2;
+    out[7] = -ax1 * bx1 - ay1 * by1 - az1 * bz1 + aw2;
+    return out;
+  }
+  function rotateX(out, a, rad) {
+    var bx = -a[0], by = -a[1], bz = -a[2], bw = a[3], ax = a[4], ay = a[5], az = a[6], aw = a[7], ax1 = ax * bw + aw * bx + ay * bz - az * by, ay1 = ay * bw + aw * by + az * bx - ax * bz, az1 = az * bw + aw * bz + ax * by - ay * bx, aw1 = aw * bw - ax * bx - ay * by - az * bz;
+    quat.rotateX(out, a, rad);
+    bx = out[0];
+    by = out[1];
+    bz = out[2];
+    bw = out[3];
+    out[4] = ax1 * bw + aw1 * bx + ay1 * bz - az1 * by;
+    out[5] = ay1 * bw + aw1 * by + az1 * bx - ax1 * bz;
+    out[6] = az1 * bw + aw1 * bz + ax1 * by - ay1 * bx;
+    out[7] = aw1 * bw - ax1 * bx - ay1 * by - az1 * bz;
+    return out;
+  }
+  function rotateY(out, a, rad) {
+    var bx = -a[0], by = -a[1], bz = -a[2], bw = a[3], ax = a[4], ay = a[5], az = a[6], aw = a[7], ax1 = ax * bw + aw * bx + ay * bz - az * by, ay1 = ay * bw + aw * by + az * bx - ax * bz, az1 = az * bw + aw * bz + ax * by - ay * bx, aw1 = aw * bw - ax * bx - ay * by - az * bz;
+    quat.rotateY(out, a, rad);
+    bx = out[0];
+    by = out[1];
+    bz = out[2];
+    bw = out[3];
+    out[4] = ax1 * bw + aw1 * bx + ay1 * bz - az1 * by;
+    out[5] = ay1 * bw + aw1 * by + az1 * bx - ax1 * bz;
+    out[6] = az1 * bw + aw1 * bz + ax1 * by - ay1 * bx;
+    out[7] = aw1 * bw - ax1 * bx - ay1 * by - az1 * bz;
+    return out;
+  }
+  function rotateZ(out, a, rad) {
+    var bx = -a[0], by = -a[1], bz = -a[2], bw = a[3], ax = a[4], ay = a[5], az = a[6], aw = a[7], ax1 = ax * bw + aw * bx + ay * bz - az * by, ay1 = ay * bw + aw * by + az * bx - ax * bz, az1 = az * bw + aw * bz + ax * by - ay * bx, aw1 = aw * bw - ax * bx - ay * by - az * bz;
+    quat.rotateZ(out, a, rad);
+    bx = out[0];
+    by = out[1];
+    bz = out[2];
+    bw = out[3];
+    out[4] = ax1 * bw + aw1 * bx + ay1 * bz - az1 * by;
+    out[5] = ay1 * bw + aw1 * by + az1 * bx - ax1 * bz;
+    out[6] = az1 * bw + aw1 * bz + ax1 * by - ay1 * bx;
+    out[7] = aw1 * bw - ax1 * bx - ay1 * by - az1 * bz;
+    return out;
+  }
+  function rotateByQuatAppend(out, a, q) {
+    var qx = q[0], qy = q[1], qz = q[2], qw = q[3], ax = a[0], ay = a[1], az = a[2], aw = a[3];
+    out[0] = ax * qw + aw * qx + ay * qz - az * qy;
+    out[1] = ay * qw + aw * qy + az * qx - ax * qz;
+    out[2] = az * qw + aw * qz + ax * qy - ay * qx;
+    out[3] = aw * qw - ax * qx - ay * qy - az * qz;
+    ax = a[4];
+    ay = a[5];
+    az = a[6];
+    aw = a[7];
+    out[4] = ax * qw + aw * qx + ay * qz - az * qy;
+    out[5] = ay * qw + aw * qy + az * qx - ax * qz;
+    out[6] = az * qw + aw * qz + ax * qy - ay * qx;
+    out[7] = aw * qw - ax * qx - ay * qy - az * qz;
+    return out;
+  }
+  function rotateByQuatPrepend(out, q, a) {
+    var qx = q[0], qy = q[1], qz = q[2], qw = q[3], bx = a[0], by = a[1], bz = a[2], bw = a[3];
+    out[0] = qx * bw + qw * bx + qy * bz - qz * by;
+    out[1] = qy * bw + qw * by + qz * bx - qx * bz;
+    out[2] = qz * bw + qw * bz + qx * by - qy * bx;
+    out[3] = qw * bw - qx * bx - qy * by - qz * bz;
+    bx = a[4];
+    by = a[5];
+    bz = a[6];
+    bw = a[7];
+    out[4] = qx * bw + qw * bx + qy * bz - qz * by;
+    out[5] = qy * bw + qw * by + qz * bx - qx * bz;
+    out[6] = qz * bw + qw * bz + qx * by - qy * bx;
+    out[7] = qw * bw - qx * bx - qy * by - qz * bz;
+    return out;
+  }
+  function rotateAroundAxis(out, a, axis, rad) {
+    if (Math.abs(rad) < glMatrix.EPSILON) {
+      return copy(out, a);
+    }
+    var axisLength = Math.hypot(axis[0], axis[1], axis[2]);
+    rad = rad * 0.5;
+    var s = Math.sin(rad);
+    var bx = s * axis[0] / axisLength;
+    var by = s * axis[1] / axisLength;
+    var bz = s * axis[2] / axisLength;
+    var bw = Math.cos(rad);
+    var ax1 = a[0], ay1 = a[1], az1 = a[2], aw1 = a[3];
+    out[0] = ax1 * bw + aw1 * bx + ay1 * bz - az1 * by;
+    out[1] = ay1 * bw + aw1 * by + az1 * bx - ax1 * bz;
+    out[2] = az1 * bw + aw1 * bz + ax1 * by - ay1 * bx;
+    out[3] = aw1 * bw - ax1 * bx - ay1 * by - az1 * bz;
+    var ax = a[4], ay = a[5], az = a[6], aw = a[7];
+    out[4] = ax * bw + aw * bx + ay * bz - az * by;
+    out[5] = ay * bw + aw * by + az * bx - ax * bz;
+    out[6] = az * bw + aw * bz + ax * by - ay * bx;
+    out[7] = aw * bw - ax * bx - ay * by - az * bz;
+    return out;
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    out[2] = a[2] + b[2];
+    out[3] = a[3] + b[3];
+    out[4] = a[4] + b[4];
+    out[5] = a[5] + b[5];
+    out[6] = a[6] + b[6];
+    out[7] = a[7] + b[7];
+    return out;
+  }
+  function multiply(out, a, b) {
+    var ax0 = a[0], ay0 = a[1], az0 = a[2], aw0 = a[3], bx1 = b[4], by1 = b[5], bz1 = b[6], bw1 = b[7], ax1 = a[4], ay1 = a[5], az1 = a[6], aw1 = a[7], bx0 = b[0], by0 = b[1], bz0 = b[2], bw0 = b[3];
+    out[0] = ax0 * bw0 + aw0 * bx0 + ay0 * bz0 - az0 * by0;
+    out[1] = ay0 * bw0 + aw0 * by0 + az0 * bx0 - ax0 * bz0;
+    out[2] = az0 * bw0 + aw0 * bz0 + ax0 * by0 - ay0 * bx0;
+    out[3] = aw0 * bw0 - ax0 * bx0 - ay0 * by0 - az0 * bz0;
+    out[4] = ax0 * bw1 + aw0 * bx1 + ay0 * bz1 - az0 * by1 + ax1 * bw0 + aw1 * bx0 + ay1 * bz0 - az1 * by0;
+    out[5] = ay0 * bw1 + aw0 * by1 + az0 * bx1 - ax0 * bz1 + ay1 * bw0 + aw1 * by0 + az1 * bx0 - ax1 * bz0;
+    out[6] = az0 * bw1 + aw0 * bz1 + ax0 * by1 - ay0 * bx1 + az1 * bw0 + aw1 * bz0 + ax1 * by0 - ay1 * bx0;
+    out[7] = aw0 * bw1 - ax0 * bx1 - ay0 * by1 - az0 * bz1 + aw1 * bw0 - ax1 * bx0 - ay1 * by0 - az1 * bz0;
+    return out;
+  }
+  var mul = multiply;
+  exports.mul = mul;
+  function scale(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    out[2] = a[2] * b;
+    out[3] = a[3] * b;
+    out[4] = a[4] * b;
+    out[5] = a[5] * b;
+    out[6] = a[6] * b;
+    out[7] = a[7] * b;
+    return out;
+  }
+  var dot = quat.dot;
+  exports.dot = dot;
+  function lerp(out, a, b, t) {
+    var mt = 1 - t;
+    if (dot(a, b) < 0)
+      t = -t;
+    out[0] = a[0] * mt + b[0] * t;
+    out[1] = a[1] * mt + b[1] * t;
+    out[2] = a[2] * mt + b[2] * t;
+    out[3] = a[3] * mt + b[3] * t;
+    out[4] = a[4] * mt + b[4] * t;
+    out[5] = a[5] * mt + b[5] * t;
+    out[6] = a[6] * mt + b[6] * t;
+    out[7] = a[7] * mt + b[7] * t;
+    return out;
+  }
+  function invert(out, a) {
+    var sqlen = squaredLength(a);
+    out[0] = -a[0] / sqlen;
+    out[1] = -a[1] / sqlen;
+    out[2] = -a[2] / sqlen;
+    out[3] = a[3] / sqlen;
+    out[4] = -a[4] / sqlen;
+    out[5] = -a[5] / sqlen;
+    out[6] = -a[6] / sqlen;
+    out[7] = a[7] / sqlen;
+    return out;
+  }
+  function conjugate(out, a) {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    out[2] = -a[2];
+    out[3] = a[3];
+    out[4] = -a[4];
+    out[5] = -a[5];
+    out[6] = -a[6];
+    out[7] = a[7];
+    return out;
+  }
+  var length = quat.length;
+  exports.length = length;
+  var len = length;
+  exports.len = len;
+  var squaredLength = quat.squaredLength;
+  exports.squaredLength = squaredLength;
+  var sqrLen = squaredLength;
+  exports.sqrLen = sqrLen;
+  function normalize2(out, a) {
+    var magnitude = squaredLength(a);
+    if (magnitude > 0) {
+      magnitude = Math.sqrt(magnitude);
+      var a0 = a[0] / magnitude;
+      var a1 = a[1] / magnitude;
+      var a2 = a[2] / magnitude;
+      var a3 = a[3] / magnitude;
+      var b0 = a[4];
+      var b1 = a[5];
+      var b2 = a[6];
+      var b3 = a[7];
+      var a_dot_b = a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3;
+      out[0] = a0;
+      out[1] = a1;
+      out[2] = a2;
+      out[3] = a3;
+      out[4] = (b0 - a0 * a_dot_b) / magnitude;
+      out[5] = (b1 - a1 * a_dot_b) / magnitude;
+      out[6] = (b2 - a2 * a_dot_b) / magnitude;
+      out[7] = (b3 - a3 * a_dot_b) / magnitude;
+    }
+    return out;
+  }
+  function str(a) {
+    return "quat2(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ")";
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3], a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7];
+    var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2)) && Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1, Math.abs(a3), Math.abs(b3)) && Math.abs(a4 - b4) <= glMatrix.EPSILON * Math.max(1, Math.abs(a4), Math.abs(b4)) && Math.abs(a5 - b5) <= glMatrix.EPSILON * Math.max(1, Math.abs(a5), Math.abs(b5)) && Math.abs(a6 - b6) <= glMatrix.EPSILON * Math.max(1, Math.abs(a6), Math.abs(b6)) && Math.abs(a7 - b7) <= glMatrix.EPSILON * Math.max(1, Math.abs(a7), Math.abs(b7));
+  }
+});
+
+// node_modules/gl-matrix/cjs/vec2.js
+var require_vec2 = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.create = create;
+  exports.clone = clone;
+  exports.fromValues = fromValues;
+  exports.copy = copy;
+  exports.set = set;
+  exports.add = add;
+  exports.subtract = subtract2;
+  exports.multiply = multiply;
+  exports.divide = divide;
+  exports.ceil = ceil;
+  exports.floor = floor;
+  exports.min = min;
+  exports.max = max;
+  exports.round = round;
+  exports.scale = scale;
+  exports.scaleAndAdd = scaleAndAdd;
+  exports.distance = distance;
+  exports.squaredDistance = squaredDistance;
+  exports.length = length;
+  exports.squaredLength = squaredLength;
+  exports.negate = negate;
+  exports.inverse = inverse;
+  exports.normalize = normalize2;
+  exports.dot = dot;
+  exports.cross = cross2;
+  exports.lerp = lerp;
+  exports.random = random;
+  exports.transformMat2 = transformMat2;
+  exports.transformMat2d = transformMat2d;
+  exports.transformMat3 = transformMat3;
+  exports.transformMat4 = transformMat4;
+  exports.rotate = rotate;
+  exports.angle = angle;
+  exports.zero = zero2;
+  exports.str = str;
+  exports.exactEquals = exactEquals;
+  exports.equals = equals;
+  exports.forEach = exports.sqrLen = exports.sqrDist = exports.dist = exports.div = exports.mul = exports.sub = exports.len = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+  function create() {
+    var out = new glMatrix.ARRAY_TYPE(2);
+    if (glMatrix.ARRAY_TYPE != Float32Array) {
+      out[0] = 0;
+      out[1] = 0;
+    }
+    return out;
+  }
+  function clone(a) {
+    var out = new glMatrix.ARRAY_TYPE(2);
+    out[0] = a[0];
+    out[1] = a[1];
+    return out;
+  }
+  function fromValues(x, y) {
+    var out = new glMatrix.ARRAY_TYPE(2);
+    out[0] = x;
+    out[1] = y;
+    return out;
+  }
+  function copy(out, a) {
+    out[0] = a[0];
+    out[1] = a[1];
+    return out;
+  }
+  function set(out, x, y) {
+    out[0] = x;
+    out[1] = y;
+    return out;
+  }
+  function add(out, a, b) {
+    out[0] = a[0] + b[0];
+    out[1] = a[1] + b[1];
+    return out;
+  }
+  function subtract2(out, a, b) {
+    out[0] = a[0] - b[0];
+    out[1] = a[1] - b[1];
+    return out;
+  }
+  function multiply(out, a, b) {
+    out[0] = a[0] * b[0];
+    out[1] = a[1] * b[1];
+    return out;
+  }
+  function divide(out, a, b) {
+    out[0] = a[0] / b[0];
+    out[1] = a[1] / b[1];
+    return out;
+  }
+  function ceil(out, a) {
+    out[0] = Math.ceil(a[0]);
+    out[1] = Math.ceil(a[1]);
+    return out;
+  }
+  function floor(out, a) {
+    out[0] = Math.floor(a[0]);
+    out[1] = Math.floor(a[1]);
+    return out;
+  }
+  function min(out, a, b) {
+    out[0] = Math.min(a[0], b[0]);
+    out[1] = Math.min(a[1], b[1]);
+    return out;
+  }
+  function max(out, a, b) {
+    out[0] = Math.max(a[0], b[0]);
+    out[1] = Math.max(a[1], b[1]);
+    return out;
+  }
+  function round(out, a) {
+    out[0] = Math.round(a[0]);
+    out[1] = Math.round(a[1]);
+    return out;
+  }
+  function scale(out, a, b) {
+    out[0] = a[0] * b;
+    out[1] = a[1] * b;
+    return out;
+  }
+  function scaleAndAdd(out, a, b, scale2) {
+    out[0] = a[0] + b[0] * scale2;
+    out[1] = a[1] + b[1] * scale2;
+    return out;
+  }
+  function distance(a, b) {
+    var x = b[0] - a[0], y = b[1] - a[1];
+    return Math.hypot(x, y);
+  }
+  function squaredDistance(a, b) {
+    var x = b[0] - a[0], y = b[1] - a[1];
+    return x * x + y * y;
+  }
+  function length(a) {
+    var x = a[0], y = a[1];
+    return Math.hypot(x, y);
+  }
+  function squaredLength(a) {
+    var x = a[0], y = a[1];
+    return x * x + y * y;
+  }
+  function negate(out, a) {
+    out[0] = -a[0];
+    out[1] = -a[1];
+    return out;
+  }
+  function inverse(out, a) {
+    out[0] = 1 / a[0];
+    out[1] = 1 / a[1];
+    return out;
+  }
+  function normalize2(out, a) {
+    var x = a[0], y = a[1];
+    var len2 = x * x + y * y;
+    if (len2 > 0) {
+      len2 = 1 / Math.sqrt(len2);
+    }
+    out[0] = a[0] * len2;
+    out[1] = a[1] * len2;
+    return out;
+  }
+  function dot(a, b) {
+    return a[0] * b[0] + a[1] * b[1];
+  }
+  function cross2(out, a, b) {
+    var z = a[0] * b[1] - a[1] * b[0];
+    out[0] = out[1] = 0;
+    out[2] = z;
+    return out;
+  }
+  function lerp(out, a, b, t) {
+    var ax = a[0], ay = a[1];
+    out[0] = ax + t * (b[0] - ax);
+    out[1] = ay + t * (b[1] - ay);
+    return out;
+  }
+  function random(out, scale2) {
+    scale2 = scale2 || 1;
+    var r = glMatrix.RANDOM() * 2 * Math.PI;
+    out[0] = Math.cos(r) * scale2;
+    out[1] = Math.sin(r) * scale2;
+    return out;
+  }
+  function transformMat2(out, a, m) {
+    var x = a[0], y = a[1];
+    out[0] = m[0] * x + m[2] * y;
+    out[1] = m[1] * x + m[3] * y;
+    return out;
+  }
+  function transformMat2d(out, a, m) {
+    var x = a[0], y = a[1];
+    out[0] = m[0] * x + m[2] * y + m[4];
+    out[1] = m[1] * x + m[3] * y + m[5];
+    return out;
+  }
+  function transformMat3(out, a, m) {
+    var x = a[0], y = a[1];
+    out[0] = m[0] * x + m[3] * y + m[6];
+    out[1] = m[1] * x + m[4] * y + m[7];
+    return out;
+  }
+  function transformMat4(out, a, m) {
+    var x = a[0];
+    var y = a[1];
+    out[0] = m[0] * x + m[4] * y + m[12];
+    out[1] = m[1] * x + m[5] * y + m[13];
+    return out;
+  }
+  function rotate(out, a, b, rad) {
+    var p0 = a[0] - b[0], p1 = a[1] - b[1], sinC = Math.sin(rad), cosC = Math.cos(rad);
+    out[0] = p0 * cosC - p1 * sinC + b[0];
+    out[1] = p0 * sinC + p1 * cosC + b[1];
+    return out;
+  }
+  function angle(a, b) {
+    var x1 = a[0], y1 = a[1], x2 = b[0], y2 = b[1], mag = Math.sqrt(x1 * x1 + y1 * y1) * Math.sqrt(x2 * x2 + y2 * y2), cosine = mag && (x1 * x2 + y1 * y2) / mag;
+    return Math.acos(Math.min(Math.max(cosine, -1), 1));
+  }
+  function zero2(out) {
+    out[0] = 0;
+    out[1] = 0;
+    return out;
+  }
+  function str(a) {
+    return "vec2(" + a[0] + ", " + a[1] + ")";
+  }
+  function exactEquals(a, b) {
+    return a[0] === b[0] && a[1] === b[1];
+  }
+  function equals(a, b) {
+    var a0 = a[0], a1 = a[1];
+    var b0 = b[0], b1 = b[1];
+    return Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1));
+  }
+  var len = length;
+  exports.len = len;
+  var sub = subtract2;
+  exports.sub = sub;
+  var mul = multiply;
+  exports.mul = mul;
+  var div = divide;
+  exports.div = div;
+  var dist = distance;
+  exports.dist = dist;
+  var sqrDist = squaredDistance;
+  exports.sqrDist = sqrDist;
+  var sqrLen = squaredLength;
+  exports.sqrLen = sqrLen;
+  var forEach = function() {
+    var vec = create();
+    return function(a, stride, offset, count, fn, arg) {
+      var i, l;
+      if (!stride) {
+        stride = 2;
+      }
+      if (!offset) {
+        offset = 0;
+      }
+      if (count) {
+        l = Math.min(count * stride + offset, a.length);
+      } else {
+        l = a.length;
+      }
+      for (i = offset; i < l; i += stride) {
+        vec[0] = a[i];
+        vec[1] = a[i + 1];
+        fn(vec, vec, arg);
+        a[i] = vec[0];
+        a[i + 1] = vec[1];
+      }
+      return a;
+    };
+  }();
+  exports.forEach = forEach;
+});
+
+// node_modules/gl-matrix/cjs/index.js
+var require_cjs = __commonJS((exports) => {
+  "use strict";
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof2(obj2) {
+        return typeof obj2;
+      };
+    } else {
+      _typeof = function _typeof2(obj2) {
+        return obj2 && typeof Symbol === "function" && obj2.constructor === Symbol && obj2 !== Symbol.prototype ? "symbol" : typeof obj2;
+      };
+    }
+    return _typeof(obj);
+  }
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.vec4 = exports.vec3 = exports.vec2 = exports.quat2 = exports.quat = exports.mat4 = exports.mat3 = exports.mat2d = exports.mat2 = exports.glMatrix = void 0;
+  var glMatrix = _interopRequireWildcard(require_common());
+  exports.glMatrix = glMatrix;
+  var mat2 = _interopRequireWildcard(require_mat2());
+  exports.mat2 = mat2;
+  var mat2d = _interopRequireWildcard(require_mat2d());
+  exports.mat2d = mat2d;
+  var mat3 = _interopRequireWildcard(require_mat3());
+  exports.mat3 = mat3;
+  var mat4 = _interopRequireWildcard(require_mat4());
+  exports.mat4 = mat4;
+  var quat = _interopRequireWildcard(require_quat());
+  exports.quat = quat;
+  var quat2 = _interopRequireWildcard(require_quat2());
+  exports.quat2 = quat2;
+  var vec22 = _interopRequireWildcard(require_vec2());
+  exports.vec2 = vec22;
+  var vec33 = _interopRequireWildcard(require_vec3());
+  exports.vec3 = vec33;
+  var vec4 = _interopRequireWildcard(require_vec4());
+  exports.vec4 = vec4;
+  function _getRequireWildcardCache(nodeInterop) {
+    if (typeof WeakMap !== "function")
+      return null;
+    var cacheBabelInterop = new WeakMap();
+    var cacheNodeInterop = new WeakMap();
+    return (_getRequireWildcardCache = function _getRequireWildcardCache2(nodeInterop2) {
+      return nodeInterop2 ? cacheNodeInterop : cacheBabelInterop;
+    })(nodeInterop);
+  }
+  function _interopRequireWildcard(obj, nodeInterop) {
+    if (!nodeInterop && obj && obj.__esModule) {
+      return obj;
+    }
+    if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") {
+      return {default: obj};
+    }
+    var cache = _getRequireWildcardCache(nodeInterop);
+    if (cache && cache.has(obj)) {
+      return cache.get(obj);
+    }
+    var newObj = {};
+    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
+    for (var key in obj) {
+      if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+        var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+        if (desc && (desc.get || desc.set)) {
+          Object.defineProperty(newObj, key, desc);
+        } else {
+          newObj[key] = obj[key];
+        }
+      }
+    }
+    newObj["default"] = obj;
+    if (cache) {
+      cache.set(obj, newObj);
+    }
+    return newObj;
+  }
+});
+
 // node_modules/lodash.clonedeep/index.js
 var require_lodash = __commonJS((exports, module) => {
   var LARGE_ARRAY_SIZE = 200;
@@ -565,13 +5065,13 @@ var require_lodash = __commonJS((exports, module) => {
     map.set(pair[0], pair[1]);
     return map;
   }
-  function addSetEntry(set2, value) {
-    set2.add(value);
-    return set2;
+  function addSetEntry(set, value) {
+    set.add(value);
+    return set;
   }
   function arrayEach(array, iteratee) {
-    var index = -1, length2 = array ? array.length : 0;
-    while (++index < length2) {
+    var index = -1, length = array ? array.length : 0;
+    while (++index < length) {
       if (iteratee(array[index], index, array) === false) {
         break;
       }
@@ -579,18 +5079,18 @@ var require_lodash = __commonJS((exports, module) => {
     return array;
   }
   function arrayPush(array, values) {
-    var index = -1, length2 = values.length, offset = array.length;
-    while (++index < length2) {
+    var index = -1, length = values.length, offset = array.length;
+    while (++index < length) {
       array[offset + index] = values[index];
     }
     return array;
   }
   function arrayReduce(array, iteratee, accumulator, initAccum) {
-    var index = -1, length2 = array ? array.length : 0;
-    if (initAccum && length2) {
+    var index = -1, length = array ? array.length : 0;
+    if (initAccum && length) {
       accumulator = array[++index];
     }
-    while (++index < length2) {
+    while (++index < length) {
       accumulator = iteratee(accumulator, array[index], index, array);
     }
     return accumulator;
@@ -627,9 +5127,9 @@ var require_lodash = __commonJS((exports, module) => {
       return func(transform(arg));
     };
   }
-  function setToArray(set2) {
-    var index = -1, result = Array(set2.size);
-    set2.forEach(function(value) {
+  function setToArray(set) {
+    var index = -1, result = Array(set.size);
+    set.forEach(function(value) {
       result[++index] = value;
     });
     return result;
@@ -660,19 +5160,19 @@ var require_lodash = __commonJS((exports, module) => {
   var Map2 = getNative(root, "Map");
   var Promise2 = getNative(root, "Promise");
   var Set2 = getNative(root, "Set");
-  var WeakMap = getNative(root, "WeakMap");
+  var WeakMap2 = getNative(root, "WeakMap");
   var nativeCreate = getNative(Object, "create");
   var dataViewCtorString = toSource(DataView2);
   var mapCtorString = toSource(Map2);
   var promiseCtorString = toSource(Promise2);
   var setCtorString = toSource(Set2);
-  var weakMapCtorString = toSource(WeakMap);
+  var weakMapCtorString = toSource(WeakMap2);
   var symbolProto = Symbol2 ? Symbol2.prototype : void 0;
   var symbolValueOf = symbolProto ? symbolProto.valueOf : void 0;
   function Hash(entries) {
-    var index = -1, length2 = entries ? entries.length : 0;
+    var index = -1, length = entries ? entries.length : 0;
     this.clear();
-    while (++index < length2) {
+    while (++index < length) {
       var entry = entries[index];
       this.set(entry[0], entry[1]);
     }
@@ -706,9 +5206,9 @@ var require_lodash = __commonJS((exports, module) => {
   Hash.prototype.has = hashHas;
   Hash.prototype.set = hashSet;
   function ListCache(entries) {
-    var index = -1, length2 = entries ? entries.length : 0;
+    var index = -1, length = entries ? entries.length : 0;
     this.clear();
-    while (++index < length2) {
+    while (++index < length) {
       var entry = entries[index];
       this.set(entry[0], entry[1]);
     }
@@ -751,9 +5251,9 @@ var require_lodash = __commonJS((exports, module) => {
   ListCache.prototype.has = listCacheHas;
   ListCache.prototype.set = listCacheSet;
   function MapCache(entries) {
-    var index = -1, length2 = entries ? entries.length : 0;
+    var index = -1, length = entries ? entries.length : 0;
     this.clear();
-    while (++index < length2) {
+    while (++index < length) {
       var entry = entries[index];
       this.set(entry[0], entry[1]);
     }
@@ -818,9 +5318,9 @@ var require_lodash = __commonJS((exports, module) => {
   Stack.prototype.set = stackSet;
   function arrayLikeKeys(value, inherited) {
     var result = isArray(value) || isArguments(value) ? baseTimes(value.length, String) : [];
-    var length2 = result.length, skipIndexes = !!length2;
+    var length = result.length, skipIndexes = !!length;
     for (var key in value) {
-      if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isIndex(key, length2)))) {
+      if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isIndex(key, length)))) {
         result.push(key);
       }
     }
@@ -833,10 +5333,10 @@ var require_lodash = __commonJS((exports, module) => {
     }
   }
   function assocIndexOf(array, key) {
-    var length2 = array.length;
-    while (length2--) {
-      if (eq(array[length2][0], key)) {
-        return length2;
+    var length = array.length;
+    while (length--) {
+      if (eq(array[length][0], key)) {
+        return length;
       }
     }
     return -1;
@@ -954,9 +5454,9 @@ var require_lodash = __commonJS((exports, module) => {
     result.lastIndex = regexp.lastIndex;
     return result;
   }
-  function cloneSet(set2, isDeep, cloneFunc) {
-    var array = isDeep ? cloneFunc(setToArray(set2), true) : setToArray(set2);
-    return arrayReduce(array, addSetEntry, new set2.constructor());
+  function cloneSet(set, isDeep, cloneFunc) {
+    var array = isDeep ? cloneFunc(setToArray(set), true) : setToArray(set);
+    return arrayReduce(array, addSetEntry, new set.constructor());
   }
   function cloneSymbol(symbol) {
     return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
@@ -966,17 +5466,17 @@ var require_lodash = __commonJS((exports, module) => {
     return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
   }
   function copyArray(source, array) {
-    var index = -1, length2 = source.length;
-    array || (array = Array(length2));
-    while (++index < length2) {
+    var index = -1, length = source.length;
+    array || (array = Array(length));
+    while (++index < length) {
       array[index] = source[index];
     }
     return array;
   }
   function copyObject(source, props, object, customizer) {
     object || (object = {});
-    var index = -1, length2 = props.length;
-    while (++index < length2) {
+    var index = -1, length = props.length;
+    while (++index < length) {
       var key = props[index];
       var newValue = customizer ? customizer(object[key], source[key], key, object, source) : void 0;
       assignValue(object, key, newValue === void 0 ? source[key] : newValue);
@@ -999,7 +5499,7 @@ var require_lodash = __commonJS((exports, module) => {
   }
   var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
   var getTag = baseGetTag;
-  if (DataView2 && getTag(new DataView2(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap && getTag(new WeakMap()) != weakMapTag) {
+  if (DataView2 && getTag(new DataView2(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap2 && getTag(new WeakMap2()) != weakMapTag) {
     getTag = function(value) {
       var result = objectToString.call(value), Ctor = result == objectTag ? value.constructor : void 0, ctorString = Ctor ? toSource(Ctor) : void 0;
       if (ctorString) {
@@ -1020,8 +5520,8 @@ var require_lodash = __commonJS((exports, module) => {
     };
   }
   function initCloneArray(array) {
-    var length2 = array.length, result = array.constructor(length2);
-    if (length2 && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
+    var length = array.length, result = array.constructor(length);
+    if (length && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
       result.index = array.index;
       result.input = array.input;
     }
@@ -1063,9 +5563,9 @@ var require_lodash = __commonJS((exports, module) => {
         return cloneSymbol(object);
     }
   }
-  function isIndex(value, length2) {
-    length2 = length2 == null ? MAX_SAFE_INTEGER : length2;
-    return !!length2 && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length2);
+  function isIndex(value, length) {
+    length = length == null ? MAX_SAFE_INTEGER : length;
+    return !!length && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
   }
   function isKeyable(value) {
     var type = typeof value;
@@ -1158,8 +5658,8 @@ function getBytesForBinaryFrame(numPixels) {
 function pack(pixelData) {
   const numPixels = pixelData.length;
   log_default.debug("numPixels: " + numPixels);
-  const length2 = getBytesForBinaryFrame(numPixels);
-  const bitPixelData = new Uint8Array(length2);
+  const length = getBytesForBinaryFrame(numPixels);
+  const bitPixelData = new Uint8Array(length);
   let bytePos = 0;
   for (let i = 0; i < numPixels; i++) {
     bytePos = Math.floor(i / 8);
@@ -1187,9 +5687,9 @@ var Z_BINARY = 0;
 var Z_TEXT = 1;
 var Z_UNKNOWN$1 = 2;
 function zero$1(buf) {
-  let len2 = buf.length;
-  while (--len2 >= 0) {
-    buf[len2] = 0;
+  let len = buf.length;
+  while (--len >= 0) {
+    buf[len] = 0;
   }
 }
 var STORED_BLOCK = 0;
@@ -1243,34 +5743,34 @@ function TreeDesc(dyn_tree, stat_desc) {
   this.max_code = 0;
   this.stat_desc = stat_desc;
 }
-var d_code = (dist2) => {
-  return dist2 < 256 ? _dist_code[dist2] : _dist_code[256 + (dist2 >>> 7)];
+var d_code = (dist) => {
+  return dist < 256 ? _dist_code[dist] : _dist_code[256 + (dist >>> 7)];
 };
 var put_short = (s, w) => {
   s.pending_buf[s.pending++] = w & 255;
   s.pending_buf[s.pending++] = w >>> 8 & 255;
 };
-var send_bits = (s, value, length2) => {
-  if (s.bi_valid > Buf_size - length2) {
+var send_bits = (s, value, length) => {
+  if (s.bi_valid > Buf_size - length) {
     s.bi_buf |= value << s.bi_valid & 65535;
     put_short(s, s.bi_buf);
     s.bi_buf = value >> Buf_size - s.bi_valid;
-    s.bi_valid += length2 - Buf_size;
+    s.bi_valid += length - Buf_size;
   } else {
     s.bi_buf |= value << s.bi_valid & 65535;
-    s.bi_valid += length2;
+    s.bi_valid += length;
   }
 };
 var send_code = (s, c, tree) => {
   send_bits(s, tree[c * 2], tree[c * 2 + 1]);
 };
-var bi_reverse = (code, len2) => {
+var bi_reverse = (code, len) => {
   let res = 0;
   do {
     res |= code & 1;
     code >>>= 1;
     res <<= 1;
-  } while (--len2 > 0);
+  } while (--len > 0);
   return res >>> 1;
 };
 var bi_flush = (s) => {
@@ -1362,40 +5862,40 @@ var gen_codes = (tree, max_code, bl_count) => {
     next_code[bits] = code;
   }
   for (n = 0; n <= max_code; n++) {
-    let len2 = tree[n * 2 + 1];
-    if (len2 === 0) {
+    let len = tree[n * 2 + 1];
+    if (len === 0) {
       continue;
     }
-    tree[n * 2] = bi_reverse(next_code[len2]++, len2);
+    tree[n * 2] = bi_reverse(next_code[len]++, len);
   }
 };
 var tr_static_init = () => {
   let n;
   let bits;
-  let length2;
+  let length;
   let code;
-  let dist2;
+  let dist;
   const bl_count = new Array(MAX_BITS$1 + 1);
-  length2 = 0;
+  length = 0;
   for (code = 0; code < LENGTH_CODES$1 - 1; code++) {
-    base_length[code] = length2;
+    base_length[code] = length;
     for (n = 0; n < 1 << extra_lbits[code]; n++) {
-      _length_code[length2++] = code;
+      _length_code[length++] = code;
     }
   }
-  _length_code[length2 - 1] = code;
-  dist2 = 0;
+  _length_code[length - 1] = code;
+  dist = 0;
   for (code = 0; code < 16; code++) {
-    base_dist[code] = dist2;
+    base_dist[code] = dist;
     for (n = 0; n < 1 << extra_dbits[code]; n++) {
-      _dist_code[dist2++] = code;
+      _dist_code[dist++] = code;
     }
   }
-  dist2 >>= 7;
+  dist >>= 7;
   for (; code < D_CODES$1; code++) {
-    base_dist[code] = dist2 << 7;
+    base_dist[code] = dist << 7;
     for (n = 0; n < 1 << extra_dbits[code] - 7; n++) {
-      _dist_code[256 + dist2++] = code;
+      _dist_code[256 + dist++] = code;
     }
   }
   for (bits = 0; bits <= MAX_BITS$1; bits++) {
@@ -1477,17 +5977,17 @@ var pqdownheap = (s, tree, k) => {
   s.heap[k] = v2;
 };
 var compress_block = (s, ltree, dtree) => {
-  let dist2;
+  let dist;
   let lc;
   let sx = 0;
   let code;
   let extra;
   if (s.sym_next !== 0) {
     do {
-      dist2 = s.pending_buf[s.sym_buf + sx++] & 255;
-      dist2 += (s.pending_buf[s.sym_buf + sx++] & 255) << 8;
+      dist = s.pending_buf[s.sym_buf + sx++] & 255;
+      dist += (s.pending_buf[s.sym_buf + sx++] & 255) << 8;
       lc = s.pending_buf[s.sym_buf + sx++];
-      if (dist2 === 0) {
+      if (dist === 0) {
         send_code(s, lc, ltree);
       } else {
         code = _length_code[lc];
@@ -1497,13 +5997,13 @@ var compress_block = (s, ltree, dtree) => {
           lc -= base_length[code];
           send_bits(s, lc, extra);
         }
-        dist2--;
-        code = d_code(dist2);
+        dist--;
+        code = d_code(dist);
         send_code(s, code, dtree);
         extra = extra_dbits[code];
         if (extra !== 0) {
-          dist2 -= base_dist[code];
-          send_bits(s, dist2, extra);
+          dist -= base_dist[code];
+          send_bits(s, dist, extra);
         }
       }
     } while (sx < s.sym_next);
@@ -1755,17 +6255,17 @@ var _tr_flush_block$1 = (s, buf, stored_len, last) => {
     bi_windup(s);
   }
 };
-var _tr_tally$1 = (s, dist2, lc) => {
-  s.pending_buf[s.sym_buf + s.sym_next++] = dist2;
-  s.pending_buf[s.sym_buf + s.sym_next++] = dist2 >> 8;
+var _tr_tally$1 = (s, dist, lc) => {
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist;
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist >> 8;
   s.pending_buf[s.sym_buf + s.sym_next++] = lc;
-  if (dist2 === 0) {
+  if (dist === 0) {
     s.dyn_ltree[lc * 2]++;
   } else {
     s.matches++;
-    dist2--;
+    dist--;
     s.dyn_ltree[(_length_code[lc] + LITERALS$1 + 1) * 2]++;
-    s.dyn_dtree[d_code(dist2) * 2]++;
+    s.dyn_dtree[d_code(dist) * 2]++;
   }
   return s.sym_next === s.sym_end;
 };
@@ -1781,11 +6281,11 @@ var trees = {
   _tr_tally: _tr_tally_1,
   _tr_align: _tr_align_1
 };
-var adler32 = (adler, buf, len2, pos) => {
+var adler32 = (adler, buf, len, pos) => {
   let s1 = adler & 65535 | 0, s2 = adler >>> 16 & 65535 | 0, n = 0;
-  while (len2 !== 0) {
-    n = len2 > 2e3 ? 2e3 : len2;
-    len2 -= n;
+  while (len !== 0) {
+    n = len > 2e3 ? 2e3 : len;
+    len -= n;
     do {
       s1 = s1 + buf[pos++] | 0;
       s2 = s2 + s1 | 0;
@@ -1808,9 +6308,9 @@ var makeTable = () => {
   return table;
 };
 var crcTable = new Uint32Array(makeTable());
-var crc32 = (crc, buf, len2, pos) => {
+var crc32 = (crc, buf, len, pos) => {
   const t = crcTable;
-  const end = pos + len2;
+  const end = pos + len;
   crc ^= -1;
   for (let i = pos; i < end; i++) {
     crc = crc >>> 8 ^ t[(crc ^ buf[i]) & 255];
@@ -1915,9 +6415,9 @@ var rank = (f) => {
   return f * 2 - (f > 4 ? 9 : 0);
 };
 var zero = (buf) => {
-  let len2 = buf.length;
-  while (--len2 >= 0) {
-    buf[len2] = 0;
+  let len = buf.length;
+  while (--len >= 0) {
+    buf[len] = 0;
   }
 };
 var slide_hash = (s) => {
@@ -1941,19 +6441,19 @@ var HASH_ZLIB = (s, prev, data2) => (prev << s.hash_shift ^ data2) & s.hash_mask
 var HASH = HASH_ZLIB;
 var flush_pending = (strm) => {
   const s = strm.state;
-  let len2 = s.pending;
-  if (len2 > strm.avail_out) {
-    len2 = strm.avail_out;
+  let len = s.pending;
+  if (len > strm.avail_out) {
+    len = strm.avail_out;
   }
-  if (len2 === 0) {
+  if (len === 0) {
     return;
   }
-  strm.output.set(s.pending_buf.subarray(s.pending_out, s.pending_out + len2), strm.next_out);
-  strm.next_out += len2;
-  s.pending_out += len2;
-  strm.total_out += len2;
-  strm.avail_out -= len2;
-  s.pending -= len2;
+  strm.output.set(s.pending_buf.subarray(s.pending_out, s.pending_out + len), strm.next_out);
+  strm.next_out += len;
+  s.pending_out += len;
+  strm.total_out += len;
+  strm.avail_out -= len;
+  s.pending -= len;
   if (s.pending === 0) {
     s.pending_out = 0;
   }
@@ -1971,29 +6471,29 @@ var putShortMSB = (s, b) => {
   s.pending_buf[s.pending++] = b & 255;
 };
 var read_buf = (strm, buf, start, size) => {
-  let len2 = strm.avail_in;
-  if (len2 > size) {
-    len2 = size;
+  let len = strm.avail_in;
+  if (len > size) {
+    len = size;
   }
-  if (len2 === 0) {
+  if (len === 0) {
     return 0;
   }
-  strm.avail_in -= len2;
-  buf.set(strm.input.subarray(strm.next_in, strm.next_in + len2), start);
+  strm.avail_in -= len;
+  buf.set(strm.input.subarray(strm.next_in, strm.next_in + len), start);
   if (strm.state.wrap === 1) {
-    strm.adler = adler32_1(strm.adler, buf, len2, start);
+    strm.adler = adler32_1(strm.adler, buf, len, start);
   } else if (strm.state.wrap === 2) {
-    strm.adler = crc32_1(strm.adler, buf, len2, start);
+    strm.adler = crc32_1(strm.adler, buf, len, start);
   }
-  strm.next_in += len2;
-  strm.total_in += len2;
-  return len2;
+  strm.next_in += len;
+  strm.total_in += len;
+  return len;
 };
 var longest_match = (s, cur_match) => {
   let chain_length = s.max_chain_length;
   let scan = s.strstart;
   let match;
-  let len2;
+  let len;
   let best_len = s.prev_length;
   let nice_match = s.nice_match;
   const limit = s.strstart > s.w_size - MIN_LOOKAHEAD ? s.strstart - (s.w_size - MIN_LOOKAHEAD) : 0;
@@ -2018,12 +6518,12 @@ var longest_match = (s, cur_match) => {
     match++;
     do {
     } while (_win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && _win[++scan] === _win[++match] && scan < strend);
-    len2 = MAX_MATCH - (strend - scan);
+    len = MAX_MATCH - (strend - scan);
     scan = strend - MAX_MATCH;
-    if (len2 > best_len) {
+    if (len > best_len) {
       s.match_start = cur_match;
-      best_len = len2;
-      if (len2 >= nice_match) {
+      best_len = len;
+      if (len >= nice_match) {
         break;
       }
       scan_end1 = _win[scan + best_len - 1];
@@ -2037,7 +6537,7 @@ var longest_match = (s, cur_match) => {
 };
 var fill_window = (s) => {
   const _w_size = s.w_size;
-  let n, more, str2;
+  let n, more, str;
   do {
     more = s.window_size - s.lookahead - s.strstart;
     if (s.strstart >= _w_size + (_w_size - MIN_LOOKAHEAD)) {
@@ -2057,14 +6557,14 @@ var fill_window = (s) => {
     n = read_buf(s.strm, s.window, s.strstart + s.lookahead, more);
     s.lookahead += n;
     if (s.lookahead + s.insert >= MIN_MATCH) {
-      str2 = s.strstart - s.insert;
-      s.ins_h = s.window[str2];
-      s.ins_h = HASH(s, s.ins_h, s.window[str2 + 1]);
+      str = s.strstart - s.insert;
+      s.ins_h = s.window[str];
+      s.ins_h = HASH(s, s.ins_h, s.window[str + 1]);
       while (s.insert) {
-        s.ins_h = HASH(s, s.ins_h, s.window[str2 + MIN_MATCH - 1]);
-        s.prev[str2 & s.w_mask] = s.head[s.ins_h];
-        s.head[s.ins_h] = str2;
-        str2++;
+        s.ins_h = HASH(s, s.ins_h, s.window[str + MIN_MATCH - 1]);
+        s.prev[str & s.w_mask] = s.head[s.ins_h];
+        s.head[s.ins_h] = str;
+        str++;
         s.insert--;
         if (s.lookahead + s.insert < MIN_MATCH) {
           break;
@@ -2075,48 +6575,48 @@ var fill_window = (s) => {
 };
 var deflate_stored = (s, flush) => {
   let min_block = s.pending_buf_size - 5 > s.w_size ? s.w_size : s.pending_buf_size - 5;
-  let len2, left, have, last = 0;
+  let len, left, have, last = 0;
   let used = s.strm.avail_in;
   do {
-    len2 = 65535;
+    len = 65535;
     have = s.bi_valid + 42 >> 3;
     if (s.strm.avail_out < have) {
       break;
     }
     have = s.strm.avail_out - have;
     left = s.strstart - s.block_start;
-    if (len2 > left + s.strm.avail_in) {
-      len2 = left + s.strm.avail_in;
+    if (len > left + s.strm.avail_in) {
+      len = left + s.strm.avail_in;
     }
-    if (len2 > have) {
-      len2 = have;
+    if (len > have) {
+      len = have;
     }
-    if (len2 < min_block && (len2 === 0 && flush !== Z_FINISH$3 || flush === Z_NO_FLUSH$2 || len2 !== left + s.strm.avail_in)) {
+    if (len < min_block && (len === 0 && flush !== Z_FINISH$3 || flush === Z_NO_FLUSH$2 || len !== left + s.strm.avail_in)) {
       break;
     }
-    last = flush === Z_FINISH$3 && len2 === left + s.strm.avail_in ? 1 : 0;
+    last = flush === Z_FINISH$3 && len === left + s.strm.avail_in ? 1 : 0;
     _tr_stored_block(s, 0, 0, last);
-    s.pending_buf[s.pending - 4] = len2;
-    s.pending_buf[s.pending - 3] = len2 >> 8;
-    s.pending_buf[s.pending - 2] = ~len2;
-    s.pending_buf[s.pending - 1] = ~len2 >> 8;
+    s.pending_buf[s.pending - 4] = len;
+    s.pending_buf[s.pending - 3] = len >> 8;
+    s.pending_buf[s.pending - 2] = ~len;
+    s.pending_buf[s.pending - 1] = ~len >> 8;
     flush_pending(s.strm);
     if (left) {
-      if (left > len2) {
-        left = len2;
+      if (left > len) {
+        left = len;
       }
       s.strm.output.set(s.window.subarray(s.block_start, s.block_start + left), s.strm.next_out);
       s.strm.next_out += left;
       s.strm.avail_out -= left;
       s.strm.total_out += left;
       s.block_start += left;
-      len2 -= left;
+      len -= left;
     }
-    if (len2) {
-      read_buf(s.strm, s.strm.output, s.strm.next_out, len2);
-      s.strm.next_out += len2;
-      s.strm.avail_out -= len2;
-      s.strm.total_out += len2;
+    if (len) {
+      read_buf(s.strm, s.strm.output, s.strm.next_out, len);
+      s.strm.next_out += len;
+      s.strm.avail_out -= len;
+      s.strm.total_out += len;
     }
   } while (last === 0);
   used -= s.strm.avail_in;
@@ -2181,10 +6681,10 @@ var deflate_stored = (s, flush) => {
   min_block = have > s.w_size ? s.w_size : have;
   left = s.strstart - s.block_start;
   if (left >= min_block || (left || flush === Z_FINISH$3) && flush !== Z_NO_FLUSH$2 && s.strm.avail_in === 0 && left <= have) {
-    len2 = left > have ? have : left;
-    last = flush === Z_FINISH$3 && s.strm.avail_in === 0 && len2 === left ? 1 : 0;
-    _tr_stored_block(s, s.block_start, len2, last);
-    s.block_start += len2;
+    len = left > have ? have : left;
+    last = flush === Z_FINISH$3 && s.strm.avail_in === 0 && len === left ? 1 : 0;
+    _tr_stored_block(s, s.block_start, len, last);
+    s.block_start += len;
     flush_pending(s.strm);
   }
   return last ? BS_FINISH_STARTED : BS_NEED_MORE;
@@ -2733,20 +7233,20 @@ var deflate$2 = (strm, flush) => {
       let beg = s.pending;
       let left = (s.gzhead.extra.length & 65535) - s.gzindex;
       while (s.pending + left > s.pending_buf_size) {
-        let copy2 = s.pending_buf_size - s.pending;
-        s.pending_buf.set(s.gzhead.extra.subarray(s.gzindex, s.gzindex + copy2), s.pending);
+        let copy = s.pending_buf_size - s.pending;
+        s.pending_buf.set(s.gzhead.extra.subarray(s.gzindex, s.gzindex + copy), s.pending);
         s.pending = s.pending_buf_size;
         if (s.gzhead.hcrc && s.pending > beg) {
           strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
         }
-        s.gzindex += copy2;
+        s.gzindex += copy;
         flush_pending(strm);
         if (s.pending !== 0) {
           s.last_flush = -1;
           return Z_OK$3;
         }
         beg = 0;
-        left -= copy2;
+        left -= copy;
       }
       let gzhead_extra = new Uint8Array(s.gzhead.extra);
       s.pending_buf.set(gzhead_extra.subarray(s.gzindex, s.gzindex + left), s.pending);
@@ -2936,15 +7436,15 @@ var deflateSetDictionary = (strm, dictionary2) => {
   strm.input = dictionary2;
   fill_window(s);
   while (s.lookahead >= MIN_MATCH) {
-    let str2 = s.strstart;
+    let str = s.strstart;
     let n = s.lookahead - (MIN_MATCH - 1);
     do {
-      s.ins_h = HASH(s, s.ins_h, s.window[str2 + MIN_MATCH - 1]);
-      s.prev[str2 & s.w_mask] = s.head[s.ins_h];
-      s.head[s.ins_h] = str2;
-      str2++;
+      s.ins_h = HASH(s, s.ins_h, s.window[str + MIN_MATCH - 1]);
+      s.prev[str & s.w_mask] = s.head[s.ins_h];
+      s.head[s.ins_h] = str;
+      str++;
     } while (--n);
-    s.strstart = str2;
+    s.strstart = str;
     s.lookahead = MIN_MATCH - 1;
     fill_window(s);
   }
@@ -3002,11 +7502,11 @@ var assign = function(obj) {
   return obj;
 };
 var flattenChunks = (chunks) => {
-  let len2 = 0;
+  let len = 0;
   for (let i = 0, l = chunks.length; i < l; i++) {
-    len2 += chunks[i].length;
+    len += chunks[i].length;
   }
-  const result = new Uint8Array(len2);
+  const result = new Uint8Array(len);
   for (let i = 0, pos = 0, l = chunks.length; i < l; i++) {
     let chunk = chunks[i];
     result.set(chunk, pos);
@@ -3029,15 +7529,15 @@ for (let q = 0; q < 256; q++) {
   _utf8len[q] = q >= 252 ? 6 : q >= 248 ? 5 : q >= 240 ? 4 : q >= 224 ? 3 : q >= 192 ? 2 : 1;
 }
 _utf8len[254] = _utf8len[254] = 1;
-var string2buf = (str2) => {
+var string2buf = (str) => {
   if (typeof TextEncoder === "function" && TextEncoder.prototype.encode) {
-    return new TextEncoder().encode(str2);
+    return new TextEncoder().encode(str);
   }
-  let buf, c, c2, m_pos, i, str_len = str2.length, buf_len = 0;
+  let buf, c, c2, m_pos, i, str_len = str.length, buf_len = 0;
   for (m_pos = 0; m_pos < str_len; m_pos++) {
-    c = str2.charCodeAt(m_pos);
+    c = str.charCodeAt(m_pos);
     if ((c & 64512) === 55296 && m_pos + 1 < str_len) {
-      c2 = str2.charCodeAt(m_pos + 1);
+      c2 = str.charCodeAt(m_pos + 1);
       if ((c2 & 64512) === 56320) {
         c = 65536 + (c - 55296 << 10) + (c2 - 56320);
         m_pos++;
@@ -3047,9 +7547,9 @@ var string2buf = (str2) => {
   }
   buf = new Uint8Array(buf_len);
   for (i = 0, m_pos = 0; i < buf_len; m_pos++) {
-    c = str2.charCodeAt(m_pos);
+    c = str.charCodeAt(m_pos);
     if ((c & 64512) === 55296 && m_pos + 1 < str_len) {
-      c2 = str2.charCodeAt(m_pos + 1);
+      c2 = str.charCodeAt(m_pos + 1);
       if ((c2 & 64512) === 56320) {
         c = 65536 + (c - 55296 << 10) + (c2 - 56320);
         m_pos++;
@@ -3073,26 +7573,26 @@ var string2buf = (str2) => {
   }
   return buf;
 };
-var buf2binstring = (buf, len2) => {
-  if (len2 < 65534) {
+var buf2binstring = (buf, len) => {
+  if (len < 65534) {
     if (buf.subarray && STR_APPLY_UIA_OK) {
-      return String.fromCharCode.apply(null, buf.length === len2 ? buf : buf.subarray(0, len2));
+      return String.fromCharCode.apply(null, buf.length === len ? buf : buf.subarray(0, len));
     }
   }
   let result = "";
-  for (let i = 0; i < len2; i++) {
+  for (let i = 0; i < len; i++) {
     result += String.fromCharCode(buf[i]);
   }
   return result;
 };
-var buf2string = (buf, max2) => {
-  const len2 = max2 || buf.length;
+var buf2string = (buf, max) => {
+  const len = max || buf.length;
   if (typeof TextDecoder === "function" && TextDecoder.prototype.decode) {
-    return new TextDecoder().decode(buf.subarray(0, max2));
+    return new TextDecoder().decode(buf.subarray(0, max));
   }
   let i, out;
-  const utf16buf = new Array(len2 * 2);
-  for (out = 0, i = 0; i < len2; ) {
+  const utf16buf = new Array(len * 2);
+  for (out = 0, i = 0; i < len; ) {
     let c = buf[i++];
     if (c < 128) {
       utf16buf[out++] = c;
@@ -3105,7 +7605,7 @@ var buf2string = (buf, max2) => {
       continue;
     }
     c &= c_len === 2 ? 31 : c_len === 3 ? 15 : 7;
-    while (c_len > 1 && i < len2) {
+    while (c_len > 1 && i < len) {
       c = c << 6 | buf[i++] & 63;
       c_len--;
     }
@@ -3123,22 +7623,22 @@ var buf2string = (buf, max2) => {
   }
   return buf2binstring(utf16buf, out);
 };
-var utf8border = (buf, max2) => {
-  max2 = max2 || buf.length;
-  if (max2 > buf.length) {
-    max2 = buf.length;
+var utf8border = (buf, max) => {
+  max = max || buf.length;
+  if (max > buf.length) {
+    max = buf.length;
   }
-  let pos = max2 - 1;
+  let pos = max - 1;
   while (pos >= 0 && (buf[pos] & 192) === 128) {
     pos--;
   }
   if (pos < 0) {
-    return max2;
+    return max;
   }
   if (pos === 0) {
-    return max2;
+    return max;
   }
-  return pos + _utf8len[buf[pos]] > max2 ? pos : max2;
+  return pos + _utf8len[buf[pos]] > max ? pos : max;
 };
 var strings = {
   string2buf,
@@ -3333,8 +7833,8 @@ var inffast = function inflate_fast(strm, start) {
   let dmask;
   let here;
   let op;
-  let len2;
-  let dist2;
+  let len;
+  let dist;
   let from;
   let from_source;
   let input, output;
@@ -3375,14 +7875,14 @@ var inffast = function inflate_fast(strm, start) {
           if (op === 0) {
             output[_out++] = here & 65535;
           } else if (op & 16) {
-            len2 = here & 65535;
+            len = here & 65535;
             op &= 15;
             if (op) {
               if (bits < op) {
                 hold += input[_in++] << bits;
                 bits += 8;
               }
-              len2 += hold & (1 << op) - 1;
+              len += hold & (1 << op) - 1;
               hold >>>= op;
               bits -= op;
             }
@@ -3400,7 +7900,7 @@ var inffast = function inflate_fast(strm, start) {
                 bits -= op;
                 op = here >>> 16 & 255;
                 if (op & 16) {
-                  dist2 = here & 65535;
+                  dist = here & 65535;
                   op &= 15;
                   if (bits < op) {
                     hold += input[_in++] << bits;
@@ -3410,8 +7910,8 @@ var inffast = function inflate_fast(strm, start) {
                       bits += 8;
                     }
                   }
-                  dist2 += hold & (1 << op) - 1;
-                  if (dist2 > dmax) {
+                  dist += hold & (1 << op) - 1;
+                  if (dist > dmax) {
                     strm.msg = "invalid distance too far back";
                     state.mode = BAD$1;
                     break top;
@@ -3419,8 +7919,8 @@ var inffast = function inflate_fast(strm, start) {
                   hold >>>= op;
                   bits -= op;
                   op = _out - beg;
-                  if (dist2 > op) {
-                    op = dist2 - op;
+                  if (dist > op) {
+                    op = dist - op;
                     if (op > whave) {
                       if (state.sane) {
                         strm.msg = "invalid distance too far back";
@@ -3432,67 +7932,67 @@ var inffast = function inflate_fast(strm, start) {
                     from_source = s_window;
                     if (wnext === 0) {
                       from += wsize - op;
-                      if (op < len2) {
-                        len2 -= op;
+                      if (op < len) {
+                        len -= op;
                         do {
                           output[_out++] = s_window[from++];
                         } while (--op);
-                        from = _out - dist2;
+                        from = _out - dist;
                         from_source = output;
                       }
                     } else if (wnext < op) {
                       from += wsize + wnext - op;
                       op -= wnext;
-                      if (op < len2) {
-                        len2 -= op;
+                      if (op < len) {
+                        len -= op;
                         do {
                           output[_out++] = s_window[from++];
                         } while (--op);
                         from = 0;
-                        if (wnext < len2) {
+                        if (wnext < len) {
                           op = wnext;
-                          len2 -= op;
+                          len -= op;
                           do {
                             output[_out++] = s_window[from++];
                           } while (--op);
-                          from = _out - dist2;
+                          from = _out - dist;
                           from_source = output;
                         }
                       }
                     } else {
                       from += wnext - op;
-                      if (op < len2) {
-                        len2 -= op;
+                      if (op < len) {
+                        len -= op;
                         do {
                           output[_out++] = s_window[from++];
                         } while (--op);
-                        from = _out - dist2;
+                        from = _out - dist;
                         from_source = output;
                       }
                     }
-                    while (len2 > 2) {
+                    while (len > 2) {
                       output[_out++] = from_source[from++];
                       output[_out++] = from_source[from++];
                       output[_out++] = from_source[from++];
-                      len2 -= 3;
+                      len -= 3;
                     }
-                    if (len2) {
+                    if (len) {
                       output[_out++] = from_source[from++];
-                      if (len2 > 1) {
+                      if (len > 1) {
                         output[_out++] = from_source[from++];
                       }
                     }
                   } else {
-                    from = _out - dist2;
+                    from = _out - dist;
                     do {
                       output[_out++] = output[from++];
                       output[_out++] = output[from++];
                       output[_out++] = output[from++];
-                      len2 -= 3;
-                    } while (len2 > 2);
-                    if (len2) {
+                      len -= 3;
+                    } while (len > 2);
+                    if (len) {
                       output[_out++] = output[from++];
-                      if (len2 > 1) {
+                      if (len > 1) {
                         output[_out++] = output[from++];
                       }
                     }
@@ -3521,9 +8021,9 @@ var inffast = function inflate_fast(strm, start) {
           break;
         }
     } while (_in < last && _out < end);
-  len2 = bits >> 3;
-  _in -= len2;
-  bits -= len2 << 3;
+  len = bits >> 3;
+  _in -= len;
+  bits -= len << 3;
   hold &= (1 << bits) - 1;
   strm.next_in = _in;
   strm.next_out = _out;
@@ -3675,9 +8175,9 @@ var dext = new Uint8Array([
 ]);
 var inflate_table = (type, lens, lens_index, codes, table, table_index, work, opts) => {
   const bits = opts.bits;
-  let len2 = 0;
+  let len = 0;
   let sym = 0;
-  let min2 = 0, max2 = 0;
+  let min = 0, max = 0;
   let root = 0;
   let curr = 0;
   let drop = 0;
@@ -3695,49 +8195,49 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
   const offs = new Uint16Array(MAXBITS + 1);
   let extra = null;
   let here_bits, here_op, here_val;
-  for (len2 = 0; len2 <= MAXBITS; len2++) {
-    count[len2] = 0;
+  for (len = 0; len <= MAXBITS; len++) {
+    count[len] = 0;
   }
   for (sym = 0; sym < codes; sym++) {
     count[lens[lens_index + sym]]++;
   }
   root = bits;
-  for (max2 = MAXBITS; max2 >= 1; max2--) {
-    if (count[max2] !== 0) {
+  for (max = MAXBITS; max >= 1; max--) {
+    if (count[max] !== 0) {
       break;
     }
   }
-  if (root > max2) {
-    root = max2;
+  if (root > max) {
+    root = max;
   }
-  if (max2 === 0) {
+  if (max === 0) {
     table[table_index++] = 1 << 24 | 64 << 16 | 0;
     table[table_index++] = 1 << 24 | 64 << 16 | 0;
     opts.bits = 1;
     return 0;
   }
-  for (min2 = 1; min2 < max2; min2++) {
-    if (count[min2] !== 0) {
+  for (min = 1; min < max; min++) {
+    if (count[min] !== 0) {
       break;
     }
   }
-  if (root < min2) {
-    root = min2;
+  if (root < min) {
+    root = min;
   }
   left = 1;
-  for (len2 = 1; len2 <= MAXBITS; len2++) {
+  for (len = 1; len <= MAXBITS; len++) {
     left <<= 1;
-    left -= count[len2];
+    left -= count[len];
     if (left < 0) {
       return -1;
     }
   }
-  if (left > 0 && (type === CODES$1 || max2 !== 1)) {
+  if (left > 0 && (type === CODES$1 || max !== 1)) {
     return -1;
   }
   offs[1] = 0;
-  for (len2 = 1; len2 < MAXBITS; len2++) {
-    offs[len2 + 1] = offs[len2] + count[len2];
+  for (len = 1; len < MAXBITS; len++) {
+    offs[len + 1] = offs[len] + count[len];
   }
   for (sym = 0; sym < codes; sym++) {
     if (lens[lens_index + sym] !== 0) {
@@ -3758,7 +8258,7 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
   }
   huff = 0;
   sym = 0;
-  len2 = min2;
+  len = min;
   next = table_index;
   curr = root;
   drop = 0;
@@ -3769,7 +8269,7 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
     return 1;
   }
   for (; ; ) {
-    here_bits = len2 - drop;
+    here_bits = len - drop;
     if (work[sym] + 1 < match) {
       here_op = 0;
       here_val = work[sym];
@@ -3780,14 +8280,14 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
       here_op = 32 + 64;
       here_val = 0;
     }
-    incr = 1 << len2 - drop;
+    incr = 1 << len - drop;
     fill = 1 << curr;
-    min2 = fill;
+    min = fill;
     do {
       fill -= incr;
       table[next + (huff >> drop) + fill] = here_bits << 24 | here_op << 16 | here_val | 0;
     } while (fill !== 0);
-    incr = 1 << len2 - 1;
+    incr = 1 << len - 1;
     while (huff & incr) {
       incr >>= 1;
     }
@@ -3798,20 +8298,20 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
       huff = 0;
     }
     sym++;
-    if (--count[len2] === 0) {
-      if (len2 === max2) {
+    if (--count[len] === 0) {
+      if (len === max) {
         break;
       }
-      len2 = lens[lens_index + work[sym]];
+      len = lens[lens_index + work[sym]];
     }
-    if (len2 > root && (huff & mask) !== low) {
+    if (len > root && (huff & mask) !== low) {
       if (drop === 0) {
         drop = root;
       }
-      next += min2;
-      curr = len2 - drop;
+      next += min;
+      curr = len - drop;
       left = 1 << curr;
-      while (curr + drop < max2) {
+      while (curr + drop < max) {
         left -= count[curr + drop];
         if (left <= 0) {
           break;
@@ -3828,7 +8328,7 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
     }
   }
   if (huff !== 0) {
-    table[next + huff] = len2 - drop << 24 | 64 << 16 | 0;
+    table[next + huff] = len - drop << 24 | 64 << 16 | 0;
   }
   opts.bits = root;
   return 0;
@@ -4047,8 +8547,8 @@ var fixedtables = (state) => {
   state.distcode = distfix;
   state.distbits = 5;
 };
-var updatewindow = (strm, src, end, copy2) => {
-  let dist2;
+var updatewindow = (strm, src, end, copy) => {
+  let dist;
   const state = strm.state;
   if (state.window === null) {
     state.wsize = 1 << state.wbits;
@@ -4056,28 +8556,28 @@ var updatewindow = (strm, src, end, copy2) => {
     state.whave = 0;
     state.window = new Uint8Array(state.wsize);
   }
-  if (copy2 >= state.wsize) {
+  if (copy >= state.wsize) {
     state.window.set(src.subarray(end - state.wsize, end), 0);
     state.wnext = 0;
     state.whave = state.wsize;
   } else {
-    dist2 = state.wsize - state.wnext;
-    if (dist2 > copy2) {
-      dist2 = copy2;
+    dist = state.wsize - state.wnext;
+    if (dist > copy) {
+      dist = copy;
     }
-    state.window.set(src.subarray(end - copy2, end - copy2 + dist2), state.wnext);
-    copy2 -= dist2;
-    if (copy2) {
-      state.window.set(src.subarray(end - copy2, end), 0);
-      state.wnext = copy2;
+    state.window.set(src.subarray(end - copy, end - copy + dist), state.wnext);
+    copy -= dist;
+    if (copy) {
+      state.window.set(src.subarray(end - copy, end), 0);
+      state.wnext = copy;
       state.whave = state.wsize;
     } else {
-      state.wnext += dist2;
+      state.wnext += dist;
       if (state.wnext === state.wsize) {
         state.wnext = 0;
       }
       if (state.whave < state.wsize) {
-        state.whave += dist2;
+        state.whave += dist;
       }
     }
   }
@@ -4092,13 +8592,13 @@ var inflate$2 = (strm, flush) => {
   let hold;
   let bits;
   let _in, _out;
-  let copy2;
+  let copy;
   let from;
   let from_source;
   let here = 0;
   let here_bits, here_op, here_val;
   let last_bits, last_op, last_val;
-  let len2;
+  let len;
   let ret;
   const hbuf = new Uint8Array(4);
   let opts;
@@ -4166,11 +8666,11 @@ var inflate$2 = (strm, flush) => {
           }
           hold >>>= 4;
           bits -= 4;
-          len2 = (hold & 15) + 8;
+          len = (hold & 15) + 8;
           if (state.wbits === 0) {
-            state.wbits = len2;
+            state.wbits = len;
           }
-          if (len2 > 15 || len2 > state.wbits) {
+          if (len > 15 || len > state.wbits) {
             strm.msg = "invalid window size";
             state.mode = BAD;
             break;
@@ -4283,24 +8783,24 @@ var inflate$2 = (strm, flush) => {
           state.mode = EXTRA;
         case EXTRA:
           if (state.flags & 1024) {
-            copy2 = state.length;
-            if (copy2 > have) {
-              copy2 = have;
+            copy = state.length;
+            if (copy > have) {
+              copy = have;
             }
-            if (copy2) {
+            if (copy) {
               if (state.head) {
-                len2 = state.head.extra_len - state.length;
+                len = state.head.extra_len - state.length;
                 if (!state.head.extra) {
                   state.head.extra = new Uint8Array(state.head.extra_len);
                 }
-                state.head.extra.set(input.subarray(next, next + copy2), len2);
+                state.head.extra.set(input.subarray(next, next + copy), len);
               }
               if (state.flags & 512 && state.wrap & 4) {
-                state.check = crc32_1(state.check, input, copy2, next);
+                state.check = crc32_1(state.check, input, copy, next);
               }
-              have -= copy2;
-              next += copy2;
-              state.length -= copy2;
+              have -= copy;
+              next += copy;
+              state.length -= copy;
             }
             if (state.length) {
               break inf_leave;
@@ -4313,19 +8813,19 @@ var inflate$2 = (strm, flush) => {
             if (have === 0) {
               break inf_leave;
             }
-            copy2 = 0;
+            copy = 0;
             do {
-              len2 = input[next + copy2++];
-              if (state.head && len2 && state.length < 65536) {
-                state.head.name += String.fromCharCode(len2);
+              len = input[next + copy++];
+              if (state.head && len && state.length < 65536) {
+                state.head.name += String.fromCharCode(len);
               }
-            } while (len2 && copy2 < have);
+            } while (len && copy < have);
             if (state.flags & 512 && state.wrap & 4) {
-              state.check = crc32_1(state.check, input, copy2, next);
+              state.check = crc32_1(state.check, input, copy, next);
             }
-            have -= copy2;
-            next += copy2;
-            if (len2) {
+            have -= copy;
+            next += copy;
+            if (len) {
               break inf_leave;
             }
           } else if (state.head) {
@@ -4338,19 +8838,19 @@ var inflate$2 = (strm, flush) => {
             if (have === 0) {
               break inf_leave;
             }
-            copy2 = 0;
+            copy = 0;
             do {
-              len2 = input[next + copy2++];
-              if (state.head && len2 && state.length < 65536) {
-                state.head.comment += String.fromCharCode(len2);
+              len = input[next + copy++];
+              if (state.head && len && state.length < 65536) {
+                state.head.comment += String.fromCharCode(len);
               }
-            } while (len2 && copy2 < have);
+            } while (len && copy < have);
             if (state.flags & 512 && state.wrap & 4) {
-              state.check = crc32_1(state.check, input, copy2, next);
+              state.check = crc32_1(state.check, input, copy, next);
             }
-            have -= copy2;
-            next += copy2;
-            if (len2) {
+            have -= copy;
+            next += copy;
+            if (len) {
               break inf_leave;
             }
           } else if (state.head) {
@@ -4478,23 +8978,23 @@ var inflate$2 = (strm, flush) => {
         case COPY_:
           state.mode = COPY;
         case COPY:
-          copy2 = state.length;
-          if (copy2) {
-            if (copy2 > have) {
-              copy2 = have;
+          copy = state.length;
+          if (copy) {
+            if (copy > have) {
+              copy = have;
             }
-            if (copy2 > left) {
-              copy2 = left;
+            if (copy > left) {
+              copy = left;
             }
-            if (copy2 === 0) {
+            if (copy === 0) {
               break inf_leave;
             }
-            output.set(input.subarray(next, next + copy2), put);
-            have -= copy2;
-            next += copy2;
-            left -= copy2;
-            put += copy2;
-            state.length -= copy2;
+            output.set(input.subarray(next, next + copy), put);
+            have -= copy;
+            next += copy;
+            left -= copy;
+            put += copy;
+            state.length -= copy;
             break;
           }
           state.mode = TYPE;
@@ -4592,8 +9092,8 @@ var inflate$2 = (strm, flush) => {
                   state.mode = BAD;
                   break;
                 }
-                len2 = state.lens[state.have - 1];
-                copy2 = 3 + (hold & 3);
+                len = state.lens[state.have - 1];
+                copy = 3 + (hold & 3);
                 hold >>>= 2;
                 bits -= 2;
               } else if (here_val === 17) {
@@ -4608,8 +9108,8 @@ var inflate$2 = (strm, flush) => {
                 }
                 hold >>>= here_bits;
                 bits -= here_bits;
-                len2 = 0;
-                copy2 = 3 + (hold & 7);
+                len = 0;
+                copy = 3 + (hold & 7);
                 hold >>>= 3;
                 bits -= 3;
               } else {
@@ -4624,18 +9124,18 @@ var inflate$2 = (strm, flush) => {
                 }
                 hold >>>= here_bits;
                 bits -= here_bits;
-                len2 = 0;
-                copy2 = 11 + (hold & 127);
+                len = 0;
+                copy = 11 + (hold & 127);
                 hold >>>= 7;
                 bits -= 7;
               }
-              if (state.have + copy2 > state.nlen + state.ndist) {
+              if (state.have + copy > state.nlen + state.ndist) {
                 strm.msg = "invalid bit length repeat";
                 state.mode = BAD;
                 break;
               }
-              while (copy2--) {
-                state.lens[state.have++] = len2;
+              while (copy--) {
+                state.lens[state.have++] = len;
               }
             }
           }
@@ -4847,39 +9347,39 @@ var inflate$2 = (strm, flush) => {
           if (left === 0) {
             break inf_leave;
           }
-          copy2 = _out - left;
-          if (state.offset > copy2) {
-            copy2 = state.offset - copy2;
-            if (copy2 > state.whave) {
+          copy = _out - left;
+          if (state.offset > copy) {
+            copy = state.offset - copy;
+            if (copy > state.whave) {
               if (state.sane) {
                 strm.msg = "invalid distance too far back";
                 state.mode = BAD;
                 break;
               }
             }
-            if (copy2 > state.wnext) {
-              copy2 -= state.wnext;
-              from = state.wsize - copy2;
+            if (copy > state.wnext) {
+              copy -= state.wnext;
+              from = state.wsize - copy;
             } else {
-              from = state.wnext - copy2;
+              from = state.wnext - copy;
             }
-            if (copy2 > state.length) {
-              copy2 = state.length;
+            if (copy > state.length) {
+              copy = state.length;
             }
             from_source = state.window;
           } else {
             from_source = output;
             from = put - state.offset;
-            copy2 = state.length;
+            copy = state.length;
           }
-          if (copy2 > left) {
-            copy2 = left;
+          if (copy > left) {
+            copy = left;
           }
-          left -= copy2;
-          state.length -= copy2;
+          left -= copy;
+          state.length -= copy;
           do {
             output[put++] = from_source[from++];
-          } while (--copy2);
+          } while (--copy);
           if (state.length === 0) {
             state.mode = LEN;
           }
@@ -5349,14 +9849,14 @@ var BufferStream = class {
   }
   writeAsciiString(value) {
     value = value || "";
-    var len2 = value.length;
-    this.checkSize(len2);
+    var len = value.length;
+    this.checkSize(len);
     var startOffset = this.offset;
-    for (let i = 0; i < len2; i++) {
+    for (let i = 0; i < len; i++) {
       var charcode = value.charCodeAt(i);
       this.view.setUint8(startOffset + i, charcode);
     }
-    return this.increment(len2);
+    return this.increment(len);
   }
   readUint32() {
     var val = this.view.getUint32(this.offset, this.isLittleEndian);
@@ -5376,13 +9876,13 @@ var BufferStream = class {
   peekUint8(offset) {
     return this.view.getUint8(this.offset + offset);
   }
-  readUint8Array(length2) {
-    var arr = new Uint8Array(this.buffer, this.offset, length2);
-    this.increment(length2);
+  readUint8Array(length) {
+    var arr = new Uint8Array(this.buffer, this.offset, length);
+    this.increment(length);
     return arr;
   }
-  readUint16Array(length2) {
-    var sixlen = length2 / 2, arr = new Uint16Array(sixlen), i = 0;
+  readUint16Array(length) {
+    var sixlen = length / 2, arr = new Uint16Array(sixlen), i = 0;
     while (i++ < sixlen) {
       arr[i] = this.view.getUint16(this.offset, this.isLittleEndian);
       this.offset += 2;
@@ -5409,10 +9909,10 @@ var BufferStream = class {
     this.increment(8);
     return val;
   }
-  readAsciiString(length2) {
+  readAsciiString(length) {
     var result = "";
     var start = this.offset;
-    var end = this.offset + length2;
+    var end = this.offset + length;
     if (end >= this.buffer.byteLength) {
       end = this.buffer.byteLength;
     }
@@ -5427,18 +9927,18 @@ var BufferStream = class {
     this.increment(2);
     return vr;
   }
-  readEncodedString(length2) {
-    if (this.offset + length2 >= this.buffer.byteLength) {
-      length2 = this.buffer.byteLength - this.offset;
+  readEncodedString(length) {
+    if (this.offset + length >= this.buffer.byteLength) {
+      length = this.buffer.byteLength - this.offset;
     }
-    const view = new DataView(this.buffer, this.offset, length2);
+    const view = new DataView(this.buffer, this.offset, length);
     const result = this.decoder.decode(view);
-    this.increment(length2);
+    this.increment(length);
     return result;
   }
-  readHex(length2) {
+  readHex(length) {
     var hexString = "";
-    for (var i = 0; i < length2; i++) {
+    for (var i = 0; i < length; i++) {
       hexString += this.readUint8().toString(16);
     }
     return hexString;
@@ -5483,15 +9983,15 @@ var BufferStream = class {
     }
     return this.buffer.slice(start, end);
   }
-  more(length2) {
-    if (this.offset + length2 > this.endOffset) {
+  more(length) {
+    if (this.offset + length > this.endOffset) {
       throw new Error("Request more than currently allocated buffer");
     }
     const newBuf = new ReadBufferStream(this.buffer, null, {
       start: this.offset,
-      stop: this.offset + length2
+      stop: this.offset + length
     });
-    this.increment(length2);
+    this.increment(length);
     return newBuf;
   }
   reset() {
@@ -5640,10 +10140,11 @@ function pnObjectToString(value) {
     value = [value];
   }
   return value.filter(Boolean).map(function(v2) {
+    var _a, _b, _c;
     if (v2 === void 0 || typeof v2 === "string" || v2 instanceof String) {
       return v2;
     }
-    return [v2.Alphabetic ?? "", v2.Ideographic ?? "", v2.Phonetic ?? ""].join(pnDelim).replace(new RegExp(`${pnDelim}*$`), "");
+    return [(_a = v2.Alphabetic) != null ? _a : "", (_b = v2.Ideographic) != null ? _b : "", (_c = v2.Phonetic) != null ? _c : ""].join(pnDelim).replace(new RegExp(`${pnDelim}*$`), "");
   }).join(String.fromCharCode(VM_DELIMITER));
 }
 function pnAddValueAccessors(value) {
@@ -60268,8 +64769,8 @@ var tagProxyHandler = {
     return true;
   }
 };
-function rtrim(str2) {
-  return str2.replace(/\s*$/g, "");
+function rtrim(str) {
+  return str.replace(/\s*$/g, "");
 }
 function toWindows(inputArray, size) {
   return Array.from({length: inputArray.length - (size - 1)}, (_, index) => inputArray.slice(index, index + size));
@@ -60306,39 +64807,40 @@ var ValueRepresentation = class {
     return value;
   }
   static addTagAccessors(tag) {
-    if (!tag.__hasTagAccessors && ValueRepresentation.hasValueAccessors(tag.vr?.type || tag.vr)) {
+    var _a;
+    if (!tag.__hasTagAccessors && ValueRepresentation.hasValueAccessors(((_a = tag.vr) == null ? void 0 : _a.type) || tag.vr)) {
       Object.defineProperty(tag, "__hasTagAccessors", {value: true});
       return new Proxy(tag, tagProxyHandler);
     }
     return tag;
   }
-  read(stream, length2, syntax) {
+  read(stream, length, syntax) {
     if (this.fixed && this.maxLength) {
-      if (!length2)
+      if (!length)
         return this.defaultValue;
-      if (this.maxLength != length2)
-        log.error("Invalid length for fixed length tag, vr " + this.type + ", length " + this.maxLength + " != " + length2);
+      if (this.maxLength != length)
+        log.error("Invalid length for fixed length tag, vr " + this.type + ", length " + this.maxLength + " != " + length);
     }
-    return this.readBytes(stream, length2, syntax);
+    return this.readBytes(stream, length, syntax);
   }
-  readBytes(stream, length2) {
-    return stream.readAsciiString(length2);
+  readBytes(stream, length) {
+    return stream.readAsciiString(length);
   }
-  readPaddedAsciiString(stream, length2) {
-    if (!length2)
+  readPaddedAsciiString(stream, length) {
+    if (!length)
       return "";
-    if (stream.peekUint8(length2 - 1) !== this.padByte) {
-      return stream.readAsciiString(length2);
+    if (stream.peekUint8(length - 1) !== this.padByte) {
+      return stream.readAsciiString(length);
     } else {
-      var val = stream.readAsciiString(length2 - 1);
+      var val = stream.readAsciiString(length - 1);
       stream.increment(1);
       return val;
     }
   }
-  readPaddedEncodedString(stream, length2) {
-    if (!length2)
+  readPaddedEncodedString(stream, length) {
+    if (!length)
       return "";
-    const val = stream.readEncodedString(length2);
+    const val = stream.readEncodedString(length);
     if (val.length && val[val.length - 1] !== String.fromCharCode(this.padByte)) {
       return val;
     } else {
@@ -60437,8 +64939,8 @@ var AsciiStringRepresentation = class extends ValueRepresentation {
   constructor(type) {
     super(type);
   }
-  readBytes(stream, length2) {
-    return stream.readAsciiString(length2);
+  readBytes(stream, length) {
+    return stream.readAsciiString(length);
   }
   writeBytes(stream, value, writeOptions) {
     const written = super.write(stream, "AsciiString", value);
@@ -60449,8 +64951,8 @@ var EncodedStringRepresentation = class extends ValueRepresentation {
   constructor(type) {
     super(type);
   }
-  readBytes(stream, length2) {
-    return stream.readEncodedString(length2);
+  readBytes(stream, length) {
+    return stream.readEncodedString(length);
   }
   writeBytes(stream, value, writeOptions) {
     const written = super.write(stream, "UTF8String", value);
@@ -60526,8 +65028,8 @@ var BinaryRepresentation = class extends ValueRepresentation {
       return super.writeBytes(stream, binaryData, [binaryStream.size], writeOptions);
     }
   }
-  readBytes(stream, length2) {
-    if (length2 == 4294967295) {
+  readBytes(stream, length) {
+    if (length == 4294967295) {
       var itemTagValue = Tag.readTag(stream), frames = [];
       if (itemTagValue.is(4294893568)) {
         var itemLength = stream.readUint32(), numOfFrames = 1, offsets = [];
@@ -60608,8 +65110,8 @@ var BinaryRepresentation = class extends ValueRepresentation {
       return frames;
     } else {
       var bytes;
-      bytes = stream.getBuffer(stream.offset, stream.offset + length2);
-      stream.increment(length2);
+      bytes = stream.getBuffer(stream.offset, stream.offset + length);
+      stream.increment(length);
       return [bytes];
     }
   }
@@ -60620,8 +65122,8 @@ var ApplicationEntity = class extends AsciiStringRepresentation {
     this.maxLength = 16;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return stream.readAsciiString(length2).trim();
+  readBytes(stream, length) {
+    return stream.readAsciiString(length).trim();
   }
 };
 var CodeString = class extends AsciiStringRepresentation {
@@ -60630,8 +65132,8 @@ var CodeString = class extends AsciiStringRepresentation {
     this.maxLength = 16;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return stream.readAsciiString(length2).trim();
+  readBytes(stream, length) {
+    return stream.readAsciiString(length).trim();
   }
 };
 var AgeString = class extends AsciiStringRepresentation {
@@ -60672,9 +65174,9 @@ var DecimalString = class extends AsciiStringRepresentation {
     this.maxLength = 16;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
+  readBytes(stream, length) {
     const BACKSLASH = String.fromCharCode(VM_DELIMITER);
-    let ds = stream.readAsciiString(length2);
+    let ds = stream.readAsciiString(length);
     ds = ds.replace(/[^0-9.\\\-+e]/gi, "");
     if (ds.indexOf(BACKSLASH) !== -1) {
       const dsArray = ds.split(BACKSLASH);
@@ -60687,8 +65189,8 @@ var DecimalString = class extends AsciiStringRepresentation {
   formatValue(value) {
     if (value === null)
       return "";
-    let str2 = String(value);
-    if (str2.length > this.maxLength) {
+    let str = String(value);
+    if (str.length > this.maxLength) {
       const sign_chars = value < 0 ? 1 : 0;
       const logval = Math.log10(Math.abs(value));
       const use_scientific = logval < -4 || logval >= 14 - sign_chars;
@@ -60704,7 +65206,7 @@ var DecimalString = class extends AsciiStringRepresentation {
         return value.toFixed(16 - sign_chars - (trunc_str.length - 16));
       }
     }
-    return str2;
+    return str;
   }
   writeBytes(stream, value, writeOptions) {
     const val = Array.isArray(value) ? value.map((ds) => this.formatValue(ds)) : [this.formatValue(value)];
@@ -60754,9 +65256,9 @@ var IntegerString = class extends AsciiStringRepresentation {
     this.maxLength = 12;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
+  readBytes(stream, length) {
     const BACKSLASH = String.fromCharCode(VM_DELIMITER);
-    let is = stream.readAsciiString(length2).trim();
+    let is = stream.readAsciiString(length).trim();
     is = is.replace(/[^0-9.\\\-+e]/gi, "");
     if (is.indexOf(BACKSLASH) !== -1) {
       const integerStringArray = is.split(BACKSLASH);
@@ -60780,8 +65282,8 @@ var LongString = class extends EncodedStringRepresentation {
     this.maxCharLength = 64;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return stream.readEncodedString(length2).trim();
+  readBytes(stream, length) {
+    return stream.readEncodedString(length).trim();
   }
 };
 var LongText = class extends EncodedStringRepresentation {
@@ -60790,8 +65292,8 @@ var LongText = class extends EncodedStringRepresentation {
     this.maxCharLength = 10240;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return rtrim(stream.readEncodedString(length2));
+  readBytes(stream, length) {
+    return rtrim(stream.readEncodedString(length));
   }
 };
 var PersonName = class extends EncodedStringRepresentation {
@@ -60838,8 +65340,8 @@ var PersonName = class extends EncodedStringRepresentation {
     }
     return true;
   }
-  readBytes(stream, length2) {
-    const result = this.readPaddedEncodedString(stream, length2);
+  readBytes(stream, length) {
+    const result = this.readPaddedEncodedString(stream, length);
     return dicomJson_default.pnConvertToJsonObject(result);
   }
   writeBytes(stream, value, writeOptions) {
@@ -60852,8 +65354,8 @@ var ShortString = class extends EncodedStringRepresentation {
     this.maxCharLength = 16;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return stream.readEncodedString(length2).trim();
+  readBytes(stream, length) {
+    return stream.readEncodedString(length).trim();
   }
 };
 var SignedLong = class extends ValueRepresentation {
@@ -60884,7 +65386,7 @@ var SequenceOfItems = class extends ValueRepresentation {
     } else {
       var undefLength = sqlength == 4294967295, elements = [], read = 0;
       while (true) {
-        var tag = Tag.readTag(stream), length2 = null;
+        var tag = Tag.readTag(stream), length = null;
         read += 4;
         if (tag.is(4294893789)) {
           stream.readUint32();
@@ -60892,9 +65394,9 @@ var SequenceOfItems = class extends ValueRepresentation {
         } else if (!undefLength && read == sqlength) {
           break;
         } else if (tag.is(4294893568)) {
-          length2 = stream.readUint32();
+          length = stream.readUint32();
           read += 4;
-          var itemStream = null, toRead = 0, undef = length2 == 4294967295;
+          var itemStream = null, toRead = 0, undef = length == 4294967295;
           if (undef) {
             var stack = 0;
             while (1) {
@@ -60930,7 +65432,7 @@ var SequenceOfItems = class extends ValueRepresentation {
               }
             }
           } else {
-            toRead = length2;
+            toRead = length;
           }
           if (toRead) {
             stream.increment(undef ? -toRead - 8 : 0);
@@ -60993,8 +65495,8 @@ var ShortText = class extends EncodedStringRepresentation {
     this.maxCharLength = 1024;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return rtrim(stream.readEncodedString(length2));
+  readBytes(stream, length) {
+    return rtrim(stream.readEncodedString(length));
   }
 };
 var TimeValue = class extends AsciiStringRepresentation {
@@ -61003,8 +65505,8 @@ var TimeValue = class extends AsciiStringRepresentation {
     this.maxLength = 14;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return rtrim(stream.readAsciiString(length2));
+  readBytes(stream, length) {
+    return rtrim(stream.readAsciiString(length));
   }
 };
 var UnlimitedCharacters = class extends EncodedStringRepresentation {
@@ -61014,8 +65516,8 @@ var UnlimitedCharacters = class extends EncodedStringRepresentation {
     this.multi = true;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return rtrim(stream.readEncodedString(length2));
+  readBytes(stream, length) {
+    return rtrim(stream.readEncodedString(length));
   }
 };
 var UnlimitedText = class extends EncodedStringRepresentation {
@@ -61024,8 +65526,8 @@ var UnlimitedText = class extends EncodedStringRepresentation {
     this.maxLength = null;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return rtrim(stream.readEncodedString(length2));
+  readBytes(stream, length) {
+    return rtrim(stream.readEncodedString(length));
   }
 };
 var UnsignedShort = class extends ValueRepresentation {
@@ -61064,8 +65566,8 @@ var UniqueIdentifier = class extends AsciiStringRepresentation {
     this.maxLength = 64;
     this.padByte = PADDING_NULL;
   }
-  readBytes(stream, length2) {
-    const result = this.readPaddedAsciiString(stream, length2);
+  readBytes(stream, length) {
+    const result = this.readPaddedAsciiString(stream, length);
     const BACKSLASH = String.fromCharCode(VM_DELIMITER);
     const uidRegExp = /[^0-9.]/g;
     if (result.indexOf(BACKSLASH) === -1) {
@@ -61081,8 +65583,8 @@ var UniversalResource = class extends AsciiStringRepresentation {
     this.maxLength = null;
     this.padByte = PADDING_SPACE;
   }
-  readBytes(stream, length2) {
-    return stream.readAsciiString(length2);
+  readBytes(stream, length) {
+    return stream.readAsciiString(length);
   }
 };
 var UnknownValue = class extends BinaryRepresentation {
@@ -61103,18 +65605,18 @@ var ParsedUnknownValue = class extends BinaryRepresentation {
     this._allowMultiple = false;
     this._isExplicit = true;
   }
-  read(stream, length2, syntax) {
-    const arrayBuffer = this.readBytes(stream, length2, syntax)[0];
+  read(stream, length, syntax) {
+    const arrayBuffer = this.readBytes(stream, length, syntax)[0];
     const streamFromBuffer = new ReadBufferStream(arrayBuffer, true);
     const vr = ValueRepresentation.createByTypeString(this.type);
     var values = [];
-    if (vr.isBinary() && length2 > vr.maxLength && !vr.noMultiple) {
-      var times = length2 / vr.maxLength, i = 0;
+    if (vr.isBinary() && length > vr.maxLength && !vr.noMultiple) {
+      var times = length / vr.maxLength, i = 0;
       while (i++ < times) {
         values.push(vr.read(streamFromBuffer, vr.maxLength, syntax));
       }
     } else {
-      var val = vr.read(streamFromBuffer, length2, syntax);
+      var val = vr.read(streamFromBuffer, length, syntax);
       if (!vr.isBinary() && singleVRs.indexOf(vr.type) == -1) {
         values = val;
         if (typeof val === "string") {
@@ -61271,12 +65773,12 @@ var Tag2 = class {
     const element = this.element();
     return group % 2 === 1 && element < 256 && element > 0;
   }
-  static fromString(str2) {
-    var group = parseInt(str2.substring(0, 4), 16), element = parseInt(str2.substring(4), 16);
+  static fromString(str) {
+    var group = parseInt(str.substring(0, 4), 16), element = parseInt(str.substring(4), 16);
     return Tag2.fromNumbers(group, element);
   }
-  static fromPString(str2) {
-    var group = parseInt(str2.substring(1, 5), 16), element = parseInt(str2.substring(6, 10), 16);
+  static fromPString(str) {
+    var group = parseInt(str.substring(1, 5), 16), element = parseInt(str.substring(6, 10), 16);
     return Tag2.fromNumbers(group, element);
   }
   static fromNumbers(group, element) {
@@ -61523,14 +66025,14 @@ var DicomMessage4 = class {
         return {tag, vr: 0, values: 0};
       }
     }
-    var length2 = null, vr = null, vrType;
+    var length = null, vr = null, vrType;
     if (implicit) {
-      length2 = stream.readUint32();
+      length = stream.readUint32();
       var elementData = DicomMessage4.lookupTag(tag);
       if (elementData) {
         vrType = elementData.vr;
       } else {
-        if (length2 == 4294967295) {
+        if (length == 4294967295) {
           vrType = "SQ";
         } else if (tag.isPixelDataTag()) {
           vrType = "OW";
@@ -61553,19 +66055,19 @@ var DicomMessage4 = class {
       }
       if (vr.isExplicit()) {
         stream.increment(2);
-        length2 = stream.readUint32();
+        length = stream.readUint32();
       } else {
-        length2 = stream.readUint16();
+        length = stream.readUint16();
       }
     }
     var values = [];
-    if (vr.isBinary() && length2 > vr.maxLength && !vr.noMultiple) {
-      var times = length2 / vr.maxLength, i = 0;
+    if (vr.isBinary() && length > vr.maxLength && !vr.noMultiple) {
+      var times = length / vr.maxLength, i = 0;
       while (i++ < times) {
         values.push(vr.read(stream, vr.maxLength, syntax));
       }
     } else {
-      var val = vr.read(stream, length2, syntax);
+      var val = vr.read(stream, length, syntax);
       if (!vr.isBinary() && singleVRs2.indexOf(vr.type) == -1) {
         values = val;
         if (typeof val === "string") {
@@ -62090,8 +66592,8 @@ var ImageNormalizer = class extends Normalizer {
     this.datasets.forEach(function(dataset) {
       let position = dataset.ImagePositionPatient.slice();
       let positionVector = ImageNormalizer.vec3Subtract(position, referencePosition);
-      let distance2 = ImageNormalizer.vec3Dot(positionVector, scanAxis);
-      distanceDatasetPairs.push([distance2, dataset]);
+      let distance = ImageNormalizer.vec3Dot(positionVector, scanAxis);
+      distanceDatasetPairs.push([distance, dataset]);
     });
     distanceDatasetPairs.sort(function(a, b) {
       return b[0] - a[0];
@@ -63153,7 +67655,7 @@ var Length = class extends TID300Measurement_default {
       point1,
       point2,
       unit = "mm",
-      distance: distance2,
+      distance,
       ReferencedSOPSequence
     } = this.props;
     return this.getMeasurement([
@@ -63167,7 +67669,7 @@ var Length = class extends TID300Measurement_default {
         },
         MeasuredValueSequence: {
           MeasurementUnitsCodeSequence: unit2CodingValue_default(unit),
-          NumericValue: distance2
+          NumericValue: distance
         },
         ContentSequence: {
           RelationshipType: "INFERRED FROM",
@@ -63224,12 +67726,12 @@ var Length2 = class {
     const {handles, finding, findingSites} = tool;
     const point1 = handles.start;
     const point2 = handles.end;
-    const distance2 = tool.length;
+    const distance = tool.length;
     const trackingIdentifierTextValue7 = "cornerstoneTools@^4.0.0:Length";
     return {
       point1,
       point2,
-      distance: distance2,
+      distance,
       trackingIdentifierTextValue: trackingIdentifierTextValue7,
       finding,
       findingSites: findingSites || []
@@ -64309,8 +68811,8 @@ function unpackPixelData(multiframe) {
     return BitArray.unpack(multiframe.PixelData);
   }
   const pixelData = new Uint8Array(multiframe.PixelData);
-  const max2 = multiframe.MaximumFractionalValue;
-  const onlyMaxAndZero = pixelData.find((element) => element !== 0 && element !== max2) === void 0;
+  const max = multiframe.MaximumFractionalValue;
+  const onlyMaxAndZero = pixelData.find((element) => element !== 0 && element !== max) === void 0;
   if (!onlyMaxAndZero) {
     log_default.warn("This is a fractional segmentation, which is not currently supported.");
     return;
@@ -64420,404 +68922,6 @@ function getSegmentMetadata(multiframe) {
 
 // src/adapters/Cornerstone/Segmentation_4X.js
 var import_ndarray4 = __toModule(require_ndarray());
-
-// node_modules/gl-matrix/esm/common.js
-var EPSILON = 1e-6;
-var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
-var RANDOM = Math.random;
-var degree = Math.PI / 180;
-if (!Math.hypot)
-  Math.hypot = function() {
-    var y = 0, i = arguments.length;
-    while (i--) {
-      y += arguments[i] * arguments[i];
-    }
-    return Math.sqrt(y);
-  };
-
-// node_modules/gl-matrix/esm/vec3.js
-var vec3_exports = {};
-__export(vec3_exports, {
-  add: () => add,
-  angle: () => angle,
-  bezier: () => bezier,
-  ceil: () => ceil,
-  clone: () => clone,
-  copy: () => copy,
-  create: () => create,
-  cross: () => cross,
-  dist: () => dist,
-  distance: () => distance,
-  div: () => div,
-  divide: () => divide,
-  dot: () => dot,
-  equals: () => equals,
-  exactEquals: () => exactEquals,
-  floor: () => floor,
-  forEach: () => forEach,
-  fromValues: () => fromValues,
-  hermite: () => hermite,
-  inverse: () => inverse,
-  len: () => len,
-  length: () => length,
-  lerp: () => lerp,
-  max: () => max,
-  min: () => min,
-  mul: () => mul,
-  multiply: () => multiply,
-  negate: () => negate,
-  normalize: () => normalize,
-  random: () => random,
-  rotateX: () => rotateX,
-  rotateY: () => rotateY,
-  rotateZ: () => rotateZ,
-  round: () => round,
-  scale: () => scale,
-  scaleAndAdd: () => scaleAndAdd,
-  set: () => set,
-  sqrDist: () => sqrDist,
-  sqrLen: () => sqrLen,
-  squaredDistance: () => squaredDistance,
-  squaredLength: () => squaredLength,
-  str: () => str,
-  sub: () => sub,
-  subtract: () => subtract,
-  transformMat3: () => transformMat3,
-  transformMat4: () => transformMat4,
-  transformQuat: () => transformQuat,
-  zero: () => zero2
-});
-function create() {
-  var out = new ARRAY_TYPE(3);
-  if (ARRAY_TYPE != Float32Array) {
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-  }
-  return out;
-}
-function clone(a) {
-  var out = new ARRAY_TYPE(3);
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  return out;
-}
-function length(a) {
-  var x = a[0];
-  var y = a[1];
-  var z = a[2];
-  return Math.hypot(x, y, z);
-}
-function fromValues(x, y, z) {
-  var out = new ARRAY_TYPE(3);
-  out[0] = x;
-  out[1] = y;
-  out[2] = z;
-  return out;
-}
-function copy(out, a) {
-  out[0] = a[0];
-  out[1] = a[1];
-  out[2] = a[2];
-  return out;
-}
-function set(out, x, y, z) {
-  out[0] = x;
-  out[1] = y;
-  out[2] = z;
-  return out;
-}
-function add(out, a, b) {
-  out[0] = a[0] + b[0];
-  out[1] = a[1] + b[1];
-  out[2] = a[2] + b[2];
-  return out;
-}
-function subtract(out, a, b) {
-  out[0] = a[0] - b[0];
-  out[1] = a[1] - b[1];
-  out[2] = a[2] - b[2];
-  return out;
-}
-function multiply(out, a, b) {
-  out[0] = a[0] * b[0];
-  out[1] = a[1] * b[1];
-  out[2] = a[2] * b[2];
-  return out;
-}
-function divide(out, a, b) {
-  out[0] = a[0] / b[0];
-  out[1] = a[1] / b[1];
-  out[2] = a[2] / b[2];
-  return out;
-}
-function ceil(out, a) {
-  out[0] = Math.ceil(a[0]);
-  out[1] = Math.ceil(a[1]);
-  out[2] = Math.ceil(a[2]);
-  return out;
-}
-function floor(out, a) {
-  out[0] = Math.floor(a[0]);
-  out[1] = Math.floor(a[1]);
-  out[2] = Math.floor(a[2]);
-  return out;
-}
-function min(out, a, b) {
-  out[0] = Math.min(a[0], b[0]);
-  out[1] = Math.min(a[1], b[1]);
-  out[2] = Math.min(a[2], b[2]);
-  return out;
-}
-function max(out, a, b) {
-  out[0] = Math.max(a[0], b[0]);
-  out[1] = Math.max(a[1], b[1]);
-  out[2] = Math.max(a[2], b[2]);
-  return out;
-}
-function round(out, a) {
-  out[0] = Math.round(a[0]);
-  out[1] = Math.round(a[1]);
-  out[2] = Math.round(a[2]);
-  return out;
-}
-function scale(out, a, b) {
-  out[0] = a[0] * b;
-  out[1] = a[1] * b;
-  out[2] = a[2] * b;
-  return out;
-}
-function scaleAndAdd(out, a, b, scale2) {
-  out[0] = a[0] + b[0] * scale2;
-  out[1] = a[1] + b[1] * scale2;
-  out[2] = a[2] + b[2] * scale2;
-  return out;
-}
-function distance(a, b) {
-  var x = b[0] - a[0];
-  var y = b[1] - a[1];
-  var z = b[2] - a[2];
-  return Math.hypot(x, y, z);
-}
-function squaredDistance(a, b) {
-  var x = b[0] - a[0];
-  var y = b[1] - a[1];
-  var z = b[2] - a[2];
-  return x * x + y * y + z * z;
-}
-function squaredLength(a) {
-  var x = a[0];
-  var y = a[1];
-  var z = a[2];
-  return x * x + y * y + z * z;
-}
-function negate(out, a) {
-  out[0] = -a[0];
-  out[1] = -a[1];
-  out[2] = -a[2];
-  return out;
-}
-function inverse(out, a) {
-  out[0] = 1 / a[0];
-  out[1] = 1 / a[1];
-  out[2] = 1 / a[2];
-  return out;
-}
-function normalize(out, a) {
-  var x = a[0];
-  var y = a[1];
-  var z = a[2];
-  var len2 = x * x + y * y + z * z;
-  if (len2 > 0) {
-    len2 = 1 / Math.sqrt(len2);
-  }
-  out[0] = a[0] * len2;
-  out[1] = a[1] * len2;
-  out[2] = a[2] * len2;
-  return out;
-}
-function dot(a, b) {
-  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-}
-function cross(out, a, b) {
-  var ax = a[0], ay = a[1], az = a[2];
-  var bx = b[0], by = b[1], bz = b[2];
-  out[0] = ay * bz - az * by;
-  out[1] = az * bx - ax * bz;
-  out[2] = ax * by - ay * bx;
-  return out;
-}
-function lerp(out, a, b, t) {
-  var ax = a[0];
-  var ay = a[1];
-  var az = a[2];
-  out[0] = ax + t * (b[0] - ax);
-  out[1] = ay + t * (b[1] - ay);
-  out[2] = az + t * (b[2] - az);
-  return out;
-}
-function hermite(out, a, b, c, d, t) {
-  var factorTimes2 = t * t;
-  var factor1 = factorTimes2 * (2 * t - 3) + 1;
-  var factor2 = factorTimes2 * (t - 2) + t;
-  var factor3 = factorTimes2 * (t - 1);
-  var factor4 = factorTimes2 * (3 - 2 * t);
-  out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
-  out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
-  out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
-  return out;
-}
-function bezier(out, a, b, c, d, t) {
-  var inverseFactor = 1 - t;
-  var inverseFactorTimesTwo = inverseFactor * inverseFactor;
-  var factorTimes2 = t * t;
-  var factor1 = inverseFactorTimesTwo * inverseFactor;
-  var factor2 = 3 * t * inverseFactorTimesTwo;
-  var factor3 = 3 * factorTimes2 * inverseFactor;
-  var factor4 = factorTimes2 * t;
-  out[0] = a[0] * factor1 + b[0] * factor2 + c[0] * factor3 + d[0] * factor4;
-  out[1] = a[1] * factor1 + b[1] * factor2 + c[1] * factor3 + d[1] * factor4;
-  out[2] = a[2] * factor1 + b[2] * factor2 + c[2] * factor3 + d[2] * factor4;
-  return out;
-}
-function random(out, scale2) {
-  scale2 = scale2 || 1;
-  var r = RANDOM() * 2 * Math.PI;
-  var z = RANDOM() * 2 - 1;
-  var zScale = Math.sqrt(1 - z * z) * scale2;
-  out[0] = Math.cos(r) * zScale;
-  out[1] = Math.sin(r) * zScale;
-  out[2] = z * scale2;
-  return out;
-}
-function transformMat4(out, a, m) {
-  var x = a[0], y = a[1], z = a[2];
-  var w = m[3] * x + m[7] * y + m[11] * z + m[15];
-  w = w || 1;
-  out[0] = (m[0] * x + m[4] * y + m[8] * z + m[12]) / w;
-  out[1] = (m[1] * x + m[5] * y + m[9] * z + m[13]) / w;
-  out[2] = (m[2] * x + m[6] * y + m[10] * z + m[14]) / w;
-  return out;
-}
-function transformMat3(out, a, m) {
-  var x = a[0], y = a[1], z = a[2];
-  out[0] = x * m[0] + y * m[3] + z * m[6];
-  out[1] = x * m[1] + y * m[4] + z * m[7];
-  out[2] = x * m[2] + y * m[5] + z * m[8];
-  return out;
-}
-function transformQuat(out, a, q) {
-  var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
-  var x = a[0], y = a[1], z = a[2];
-  var uvx = qy * z - qz * y, uvy = qz * x - qx * z, uvz = qx * y - qy * x;
-  var uuvx = qy * uvz - qz * uvy, uuvy = qz * uvx - qx * uvz, uuvz = qx * uvy - qy * uvx;
-  var w2 = qw * 2;
-  uvx *= w2;
-  uvy *= w2;
-  uvz *= w2;
-  uuvx *= 2;
-  uuvy *= 2;
-  uuvz *= 2;
-  out[0] = x + uvx + uuvx;
-  out[1] = y + uvy + uuvy;
-  out[2] = z + uvz + uuvz;
-  return out;
-}
-function rotateX(out, a, b, rad) {
-  var p = [], r = [];
-  p[0] = a[0] - b[0];
-  p[1] = a[1] - b[1];
-  p[2] = a[2] - b[2];
-  r[0] = p[0];
-  r[1] = p[1] * Math.cos(rad) - p[2] * Math.sin(rad);
-  r[2] = p[1] * Math.sin(rad) + p[2] * Math.cos(rad);
-  out[0] = r[0] + b[0];
-  out[1] = r[1] + b[1];
-  out[2] = r[2] + b[2];
-  return out;
-}
-function rotateY(out, a, b, rad) {
-  var p = [], r = [];
-  p[0] = a[0] - b[0];
-  p[1] = a[1] - b[1];
-  p[2] = a[2] - b[2];
-  r[0] = p[2] * Math.sin(rad) + p[0] * Math.cos(rad);
-  r[1] = p[1];
-  r[2] = p[2] * Math.cos(rad) - p[0] * Math.sin(rad);
-  out[0] = r[0] + b[0];
-  out[1] = r[1] + b[1];
-  out[2] = r[2] + b[2];
-  return out;
-}
-function rotateZ(out, a, b, rad) {
-  var p = [], r = [];
-  p[0] = a[0] - b[0];
-  p[1] = a[1] - b[1];
-  p[2] = a[2] - b[2];
-  r[0] = p[0] * Math.cos(rad) - p[1] * Math.sin(rad);
-  r[1] = p[0] * Math.sin(rad) + p[1] * Math.cos(rad);
-  r[2] = p[2];
-  out[0] = r[0] + b[0];
-  out[1] = r[1] + b[1];
-  out[2] = r[2] + b[2];
-  return out;
-}
-function angle(a, b) {
-  var ax = a[0], ay = a[1], az = a[2], bx = b[0], by = b[1], bz = b[2], mag1 = Math.sqrt(ax * ax + ay * ay + az * az), mag2 = Math.sqrt(bx * bx + by * by + bz * bz), mag = mag1 * mag2, cosine = mag && dot(a, b) / mag;
-  return Math.acos(Math.min(Math.max(cosine, -1), 1));
-}
-function zero2(out) {
-  out[0] = 0;
-  out[1] = 0;
-  out[2] = 0;
-  return out;
-}
-function str(a) {
-  return "vec3(" + a[0] + ", " + a[1] + ", " + a[2] + ")";
-}
-function exactEquals(a, b) {
-  return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
-}
-function equals(a, b) {
-  var a0 = a[0], a1 = a[1], a2 = a[2];
-  var b0 = b[0], b1 = b[1], b2 = b[2];
-  return Math.abs(a0 - b0) <= EPSILON * Math.max(1, Math.abs(a0), Math.abs(b0)) && Math.abs(a1 - b1) <= EPSILON * Math.max(1, Math.abs(a1), Math.abs(b1)) && Math.abs(a2 - b2) <= EPSILON * Math.max(1, Math.abs(a2), Math.abs(b2));
-}
-var sub = subtract;
-var mul = multiply;
-var div = divide;
-var dist = distance;
-var sqrDist = squaredDistance;
-var len = length;
-var sqrLen = squaredLength;
-var forEach = function() {
-  var vec = create();
-  return function(a, stride, offset, count, fn, arg) {
-    var i, l;
-    if (!stride) {
-      stride = 3;
-    }
-    if (!offset) {
-      offset = 0;
-    }
-    if (count) {
-      l = Math.min(count * stride + offset, a.length);
-    } else {
-      l = a.length;
-    }
-    for (i = offset; i < l; i += stride) {
-      vec[0] = a[i];
-      vec[1] = a[i + 1];
-      vec[2] = a[i + 2];
-      fn(vec, vec, arg);
-      a[i] = vec[0];
-      a[i + 1] = vec[1];
-      a[i + 2] = vec[2];
-    }
-    return a;
-  };
-}();
 
 // src/utilities/compression/rleSingleSamplePerPixel.js
 var rleSingleSamplePerPixel_exports = {};
@@ -65264,7 +69368,7 @@ function checkSEGsOverlapping(pixelData, multiframe, imageIds, validOrientations
         continue;
       }
       const data2 = alignedPixelDataI.data;
-      for (let j = 0, len2 = data2.length; j < len2; ++j) {
+      for (let j = 0, len = data2.length; j < len; ++j) {
         if (data2[j] !== 0) {
           temp2DArray[j]++;
           if (temp2DArray[j] > 1) {
@@ -65327,7 +69431,7 @@ function insertOverlappingPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray,
       const labelmap2DView = new Uint16Array(tempBuffer, byteOffset, sliceLength);
       const data2 = alignedPixelDataI.data;
       let segmentOnFrame = false;
-      for (let j = 0, len2 = alignedPixelDataI.data.length; j < len2; ++j) {
+      for (let j = 0, len = alignedPixelDataI.data.length; j < len; ++j) {
         if (data2[j]) {
           if (labelmap2DView[j] !== 0) {
             m++;
@@ -65409,9 +69513,9 @@ function insertPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray, labelmapBu
     const byteOffset = sliceLength * 2 * imageIdIndex;
     const labelmap2DView = new Uint16Array(labelmapBufferArray[0], byteOffset, sliceLength);
     const data2 = alignedPixelDataI.data;
-    for (let j = 0, len2 = alignedPixelDataI.data.length; j < len2; ++j) {
+    for (let j = 0, len = alignedPixelDataI.data.length; j < len; ++j) {
       if (data2[j]) {
-        for (let x = j; x < len2; ++x) {
+        for (let x = j; x < len; ++x) {
           if (data2[x]) {
             labelmap2DView[x] = segmentIndex;
           }
@@ -65459,8 +69563,8 @@ function unpackPixelData2(multiframe) {
     return BitArray.unpack(data2);
   }
   const pixelData = new Uint8Array(data2);
-  const max2 = multiframe.MaximumFractionalValue;
-  const onlyMaxAndZero = pixelData.find((element) => element !== 0 && element !== max2) === void 0;
+  const max = multiframe.MaximumFractionalValue;
+  const onlyMaxAndZero = pixelData.find((element) => element !== 0 && element !== max) === void 0;
   if (!onlyMaxAndZero) {
     return;
   }
@@ -66158,11 +70262,11 @@ var Length3 = class {
     const end = worldToImageCoords(referencedImageId, handles.points[1]);
     const point1 = {x: start[0], y: start[1]};
     const point2 = {x: end[0], y: end[1]};
-    const {length: distance2} = cachedStats[`imageId:${referencedImageId}`] || {};
+    const {length: distance} = cachedStats[`imageId:${referencedImageId}`] || {};
     return {
       point1,
       point2,
-      distance: distance2,
+      distance,
       trackingIdentifierTextValue,
       finding,
       findingSites: findingSites || []
@@ -66243,7 +70347,7 @@ var Bidirectional3 = class {
     if (!referencedImageId) {
       throw new Error("Bidirectional.getTID300RepresentationArguments: referencedImageId is not defined");
     }
-    const {length: length2, width} = cachedStats[`imageId:${referencedImageId}`] || {};
+    const {length, width} = cachedStats[`imageId:${referencedImageId}`] || {};
     const {points} = handles;
     let firstPointPairs = [points[0], points[1]];
     let secondPointPairs = [points[2], points[3]];
@@ -66283,7 +70387,7 @@ var Bidirectional3 = class {
           y: shortAxisEndImage[1]
         }
       },
-      longAxisLength: length2,
+      longAxisLength: length,
       shortAxisLength: width,
       trackingIdentifierTextValue: trackingIdentifierTextValue2,
       finding,
@@ -66308,8 +70412,9 @@ MeasurementReport_default2.registerTool(Bidirectional3);
 var Bidirectional_default3 = Bidirectional3;
 
 // src/adapters/Cornerstone3D/EllipticalROI.js
+var import_gl_matrix = __toModule(require_cjs());
 var ELLIPTICALROI2 = "EllipticalROI";
-var EPSILON2 = 1e-4;
+var EPSILON = 1e-4;
 var trackingIdentifierTextValue3 = `${cornerstone3DTag_default}:${ELLIPTICALROI2}`;
 var EllipticalROI = class {
   constructor() {
@@ -66326,35 +70431,35 @@ var EllipticalROI = class {
       ]);
       pointsWorld.push(worldPos);
     }
-    const majorAxisStart = vec3_exports.fromValues(...pointsWorld[0]);
-    const majorAxisEnd = vec3_exports.fromValues(...pointsWorld[1]);
-    const minorAxisStart = vec3_exports.fromValues(...pointsWorld[2]);
-    const minorAxisEnd = vec3_exports.fromValues(...pointsWorld[3]);
-    const majorAxisVec = vec3_exports.create();
-    vec3_exports.sub(majorAxisVec, majorAxisEnd, majorAxisStart);
-    vec3_exports.normalize(majorAxisVec, majorAxisVec);
-    const minorAxisVec = vec3_exports.create();
-    vec3_exports.sub(minorAxisVec, minorAxisEnd, minorAxisStart);
-    vec3_exports.normalize(minorAxisVec, minorAxisVec);
+    const majorAxisStart = import_gl_matrix.vec3.fromValues(...pointsWorld[0]);
+    const majorAxisEnd = import_gl_matrix.vec3.fromValues(...pointsWorld[1]);
+    const minorAxisStart = import_gl_matrix.vec3.fromValues(...pointsWorld[2]);
+    const minorAxisEnd = import_gl_matrix.vec3.fromValues(...pointsWorld[3]);
+    const majorAxisVec = import_gl_matrix.vec3.create();
+    import_gl_matrix.vec3.sub(majorAxisVec, majorAxisEnd, majorAxisStart);
+    import_gl_matrix.vec3.normalize(majorAxisVec, majorAxisVec);
+    const minorAxisVec = import_gl_matrix.vec3.create();
+    import_gl_matrix.vec3.sub(minorAxisVec, minorAxisEnd, minorAxisStart);
+    import_gl_matrix.vec3.normalize(minorAxisVec, minorAxisVec);
     const imagePlaneModule = metadata.get("imagePlaneModule", referencedImageId);
     if (!imagePlaneModule) {
       throw new Error("imageId does not have imagePlaneModule metadata");
     }
     const {columnCosines} = imagePlaneModule;
-    const columnCosinesVec = vec3_exports.fromValues(...columnCosines);
-    const projectedMajorAxisOnColVec = vec3_exports.dot(columnCosinesVec, majorAxisVec);
-    const projectedMinorAxisOnColVec = vec3_exports.dot(columnCosinesVec, minorAxisVec);
+    const columnCosinesVec = import_gl_matrix.vec3.fromValues(...columnCosines);
+    const projectedMajorAxisOnColVec = import_gl_matrix.vec3.dot(columnCosinesVec, majorAxisVec);
+    const projectedMinorAxisOnColVec = import_gl_matrix.vec3.dot(columnCosinesVec, minorAxisVec);
     const absoluteOfMajorDotProduct = Math.abs(projectedMajorAxisOnColVec);
     const absoluteOfMinorDotProduct = Math.abs(projectedMinorAxisOnColVec);
     let ellipsePoints = [];
-    if (Math.abs(absoluteOfMajorDotProduct - 1) < EPSILON2) {
+    if (Math.abs(absoluteOfMajorDotProduct - 1) < EPSILON) {
       ellipsePoints = [
         pointsWorld[0],
         pointsWorld[1],
         pointsWorld[2],
         pointsWorld[3]
       ];
-    } else if (Math.abs(absoluteOfMinorDotProduct - 1) < EPSILON2) {
+    } else if (Math.abs(absoluteOfMinorDotProduct - 1) < EPSILON) {
       ellipsePoints = [
         pointsWorld[2],
         pointsWorld[3],
@@ -66607,6 +70712,7 @@ MeasurementReport_default2.registerTool(Probe);
 var Probe_default = Probe;
 
 // src/adapters/Cornerstone3D/PlanarFreehandROI.js
+var import_gl_matrix2 = __toModule(require_cjs());
 var PLANARFREEHANDROI = "PlanarFreehandROI";
 var trackingIdentifierTextValue6 = `${cornerstone3DTag_default}:${PLANARFREEHANDROI}`;
 var closedContourThreshold = 1e-5;
@@ -66625,7 +70731,7 @@ var PlanarFreehandROI = class {
       ]);
       worldCoords.push(point);
     }
-    const distanceBetweenFirstAndLastPoint = vec3_exports.distance(worldCoords[worldCoords.length - 1], worldCoords[0]);
+    const distanceBetweenFirstAndLastPoint = import_gl_matrix2.vec3.distance(worldCoords[worldCoords.length - 1], worldCoords[0]);
     let isOpenContour = true;
     if (distanceBetweenFirstAndLastPoint < closedContourThreshold) {
       worldCoords.pop();
@@ -66710,7 +70816,7 @@ function dicomlab2RGBA(cielab) {
   rgba.push(255);
   return rgba;
 }
-function cross2(x, y, out) {
+function cross(x, y, out) {
   const Zx = x[1] * y[2] - x[2] * y[1];
   const Zy = x[2] * y[0] - x[0] * y[2];
   const Zz = x[0] * y[1] - x[1] * y[0];
@@ -66735,7 +70841,7 @@ function norm(x, n = 3) {
     }
   }
 }
-function normalize2(x) {
+function normalize(x) {
   const den = norm(x);
   if (den !== 0) {
     x[0] /= den;
@@ -66744,7 +70850,7 @@ function normalize2(x) {
   }
   return den;
 }
-function subtract2(a, b, out) {
+function subtract(a, b, out) {
   out[0] = a[0] - b[0];
   out[1] = a[1] - b[1];
   out[2] = a[2] - b[2];
@@ -66772,10 +70878,10 @@ function geometryFromFunctionalGroups(dataset, PerFrameFunctionalGroups) {
   const columnStepToPatient = orientation.slice(0, 3);
   const rowStepToPatient = orientation.slice(3, 6);
   geometry.planeNormal = [];
-  cross2(columnStepToPatient, rowStepToPatient, geometry.planeNormal);
+  cross(columnStepToPatient, rowStepToPatient, geometry.planeNormal);
   geometry.sliceStep = [];
-  subtract2(lastPosition, firstPosition, geometry.sliceStep);
-  normalize2(geometry.sliceStep);
+  subtract(lastPosition, firstPosition, geometry.sliceStep);
+  normalize(geometry.sliceStep);
   geometry.direction = columnStepToPatient.concat(rowStepToPatient).concat(geometry.sliceStep);
   return geometry;
 }
@@ -67199,7 +71305,7 @@ var Calibration = class extends TID300Measurement_default {
       point1,
       point2,
       unit = "mm",
-      distance: distance2,
+      distance,
       ReferencedSOPSequence
     } = this.props;
     return this.getMeasurement([
@@ -67213,7 +71319,7 @@ var Calibration = class extends TID300Measurement_default {
         },
         MeasuredValueSequence: {
           MeasurementUnitsCodeSequence: unit2CodingValue_default(unit),
-          NumericValue: distance2
+          NumericValue: distance
         },
         ContentSequence: {
           RelationshipType: "INFERRED FROM",
@@ -67252,16 +71358,16 @@ var TID300_default = TID300;
 function uint8ArrayToString(arr, offset, limit) {
   offset = offset || 0;
   limit = limit || arr.length - offset;
-  let str2 = "";
+  let str = "";
   for (let i = offset; i < offset + limit; i++) {
-    str2 += String.fromCharCode(arr[i]);
+    str += String.fromCharCode(arr[i]);
   }
-  return str2;
+  return str;
 }
-function stringToUint8Array(str2) {
-  const arr = new Uint8Array(str2.length);
-  for (let i = 0, j = str2.length; i < j; i++) {
-    arr[i] = str2.charCodeAt(i);
+function stringToUint8Array(str) {
+  const arr = new Uint8Array(str.length);
+  for (let i = 0, j = str.length; i < j; i++) {
+    arr[i] = str.charCodeAt(i);
   }
   return arr;
 }
@@ -67312,14 +71418,14 @@ ${contentTypeString}\r
   const footerArray = stringToUint8Array(footer);
   const headerLength = headerArray.length;
   const footerLength = footerArray.length;
-  let length2 = 0;
+  let length = 0;
   const contentArrays = datasets.map((datasetBuffer) => {
     const contentArray = new Uint8Array(datasetBuffer);
     const contentLength = contentArray.length;
-    length2 += headerLength + contentLength + footerLength;
+    length += headerLength + contentLength + footerLength;
     return contentArray;
   });
-  const multipartArray = new Uint8Array(length2);
+  const multipartArray = new Uint8Array(length);
   multipartArray.set(headerArray, 0);
   let position = 0;
   contentArrays.forEach((contentArray) => {
@@ -67358,8 +71464,8 @@ function multipartDecode(response) {
       break;
     }
     const spacingLength = 2;
-    const length2 = boundaryIndex - offset - spacingLength;
-    const data2 = response.slice(offset, offset + length2);
+    const length = boundaryIndex - offset - spacingLength;
+    const data2 = response.slice(offset, offset + length);
     components.push(data2);
     var boundaryEnd = findToken(message2, separator, boundaryIndex + 1, maxSearchLength);
     if (boundaryEnd === -1)

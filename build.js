@@ -9,8 +9,8 @@ esbuild
         format: "esm",
         sourcemap: true,
         minify: true,
-        target: ["es6"],
-        platform: "browser",
+        target: ["node14"],
+        platform: "node",
         plugins: []
     })
     .catch(() => process.exit(1));
@@ -21,6 +21,8 @@ esbuild
         bundle: true,
         outfile: "build/dcmjs.es.js",
         format: "esm",
+        target: ["node14"],
+        platform: "node",
         sourcemap: false,
         minify: false
     })
