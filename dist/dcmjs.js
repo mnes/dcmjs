@@ -1,1189 +1,1141 @@
 var __create = Object.create;
 var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
+var __commonJS = (callback, module) => () => {
+  if (!module) {
+    module = {exports: {}};
+    callback(module.exports, module);
+  }
+  return module.exports;
 };
 var __export = (target, all) => {
   for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+    __defProp(target, name, {get: all[name], enumerable: true});
 };
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+var __exportStar = (target, module, desc) => {
+  if (module && typeof module === "object" || typeof module === "function") {
+    for (let key of __getOwnPropNames(module))
+      if (!__hasOwnProp.call(target, key) && key !== "default")
+        __defProp(target, key, {get: () => module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable});
   }
-  return to;
+  return target;
 };
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
+var __toModule = (module) => {
+  return __exportStar(__markAsModule(__defProp(module != null ? __create(__getProtoOf(module)) : {}, "default", module && module.__esModule && "default" in module ? {get: () => module.default, enumerable: true} : {value: module, enumerable: true})), module);
+};
 
 // node_modules/loglevelnext/lib/factory/MethodFactory.js
-var require_MethodFactory = __commonJS({
-  "node_modules/loglevelnext/lib/factory/MethodFactory.js"(exports, module) {
-    var noop = () => {
-    };
-    var levels = Symbol("log-levels");
-    var instance = Symbol("log-instance");
-    module.exports = class MethodFactory {
-      constructor(logger) {
-        this[instance] = logger;
-        this[levels] = {
-          TRACE: 0,
-          DEBUG: 1,
-          INFO: 2,
-          WARN: 3,
-          ERROR: 4,
-          SILENT: 5
+var require_MethodFactory = __commonJS((exports, module) => {
+  var noop = () => {
+  };
+  var levels = Symbol("log-levels");
+  var instance = Symbol("log-instance");
+  module.exports = class MethodFactory {
+    constructor(logger) {
+      this[instance] = logger;
+      this[levels] = {
+        TRACE: 0,
+        DEBUG: 1,
+        INFO: 2,
+        WARN: 3,
+        ERROR: 4,
+        SILENT: 5
+      };
+    }
+    get levels() {
+      return this[levels];
+    }
+    get logger() {
+      return this[instance];
+    }
+    set logger(logger) {
+      this[instance] = logger;
+    }
+    get methods() {
+      return Object.keys(this.levels).map((key) => key.toLowerCase()).filter((key) => key !== "silent");
+    }
+    bindMethod(obj, methodName) {
+      const method = obj[methodName];
+      if (typeof method.bind === "function") {
+        return method.bind(obj);
+      }
+      try {
+        return Function.prototype.bind.call(method, obj);
+      } catch (e) {
+        return function result() {
+          return Function.prototype.apply.apply(method, [obj, arguments]);
         };
       }
-      get levels() {
-        return this[levels];
+    }
+    distillLevel(level) {
+      let result = level;
+      if (typeof result === "string" && typeof this.levels[result.toUpperCase()] !== "undefined") {
+        result = this.levels[result.toUpperCase()];
       }
-      get logger() {
-        return this[instance];
+      if (this.levelValid(result)) {
+        return result;
       }
-      set logger(logger) {
-        this[instance] = logger;
+      return false;
+    }
+    levelValid(level) {
+      if (typeof level === "number" && level >= 0 && level <= this.levels.SILENT) {
+        return true;
       }
-      get methods() {
-        return Object.keys(this.levels).map((key) => key.toLowerCase()).filter((key) => key !== "silent");
+      return false;
+    }
+    make(methodName) {
+      if (methodName === "debug") {
+        methodName = "log";
       }
-      // eslint-disable-next-line class-methods-use-this
-      bindMethod(obj, methodName) {
-        const method = obj[methodName];
-        if (typeof method.bind === "function") {
-          return method.bind(obj);
-        }
-        try {
-          return Function.prototype.bind.call(method, obj);
-        } catch (e) {
-          return function result() {
-            return Function.prototype.apply.apply(method, [obj, arguments]);
-          };
-        }
+      if (typeof console[methodName] !== "undefined") {
+        return this.bindMethod(console, methodName);
+      } else if (typeof console.log !== "undefined") {
+        return this.bindMethod(console, "log");
       }
-      distillLevel(level) {
-        let result = level;
-        if (typeof result === "string" && typeof this.levels[result.toUpperCase()] !== "undefined") {
-          result = this.levels[result.toUpperCase()];
-        }
-        if (this.levelValid(result)) {
-          return result;
-        }
-        return false;
+      return noop;
+    }
+    replaceMethods(logLevel) {
+      const level = this.distillLevel(logLevel);
+      if (level == null) {
+        throw new Error(`loglevelnext: replaceMethods() called with invalid level: ${logLevel}`);
       }
-      levelValid(level) {
-        if (typeof level === "number" && level >= 0 && level <= this.levels.SILENT) {
-          return true;
-        }
-        return false;
+      if (!this.logger || this.logger.type !== "LogLevel") {
+        throw new TypeError("loglevelnext: Logger is undefined or invalid. Please specify a valid Logger instance.");
       }
-      /**
-       * Build the best logging method possible for this env
-       * Wherever possible we want to bind, not wrap, to preserve stack traces.
-       * Since we're targeting modern browsers, there's no need to wait for the
-       * console to become available.
-       */
-      // eslint-disable-next-line class-methods-use-this
-      make(methodName) {
-        if (methodName === "debug") {
-          methodName = "log";
-        }
-        if (typeof console[methodName] !== "undefined") {
-          return this.bindMethod(console, methodName);
-        } else if (typeof console.log !== "undefined") {
-          return this.bindMethod(console, "log");
-        }
-        return noop;
-      }
-      replaceMethods(logLevel) {
-        const level = this.distillLevel(logLevel);
-        if (level == null) {
-          throw new Error(`loglevelnext: replaceMethods() called with invalid level: ${logLevel}`);
-        }
-        if (!this.logger || this.logger.type !== "LogLevel") {
-          throw new TypeError(
-            "loglevelnext: Logger is undefined or invalid. Please specify a valid Logger instance."
-          );
-        }
-        this.methods.forEach((methodName) => {
-          const { [methodName.toUpperCase()]: methodLevel } = this.levels;
-          this.logger[methodName] = methodLevel < level ? noop : this.make(methodName);
-        });
-        this.logger.log = this.logger.debug;
-      }
-    };
-  }
+      this.methods.forEach((methodName) => {
+        const {[methodName.toUpperCase()]: methodLevel} = this.levels;
+        this.logger[methodName] = methodLevel < level ? noop : this.make(methodName);
+      });
+      this.logger.log = this.logger.debug;
+    }
+  };
 });
 
 // node_modules/loglevelnext/lib/factory/PrefixFactory.js
-var require_PrefixFactory = __commonJS({
-  "node_modules/loglevelnext/lib/factory/PrefixFactory.js"(exports, module) {
-    var MethodFactory = require_MethodFactory();
-    var defaults = {
-      level: (opts) => `[${opts.level}]`,
-      name: (opts) => opts.logger.name,
-      template: "{{time}} {{level}} ",
-      time: () => (/* @__PURE__ */ new Date()).toTimeString().split(" ")[0]
-    };
-    module.exports = class PrefixFactory extends MethodFactory {
-      constructor(logger, options) {
-        super(logger);
-        this.options = Object.assign({}, defaults, options);
-      }
-      interpolate(level) {
-        return this.options.template.replace(/{{([^{}]*)}}/g, (stache, prop) => {
-          const fn = this.options[prop];
-          if (fn) {
-            return fn({ level, logger: this.logger });
-          }
-          return stache;
-        });
-      }
-      make(methodName) {
-        const og = super.make(methodName);
-        return (...args) => {
-          const output = this.interpolate(methodName);
-          const [first] = args;
-          if (typeof first === "string") {
-            args[0] = output + first;
-          } else {
-            args.unshift(output);
-          }
-          og(...args);
-        };
-      }
-    };
-  }
+var require_PrefixFactory = __commonJS((exports, module) => {
+  var MethodFactory = require_MethodFactory();
+  var defaults = {
+    level: (opts) => `[${opts.level}]`,
+    name: (opts) => opts.logger.name,
+    template: "{{time}} {{level}} ",
+    time: () => new Date().toTimeString().split(" ")[0]
+  };
+  module.exports = class PrefixFactory extends MethodFactory {
+    constructor(logger, options) {
+      super(logger);
+      this.options = Object.assign({}, defaults, options);
+    }
+    interpolate(level) {
+      return this.options.template.replace(/{{([^{}]*)}}/g, (stache, prop) => {
+        const fn = this.options[prop];
+        if (fn) {
+          return fn({level, logger: this.logger});
+        }
+        return stache;
+      });
+    }
+    make(methodName) {
+      const og = super.make(methodName);
+      return (...args) => {
+        const output = this.interpolate(methodName);
+        const [first] = args;
+        if (typeof first === "string") {
+          args[0] = output + first;
+        } else {
+          args.unshift(output);
+        }
+        og(...args);
+      };
+    }
+  };
 });
 
 // node_modules/loglevelnext/lib/LogLevel.js
-var require_LogLevel = __commonJS({
-  "node_modules/loglevelnext/lib/LogLevel.js"(exports, module) {
-    var PrefixFactory = require_PrefixFactory();
-    var MethodFactory = require_MethodFactory();
-    var defaults = {
-      factory: null,
-      level: "warn",
-      name: +/* @__PURE__ */ new Date(),
-      prefix: null
-    };
-    module.exports = class LogLevel {
-      constructor(options) {
-        this.type = "LogLevel";
-        this.options = Object.assign({}, defaults, options);
-        this.methodFactory = options.factory;
-        if (!this.methodFactory) {
-          const factory = options.prefix ? new PrefixFactory(this, options.prefix) : new MethodFactory(this);
-          this.methodFactory = factory;
-        }
-        if (!this.methodFactory.logger) {
-          this.methodFactory.logger = this;
-        }
-        this.name = options.name || "<unknown>";
-        this.level = this.options.level;
-      }
-      get factory() {
-        return this.methodFactory;
-      }
-      set factory(factory) {
-        factory.logger = this;
+var require_LogLevel = __commonJS((exports, module) => {
+  var PrefixFactory = require_PrefixFactory();
+  var MethodFactory = require_MethodFactory();
+  var defaults = {
+    factory: null,
+    level: "warn",
+    name: +new Date(),
+    prefix: null
+  };
+  module.exports = class LogLevel {
+    constructor(options) {
+      this.type = "LogLevel";
+      this.options = Object.assign({}, defaults, options);
+      this.methodFactory = options.factory;
+      if (!this.methodFactory) {
+        const factory = options.prefix ? new PrefixFactory(this, options.prefix) : new MethodFactory(this);
         this.methodFactory = factory;
-        this.methodFactory.replaceMethods(this.level);
       }
-      disable() {
-        this.level = this.levels.SILENT;
+      if (!this.methodFactory.logger) {
+        this.methodFactory.logger = this;
       }
-      enable() {
-        this.level = this.levels.TRACE;
+      this.name = options.name || "<unknown>";
+      this.level = this.options.level;
+    }
+    get factory() {
+      return this.methodFactory;
+    }
+    set factory(factory) {
+      factory.logger = this;
+      this.methodFactory = factory;
+      this.methodFactory.replaceMethods(this.level);
+    }
+    disable() {
+      this.level = this.levels.SILENT;
+    }
+    enable() {
+      this.level = this.levels.TRACE;
+    }
+    get level() {
+      return this.currentLevel;
+    }
+    set level(logLevel) {
+      const level = this.methodFactory.distillLevel(logLevel);
+      if (level === false || level == null) {
+        throw new RangeError(`loglevelnext: setLevel() called with invalid level: ${logLevel}`);
       }
-      get level() {
-        return this.currentLevel;
+      this.currentLevel = level;
+      this.methodFactory.replaceMethods(level);
+      if (typeof console === "undefined" && level < this.levels.SILENT) {
+        console.warn("loglevelnext: console is undefined. The log will produce no output.");
       }
-      set level(logLevel) {
-        const level = this.methodFactory.distillLevel(logLevel);
-        if (level === false || level == null) {
-          throw new RangeError(`loglevelnext: setLevel() called with invalid level: ${logLevel}`);
-        }
-        this.currentLevel = level;
-        this.methodFactory.replaceMethods(level);
-        if (typeof console === "undefined" && level < this.levels.SILENT) {
-          console.warn("loglevelnext: console is undefined. The log will produce no output.");
-        }
-      }
-      get levels() {
-        return this.methodFactory.levels;
-      }
-    };
-  }
+    }
+    get levels() {
+      return this.methodFactory.levels;
+    }
+  };
 });
 
 // node_modules/loglevelnext/lib/index.js
-var require_lib = __commonJS({
-  "node_modules/loglevelnext/lib/index.js"(exports, module) {
-    var LogLevel = require_LogLevel();
-    var MethodFactory = require_MethodFactory();
-    var PrefixFactory = require_PrefixFactory();
-    var factories = Symbol("log-factories");
-    var DefaultLogger = class extends LogLevel {
-      constructor() {
-        super({ name: "default" });
-        this.cache = { default: this };
-        this[factories] = { MethodFactory, PrefixFactory };
+var require_lib = __commonJS((exports, module) => {
+  var LogLevel = require_LogLevel();
+  var MethodFactory = require_MethodFactory();
+  var PrefixFactory = require_PrefixFactory();
+  var factories = Symbol("log-factories");
+  var DefaultLogger = class extends LogLevel {
+    constructor() {
+      super({name: "default"});
+      this.cache = {default: this};
+      this[factories] = {MethodFactory, PrefixFactory};
+    }
+    get factories() {
+      return this[factories];
+    }
+    get loggers() {
+      return this.cache;
+    }
+    create(opts) {
+      let options;
+      if (typeof opts === "string") {
+        options = {name: opts};
+      } else {
+        options = Object.assign({}, opts);
       }
-      get factories() {
-        return this[factories];
+      if (!options.id) {
+        options.id = options.name;
       }
-      get loggers() {
-        return this.cache;
+      const {name, id} = options;
+      const defaults = {level: this.level};
+      if (typeof name !== "string" || !name || !name.length) {
+        throw new TypeError("You must supply a name when creating a logger.");
       }
-      create(opts) {
-        let options;
-        if (typeof opts === "string") {
-          options = { name: opts };
-        } else {
-          options = Object.assign({}, opts);
-        }
-        if (!options.id) {
-          options.id = options.name;
-        }
-        const { name, id } = options;
-        const defaults = { level: this.level };
-        if (typeof name !== "string" || !name || !name.length) {
-          throw new TypeError("You must supply a name when creating a logger.");
-        }
-        let logger = this.cache[id];
-        if (!logger) {
-          logger = new LogLevel(Object.assign({}, defaults, options));
-          this.cache[id] = logger;
-        }
-        return logger;
+      let logger = this.cache[id];
+      if (!logger) {
+        logger = new LogLevel(Object.assign({}, defaults, options));
+        this.cache[id] = logger;
       }
-    };
-    module.exports = new DefaultLogger();
-    module.exports.default = module.exports;
-  }
+      return logger;
+    }
+  };
+  module.exports = new DefaultLogger();
+  module.exports.default = module.exports;
 });
 
 // node_modules/iota-array/iota.js
-var require_iota = __commonJS({
-  "node_modules/iota-array/iota.js"(exports, module) {
-    "use strict";
-    function iota(n) {
-      var result = new Array(n);
-      for (var i = 0; i < n; ++i) {
-        result[i] = i;
-      }
-      return result;
+var require_iota = __commonJS((exports, module) => {
+  "use strict";
+  function iota(n) {
+    var result = new Array(n);
+    for (var i = 0; i < n; ++i) {
+      result[i] = i;
     }
-    module.exports = iota;
+    return result;
   }
+  module.exports = iota;
 });
 
 // node_modules/is-buffer/index.js
-var require_is_buffer = __commonJS({
-  "node_modules/is-buffer/index.js"(exports, module) {
-    module.exports = function(obj) {
-      return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer);
-    };
-    function isBuffer(obj) {
-      return !!obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj);
-    }
-    function isSlowBuffer(obj) {
-      return typeof obj.readFloatLE === "function" && typeof obj.slice === "function" && isBuffer(obj.slice(0, 0));
-    }
+var require_is_buffer = __commonJS((exports, module) => {
+  /*!
+   * Determine if an object is a Buffer
+   *
+   * @author   Feross Aboukhadijeh <https://feross.org>
+   * @license  MIT
+   */
+  module.exports = function(obj) {
+    return obj != null && (isBuffer(obj) || isSlowBuffer(obj) || !!obj._isBuffer);
+  };
+  function isBuffer(obj) {
+    return !!obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj);
+  }
+  function isSlowBuffer(obj) {
+    return typeof obj.readFloatLE === "function" && typeof obj.slice === "function" && isBuffer(obj.slice(0, 0));
   }
 });
 
 // node_modules/ndarray/ndarray.js
-var require_ndarray = __commonJS({
-  "node_modules/ndarray/ndarray.js"(exports, module) {
-    var iota = require_iota();
-    var isBuffer = require_is_buffer();
-    var hasTypedArrays = typeof Float64Array !== "undefined";
-    function compare1st(a, b) {
-      return a[0] - b[0];
-    }
-    function order() {
-      var stride = this.stride;
-      var terms = new Array(stride.length);
-      var i;
-      for (i = 0; i < terms.length; ++i) {
-        terms[i] = [Math.abs(stride[i]), i];
-      }
-      terms.sort(compare1st);
-      var result = new Array(terms.length);
-      for (i = 0; i < result.length; ++i) {
-        result[i] = terms[i][1];
-      }
-      return result;
-    }
-    function compileConstructor(dtype, dimension) {
-      var className = ["View", dimension, "d", dtype].join("");
-      if (dimension < 0) {
-        className = "View_Nil" + dtype;
-      }
-      var useGetters = dtype === "generic";
-      if (dimension === -1) {
-        var code = "function " + className + "(a){this.data=a;};var proto=" + className + ".prototype;proto.dtype='" + dtype + "';proto.index=function(){return -1};proto.size=0;proto.dimension=-1;proto.shape=proto.stride=proto.order=[];proto.lo=proto.hi=proto.transpose=proto.step=function(){return new " + className + "(this.data);};proto.get=proto.set=function(){};proto.pick=function(){return null};return function construct_" + className + "(a){return new " + className + "(a);}";
-        var procedure = new Function(code);
-        return procedure();
-      } else if (dimension === 0) {
-        var code = "function " + className + "(a,d) {this.data = a;this.offset = d};var proto=" + className + ".prototype;proto.dtype='" + dtype + "';proto.index=function(){return this.offset};proto.dimension=0;proto.size=1;proto.shape=proto.stride=proto.order=[];proto.lo=proto.hi=proto.transpose=proto.step=function " + className + "_copy() {return new " + className + "(this.data,this.offset)};proto.pick=function " + className + "_pick(){return TrivialArray(this.data);};proto.valueOf=proto.get=function " + className + "_get(){return " + (useGetters ? "this.data.get(this.offset)" : "this.data[this.offset]") + "};proto.set=function " + className + "_set(v){return " + (useGetters ? "this.data.set(this.offset,v)" : "this.data[this.offset]=v") + "};return function construct_" + className + "(a,b,c,d){return new " + className + "(a,d)}";
-        var procedure = new Function("TrivialArray", code);
-        return procedure(CACHED_CONSTRUCTORS[dtype][0]);
-      }
-      var code = ["'use strict'"];
-      var indices = iota(dimension);
-      var args = indices.map(function(i2) {
-        return "i" + i2;
-      });
-      var index_str = "this.offset+" + indices.map(function(i2) {
-        return "this.stride[" + i2 + "]*i" + i2;
-      }).join("+");
-      var shapeArg = indices.map(function(i2) {
-        return "b" + i2;
-      }).join(",");
-      var strideArg = indices.map(function(i2) {
-        return "c" + i2;
-      }).join(",");
-      code.push(
-        "function " + className + "(a," + shapeArg + "," + strideArg + ",d){this.data=a",
-        "this.shape=[" + shapeArg + "]",
-        "this.stride=[" + strideArg + "]",
-        "this.offset=d|0}",
-        "var proto=" + className + ".prototype",
-        "proto.dtype='" + dtype + "'",
-        "proto.dimension=" + dimension
-      );
-      code.push(
-        "Object.defineProperty(proto,'size',{get:function " + className + "_size(){return " + indices.map(function(i2) {
-          return "this.shape[" + i2 + "]";
-        }).join("*"),
-        "}})"
-      );
-      if (dimension === 1) {
-        code.push("proto.order=[0]");
-      } else {
-        code.push("Object.defineProperty(proto,'order',{get:");
-        if (dimension < 4) {
-          code.push("function " + className + "_order(){");
-          if (dimension === 2) {
-            code.push("return (Math.abs(this.stride[0])>Math.abs(this.stride[1]))?[1,0]:[0,1]}})");
-          } else if (dimension === 3) {
-            code.push(
-              "var s0=Math.abs(this.stride[0]),s1=Math.abs(this.stride[1]),s2=Math.abs(this.stride[2]);if(s0>s1){if(s1>s2){return [2,1,0];}else if(s0>s2){return [1,2,0];}else{return [1,0,2];}}else if(s0>s2){return [2,0,1];}else if(s2>s1){return [0,1,2];}else{return [0,2,1];}}})"
-            );
-          }
-        } else {
-          code.push("ORDER})");
-        }
-      }
-      code.push(
-        "proto.set=function " + className + "_set(" + args.join(",") + ",v){"
-      );
-      if (useGetters) {
-        code.push("return this.data.set(" + index_str + ",v)}");
-      } else {
-        code.push("return this.data[" + index_str + "]=v}");
-      }
-      code.push("proto.get=function " + className + "_get(" + args.join(",") + "){");
-      if (useGetters) {
-        code.push("return this.data.get(" + index_str + ")}");
-      } else {
-        code.push("return this.data[" + index_str + "]}");
-      }
-      code.push(
-        "proto.index=function " + className + "_index(",
-        args.join(),
-        "){return " + index_str + "}"
-      );
-      code.push("proto.hi=function " + className + "_hi(" + args.join(",") + "){return new " + className + "(this.data," + indices.map(function(i2) {
-        return ["(typeof i", i2, "!=='number'||i", i2, "<0)?this.shape[", i2, "]:i", i2, "|0"].join("");
-      }).join(",") + "," + indices.map(function(i2) {
-        return "this.stride[" + i2 + "]";
-      }).join(",") + ",this.offset)}");
-      var a_vars = indices.map(function(i2) {
-        return "a" + i2 + "=this.shape[" + i2 + "]";
-      });
-      var c_vars = indices.map(function(i2) {
-        return "c" + i2 + "=this.stride[" + i2 + "]";
-      });
-      code.push("proto.lo=function " + className + "_lo(" + args.join(",") + "){var b=this.offset,d=0," + a_vars.join(",") + "," + c_vars.join(","));
-      for (var i = 0; i < dimension; ++i) {
-        code.push(
-          "if(typeof i" + i + "==='number'&&i" + i + ">=0){d=i" + i + "|0;b+=c" + i + "*d;a" + i + "-=d}"
-        );
-      }
-      code.push("return new " + className + "(this.data," + indices.map(function(i2) {
-        return "a" + i2;
-      }).join(",") + "," + indices.map(function(i2) {
-        return "c" + i2;
-      }).join(",") + ",b)}");
-      code.push("proto.step=function " + className + "_step(" + args.join(",") + "){var " + indices.map(function(i2) {
-        return "a" + i2 + "=this.shape[" + i2 + "]";
-      }).join(",") + "," + indices.map(function(i2) {
-        return "b" + i2 + "=this.stride[" + i2 + "]";
-      }).join(",") + ",c=this.offset,d=0,ceil=Math.ceil");
-      for (var i = 0; i < dimension; ++i) {
-        code.push(
-          "if(typeof i" + i + "==='number'){d=i" + i + "|0;if(d<0){c+=b" + i + "*(a" + i + "-1);a" + i + "=ceil(-a" + i + "/d)}else{a" + i + "=ceil(a" + i + "/d)}b" + i + "*=d}"
-        );
-      }
-      code.push("return new " + className + "(this.data," + indices.map(function(i2) {
-        return "a" + i2;
-      }).join(",") + "," + indices.map(function(i2) {
-        return "b" + i2;
-      }).join(",") + ",c)}");
-      var tShape = new Array(dimension);
-      var tStride = new Array(dimension);
-      for (var i = 0; i < dimension; ++i) {
-        tShape[i] = "a[i" + i + "]";
-        tStride[i] = "b[i" + i + "]";
-      }
-      code.push(
-        "proto.transpose=function " + className + "_transpose(" + args + "){" + args.map(function(n, idx) {
-          return n + "=(" + n + "===undefined?" + idx + ":" + n + "|0)";
-        }).join(";"),
-        "var a=this.shape,b=this.stride;return new " + className + "(this.data," + tShape.join(",") + "," + tStride.join(",") + ",this.offset)}"
-      );
-      code.push("proto.pick=function " + className + "_pick(" + args + "){var a=[],b=[],c=this.offset");
-      for (var i = 0; i < dimension; ++i) {
-        code.push("if(typeof i" + i + "==='number'&&i" + i + ">=0){c=(c+this.stride[" + i + "]*i" + i + ")|0}else{a.push(this.shape[" + i + "]);b.push(this.stride[" + i + "])}");
-      }
-      code.push("var ctor=CTOR_LIST[a.length+1];return ctor(this.data,a,b,c)}");
-      code.push("return function construct_" + className + "(data,shape,stride,offset){return new " + className + "(data," + indices.map(function(i2) {
-        return "shape[" + i2 + "]";
-      }).join(",") + "," + indices.map(function(i2) {
-        return "stride[" + i2 + "]";
-      }).join(",") + ",offset)}");
-      var procedure = new Function("CTOR_LIST", "ORDER", code.join("\n"));
-      return procedure(CACHED_CONSTRUCTORS[dtype], order);
-    }
-    function arrayDType(data2) {
-      if (isBuffer(data2)) {
-        return "buffer";
-      }
-      if (hasTypedArrays) {
-        switch (Object.prototype.toString.call(data2)) {
-          case "[object Float64Array]":
-            return "float64";
-          case "[object Float32Array]":
-            return "float32";
-          case "[object Int8Array]":
-            return "int8";
-          case "[object Int16Array]":
-            return "int16";
-          case "[object Int32Array]":
-            return "int32";
-          case "[object Uint8Array]":
-            return "uint8";
-          case "[object Uint16Array]":
-            return "uint16";
-          case "[object Uint32Array]":
-            return "uint32";
-          case "[object Uint8ClampedArray]":
-            return "uint8_clamped";
-          case "[object BigInt64Array]":
-            return "bigint64";
-          case "[object BigUint64Array]":
-            return "biguint64";
-        }
-      }
-      if (Array.isArray(data2)) {
-        return "array";
-      }
-      return "generic";
-    }
-    var CACHED_CONSTRUCTORS = {
-      "float32": [],
-      "float64": [],
-      "int8": [],
-      "int16": [],
-      "int32": [],
-      "uint8": [],
-      "uint16": [],
-      "uint32": [],
-      "array": [],
-      "uint8_clamped": [],
-      "bigint64": [],
-      "biguint64": [],
-      "buffer": [],
-      "generic": []
-    };
-    function wrappedNDArrayCtor(data2, shape, stride, offset) {
-      if (data2 === void 0) {
-        var ctor = CACHED_CONSTRUCTORS.array[0];
-        return ctor([]);
-      } else if (typeof data2 === "number") {
-        data2 = [data2];
-      }
-      if (shape === void 0) {
-        shape = [data2.length];
-      }
-      var d = shape.length;
-      if (stride === void 0) {
-        stride = new Array(d);
-        for (var i = d - 1, sz = 1; i >= 0; --i) {
-          stride[i] = sz;
-          sz *= shape[i];
-        }
-      }
-      if (offset === void 0) {
-        offset = 0;
-        for (var i = 0; i < d; ++i) {
-          if (stride[i] < 0) {
-            offset -= (shape[i] - 1) * stride[i];
-          }
-        }
-      }
-      var dtype = arrayDType(data2);
-      var ctor_list = CACHED_CONSTRUCTORS[dtype];
-      while (ctor_list.length <= d + 1) {
-        ctor_list.push(compileConstructor(dtype, ctor_list.length - 1));
-      }
-      var ctor = ctor_list[d + 1];
-      return ctor(data2, shape, stride, offset);
-    }
-    module.exports = wrappedNDArrayCtor;
+var require_ndarray = __commonJS((exports, module) => {
+  var iota = require_iota();
+  var isBuffer = require_is_buffer();
+  var hasTypedArrays = typeof Float64Array !== "undefined";
+  function compare1st(a, b) {
+    return a[0] - b[0];
   }
+  function order() {
+    var stride = this.stride;
+    var terms = new Array(stride.length);
+    var i;
+    for (i = 0; i < terms.length; ++i) {
+      terms[i] = [Math.abs(stride[i]), i];
+    }
+    terms.sort(compare1st);
+    var result = new Array(terms.length);
+    for (i = 0; i < result.length; ++i) {
+      result[i] = terms[i][1];
+    }
+    return result;
+  }
+  function compileConstructor(dtype, dimension) {
+    var className = ["View", dimension, "d", dtype].join("");
+    if (dimension < 0) {
+      className = "View_Nil" + dtype;
+    }
+    var useGetters = dtype === "generic";
+    if (dimension === -1) {
+      var code = "function " + className + "(a){this.data=a;};var proto=" + className + ".prototype;proto.dtype='" + dtype + "';proto.index=function(){return -1};proto.size=0;proto.dimension=-1;proto.shape=proto.stride=proto.order=[];proto.lo=proto.hi=proto.transpose=proto.step=function(){return new " + className + "(this.data);};proto.get=proto.set=function(){};proto.pick=function(){return null};return function construct_" + className + "(a){return new " + className + "(a);}";
+      var procedure = new Function(code);
+      return procedure();
+    } else if (dimension === 0) {
+      var code = "function " + className + "(a,d) {this.data = a;this.offset = d};var proto=" + className + ".prototype;proto.dtype='" + dtype + "';proto.index=function(){return this.offset};proto.dimension=0;proto.size=1;proto.shape=proto.stride=proto.order=[];proto.lo=proto.hi=proto.transpose=proto.step=function " + className + "_copy() {return new " + className + "(this.data,this.offset)};proto.pick=function " + className + "_pick(){return TrivialArray(this.data);};proto.valueOf=proto.get=function " + className + "_get(){return " + (useGetters ? "this.data.get(this.offset)" : "this.data[this.offset]") + "};proto.set=function " + className + "_set(v){return " + (useGetters ? "this.data.set(this.offset,v)" : "this.data[this.offset]=v") + "};return function construct_" + className + "(a,b,c,d){return new " + className + "(a,d)}";
+      var procedure = new Function("TrivialArray", code);
+      return procedure(CACHED_CONSTRUCTORS[dtype][0]);
+    }
+    var code = ["'use strict'"];
+    var indices = iota(dimension);
+    var args = indices.map(function(i2) {
+      return "i" + i2;
+    });
+    var index_str = "this.offset+" + indices.map(function(i2) {
+      return "this.stride[" + i2 + "]*i" + i2;
+    }).join("+");
+    var shapeArg = indices.map(function(i2) {
+      return "b" + i2;
+    }).join(",");
+    var strideArg = indices.map(function(i2) {
+      return "c" + i2;
+    }).join(",");
+    code.push("function " + className + "(a," + shapeArg + "," + strideArg + ",d){this.data=a", "this.shape=[" + shapeArg + "]", "this.stride=[" + strideArg + "]", "this.offset=d|0}", "var proto=" + className + ".prototype", "proto.dtype='" + dtype + "'", "proto.dimension=" + dimension);
+    code.push("Object.defineProperty(proto,'size',{get:function " + className + "_size(){return " + indices.map(function(i2) {
+      return "this.shape[" + i2 + "]";
+    }).join("*"), "}})");
+    if (dimension === 1) {
+      code.push("proto.order=[0]");
+    } else {
+      code.push("Object.defineProperty(proto,'order',{get:");
+      if (dimension < 4) {
+        code.push("function " + className + "_order(){");
+        if (dimension === 2) {
+          code.push("return (Math.abs(this.stride[0])>Math.abs(this.stride[1]))?[1,0]:[0,1]}})");
+        } else if (dimension === 3) {
+          code.push("var s0=Math.abs(this.stride[0]),s1=Math.abs(this.stride[1]),s2=Math.abs(this.stride[2]);if(s0>s1){if(s1>s2){return [2,1,0];}else if(s0>s2){return [1,2,0];}else{return [1,0,2];}}else if(s0>s2){return [2,0,1];}else if(s2>s1){return [0,1,2];}else{return [0,2,1];}}})");
+        }
+      } else {
+        code.push("ORDER})");
+      }
+    }
+    code.push("proto.set=function " + className + "_set(" + args.join(",") + ",v){");
+    if (useGetters) {
+      code.push("return this.data.set(" + index_str + ",v)}");
+    } else {
+      code.push("return this.data[" + index_str + "]=v}");
+    }
+    code.push("proto.get=function " + className + "_get(" + args.join(",") + "){");
+    if (useGetters) {
+      code.push("return this.data.get(" + index_str + ")}");
+    } else {
+      code.push("return this.data[" + index_str + "]}");
+    }
+    code.push("proto.index=function " + className + "_index(", args.join(), "){return " + index_str + "}");
+    code.push("proto.hi=function " + className + "_hi(" + args.join(",") + "){return new " + className + "(this.data," + indices.map(function(i2) {
+      return ["(typeof i", i2, "!=='number'||i", i2, "<0)?this.shape[", i2, "]:i", i2, "|0"].join("");
+    }).join(",") + "," + indices.map(function(i2) {
+      return "this.stride[" + i2 + "]";
+    }).join(",") + ",this.offset)}");
+    var a_vars = indices.map(function(i2) {
+      return "a" + i2 + "=this.shape[" + i2 + "]";
+    });
+    var c_vars = indices.map(function(i2) {
+      return "c" + i2 + "=this.stride[" + i2 + "]";
+    });
+    code.push("proto.lo=function " + className + "_lo(" + args.join(",") + "){var b=this.offset,d=0," + a_vars.join(",") + "," + c_vars.join(","));
+    for (var i = 0; i < dimension; ++i) {
+      code.push("if(typeof i" + i + "==='number'&&i" + i + ">=0){d=i" + i + "|0;b+=c" + i + "*d;a" + i + "-=d}");
+    }
+    code.push("return new " + className + "(this.data," + indices.map(function(i2) {
+      return "a" + i2;
+    }).join(",") + "," + indices.map(function(i2) {
+      return "c" + i2;
+    }).join(",") + ",b)}");
+    code.push("proto.step=function " + className + "_step(" + args.join(",") + "){var " + indices.map(function(i2) {
+      return "a" + i2 + "=this.shape[" + i2 + "]";
+    }).join(",") + "," + indices.map(function(i2) {
+      return "b" + i2 + "=this.stride[" + i2 + "]";
+    }).join(",") + ",c=this.offset,d=0,ceil=Math.ceil");
+    for (var i = 0; i < dimension; ++i) {
+      code.push("if(typeof i" + i + "==='number'){d=i" + i + "|0;if(d<0){c+=b" + i + "*(a" + i + "-1);a" + i + "=ceil(-a" + i + "/d)}else{a" + i + "=ceil(a" + i + "/d)}b" + i + "*=d}");
+    }
+    code.push("return new " + className + "(this.data," + indices.map(function(i2) {
+      return "a" + i2;
+    }).join(",") + "," + indices.map(function(i2) {
+      return "b" + i2;
+    }).join(",") + ",c)}");
+    var tShape = new Array(dimension);
+    var tStride = new Array(dimension);
+    for (var i = 0; i < dimension; ++i) {
+      tShape[i] = "a[i" + i + "]";
+      tStride[i] = "b[i" + i + "]";
+    }
+    code.push("proto.transpose=function " + className + "_transpose(" + args + "){" + args.map(function(n, idx) {
+      return n + "=(" + n + "===undefined?" + idx + ":" + n + "|0)";
+    }).join(";"), "var a=this.shape,b=this.stride;return new " + className + "(this.data," + tShape.join(",") + "," + tStride.join(",") + ",this.offset)}");
+    code.push("proto.pick=function " + className + "_pick(" + args + "){var a=[],b=[],c=this.offset");
+    for (var i = 0; i < dimension; ++i) {
+      code.push("if(typeof i" + i + "==='number'&&i" + i + ">=0){c=(c+this.stride[" + i + "]*i" + i + ")|0}else{a.push(this.shape[" + i + "]);b.push(this.stride[" + i + "])}");
+    }
+    code.push("var ctor=CTOR_LIST[a.length+1];return ctor(this.data,a,b,c)}");
+    code.push("return function construct_" + className + "(data,shape,stride,offset){return new " + className + "(data," + indices.map(function(i2) {
+      return "shape[" + i2 + "]";
+    }).join(",") + "," + indices.map(function(i2) {
+      return "stride[" + i2 + "]";
+    }).join(",") + ",offset)}");
+    var procedure = new Function("CTOR_LIST", "ORDER", code.join("\n"));
+    return procedure(CACHED_CONSTRUCTORS[dtype], order);
+  }
+  function arrayDType(data2) {
+    if (isBuffer(data2)) {
+      return "buffer";
+    }
+    if (hasTypedArrays) {
+      switch (Object.prototype.toString.call(data2)) {
+        case "[object Float64Array]":
+          return "float64";
+        case "[object Float32Array]":
+          return "float32";
+        case "[object Int8Array]":
+          return "int8";
+        case "[object Int16Array]":
+          return "int16";
+        case "[object Int32Array]":
+          return "int32";
+        case "[object Uint8Array]":
+          return "uint8";
+        case "[object Uint16Array]":
+          return "uint16";
+        case "[object Uint32Array]":
+          return "uint32";
+        case "[object Uint8ClampedArray]":
+          return "uint8_clamped";
+        case "[object BigInt64Array]":
+          return "bigint64";
+        case "[object BigUint64Array]":
+          return "biguint64";
+      }
+    }
+    if (Array.isArray(data2)) {
+      return "array";
+    }
+    return "generic";
+  }
+  var CACHED_CONSTRUCTORS = {
+    float32: [],
+    float64: [],
+    int8: [],
+    int16: [],
+    int32: [],
+    uint8: [],
+    uint16: [],
+    uint32: [],
+    array: [],
+    uint8_clamped: [],
+    bigint64: [],
+    biguint64: [],
+    buffer: [],
+    generic: []
+  };
+  function wrappedNDArrayCtor(data2, shape, stride, offset) {
+    if (data2 === void 0) {
+      var ctor = CACHED_CONSTRUCTORS.array[0];
+      return ctor([]);
+    } else if (typeof data2 === "number") {
+      data2 = [data2];
+    }
+    if (shape === void 0) {
+      shape = [data2.length];
+    }
+    var d = shape.length;
+    if (stride === void 0) {
+      stride = new Array(d);
+      for (var i = d - 1, sz = 1; i >= 0; --i) {
+        stride[i] = sz;
+        sz *= shape[i];
+      }
+    }
+    if (offset === void 0) {
+      offset = 0;
+      for (var i = 0; i < d; ++i) {
+        if (stride[i] < 0) {
+          offset -= (shape[i] - 1) * stride[i];
+        }
+      }
+    }
+    var dtype = arrayDType(data2);
+    var ctor_list = CACHED_CONSTRUCTORS[dtype];
+    while (ctor_list.length <= d + 1) {
+      ctor_list.push(compileConstructor(dtype, ctor_list.length - 1));
+    }
+    var ctor = ctor_list[d + 1];
+    return ctor(data2, shape, stride, offset);
+  }
+  module.exports = wrappedNDArrayCtor;
 });
 
 // node_modules/lodash.clonedeep/index.js
-var require_lodash = __commonJS({
-  "node_modules/lodash.clonedeep/index.js"(exports, module) {
-    var LARGE_ARRAY_SIZE = 200;
-    var HASH_UNDEFINED = "__lodash_hash_undefined__";
-    var MAX_SAFE_INTEGER = 9007199254740991;
-    var argsTag = "[object Arguments]";
-    var arrayTag = "[object Array]";
-    var boolTag = "[object Boolean]";
-    var dateTag = "[object Date]";
-    var errorTag = "[object Error]";
-    var funcTag = "[object Function]";
-    var genTag = "[object GeneratorFunction]";
-    var mapTag = "[object Map]";
-    var numberTag = "[object Number]";
-    var objectTag = "[object Object]";
-    var promiseTag = "[object Promise]";
-    var regexpTag = "[object RegExp]";
-    var setTag = "[object Set]";
-    var stringTag = "[object String]";
-    var symbolTag = "[object Symbol]";
-    var weakMapTag = "[object WeakMap]";
-    var arrayBufferTag = "[object ArrayBuffer]";
-    var dataViewTag = "[object DataView]";
-    var float32Tag = "[object Float32Array]";
-    var float64Tag = "[object Float64Array]";
-    var int8Tag = "[object Int8Array]";
-    var int16Tag = "[object Int16Array]";
-    var int32Tag = "[object Int32Array]";
-    var uint8Tag = "[object Uint8Array]";
-    var uint8ClampedTag = "[object Uint8ClampedArray]";
-    var uint16Tag = "[object Uint16Array]";
-    var uint32Tag = "[object Uint32Array]";
-    var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-    var reFlags = /\w*$/;
-    var reIsHostCtor = /^\[object .+?Constructor\]$/;
-    var reIsUint = /^(?:0|[1-9]\d*)$/;
-    var cloneableTags = {};
-    cloneableTags[argsTag] = cloneableTags[arrayTag] = cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] = cloneableTags[boolTag] = cloneableTags[dateTag] = cloneableTags[float32Tag] = cloneableTags[float64Tag] = cloneableTags[int8Tag] = cloneableTags[int16Tag] = cloneableTags[int32Tag] = cloneableTags[mapTag] = cloneableTags[numberTag] = cloneableTags[objectTag] = cloneableTags[regexpTag] = cloneableTags[setTag] = cloneableTags[stringTag] = cloneableTags[symbolTag] = cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] = cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
-    cloneableTags[errorTag] = cloneableTags[funcTag] = cloneableTags[weakMapTag] = false;
-    var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-    var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-    var root = freeGlobal || freeSelf || Function("return this")();
-    var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-    var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-    var moduleExports = freeModule && freeModule.exports === freeExports;
-    function addMapEntry(map, pair) {
-      map.set(pair[0], pair[1]);
-      return map;
-    }
-    function addSetEntry(set2, value) {
-      set2.add(value);
-      return set2;
-    }
-    function arrayEach(array, iteratee) {
-      var index = -1, length2 = array ? array.length : 0;
-      while (++index < length2) {
-        if (iteratee(array[index], index, array) === false) {
-          break;
-        }
-      }
-      return array;
-    }
-    function arrayPush(array, values) {
-      var index = -1, length2 = values.length, offset = array.length;
-      while (++index < length2) {
-        array[offset + index] = values[index];
-      }
-      return array;
-    }
-    function arrayReduce(array, iteratee, accumulator, initAccum) {
-      var index = -1, length2 = array ? array.length : 0;
-      if (initAccum && length2) {
-        accumulator = array[++index];
-      }
-      while (++index < length2) {
-        accumulator = iteratee(accumulator, array[index], index, array);
-      }
-      return accumulator;
-    }
-    function baseTimes(n, iteratee) {
-      var index = -1, result = Array(n);
-      while (++index < n) {
-        result[index] = iteratee(index);
-      }
-      return result;
-    }
-    function getValue(object, key) {
-      return object == null ? void 0 : object[key];
-    }
-    function isHostObject(value) {
-      var result = false;
-      if (value != null && typeof value.toString != "function") {
-        try {
-          result = !!(value + "");
-        } catch (e) {
-        }
-      }
-      return result;
-    }
-    function mapToArray(map) {
-      var index = -1, result = Array(map.size);
-      map.forEach(function(value, key) {
-        result[++index] = [key, value];
-      });
-      return result;
-    }
-    function overArg(func, transform) {
-      return function(arg) {
-        return func(transform(arg));
-      };
-    }
-    function setToArray(set2) {
-      var index = -1, result = Array(set2.size);
-      set2.forEach(function(value) {
-        result[++index] = value;
-      });
-      return result;
-    }
-    var arrayProto = Array.prototype;
-    var funcProto = Function.prototype;
-    var objectProto = Object.prototype;
-    var coreJsData = root["__core-js_shared__"];
-    var maskSrcKey = function() {
-      var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
-      return uid ? "Symbol(src)_1." + uid : "";
-    }();
-    var funcToString = funcProto.toString;
-    var hasOwnProperty = objectProto.hasOwnProperty;
-    var objectToString = objectProto.toString;
-    var reIsNative = RegExp(
-      "^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
-    );
-    var Buffer2 = moduleExports ? root.Buffer : void 0;
-    var Symbol2 = root.Symbol;
-    var Uint8Array2 = root.Uint8Array;
-    var getPrototype = overArg(Object.getPrototypeOf, Object);
-    var objectCreate = Object.create;
-    var propertyIsEnumerable = objectProto.propertyIsEnumerable;
-    var splice = arrayProto.splice;
-    var nativeGetSymbols = Object.getOwnPropertySymbols;
-    var nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : void 0;
-    var nativeKeys = overArg(Object.keys, Object);
-    var DataView2 = getNative(root, "DataView");
-    var Map2 = getNative(root, "Map");
-    var Promise2 = getNative(root, "Promise");
-    var Set2 = getNative(root, "Set");
-    var WeakMap = getNative(root, "WeakMap");
-    var nativeCreate = getNative(Object, "create");
-    var dataViewCtorString = toSource(DataView2);
-    var mapCtorString = toSource(Map2);
-    var promiseCtorString = toSource(Promise2);
-    var setCtorString = toSource(Set2);
-    var weakMapCtorString = toSource(WeakMap);
-    var symbolProto = Symbol2 ? Symbol2.prototype : void 0;
-    var symbolValueOf = symbolProto ? symbolProto.valueOf : void 0;
-    function Hash(entries) {
-      var index = -1, length2 = entries ? entries.length : 0;
-      this.clear();
-      while (++index < length2) {
-        var entry = entries[index];
-        this.set(entry[0], entry[1]);
+var require_lodash = __commonJS((exports, module) => {
+  var LARGE_ARRAY_SIZE = 200;
+  var HASH_UNDEFINED = "__lodash_hash_undefined__";
+  var MAX_SAFE_INTEGER = 9007199254740991;
+  var argsTag = "[object Arguments]";
+  var arrayTag = "[object Array]";
+  var boolTag = "[object Boolean]";
+  var dateTag = "[object Date]";
+  var errorTag = "[object Error]";
+  var funcTag = "[object Function]";
+  var genTag = "[object GeneratorFunction]";
+  var mapTag = "[object Map]";
+  var numberTag = "[object Number]";
+  var objectTag = "[object Object]";
+  var promiseTag = "[object Promise]";
+  var regexpTag = "[object RegExp]";
+  var setTag = "[object Set]";
+  var stringTag = "[object String]";
+  var symbolTag = "[object Symbol]";
+  var weakMapTag = "[object WeakMap]";
+  var arrayBufferTag = "[object ArrayBuffer]";
+  var dataViewTag = "[object DataView]";
+  var float32Tag = "[object Float32Array]";
+  var float64Tag = "[object Float64Array]";
+  var int8Tag = "[object Int8Array]";
+  var int16Tag = "[object Int16Array]";
+  var int32Tag = "[object Int32Array]";
+  var uint8Tag = "[object Uint8Array]";
+  var uint8ClampedTag = "[object Uint8ClampedArray]";
+  var uint16Tag = "[object Uint16Array]";
+  var uint32Tag = "[object Uint32Array]";
+  var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+  var reFlags = /\w*$/;
+  var reIsHostCtor = /^\[object .+?Constructor\]$/;
+  var reIsUint = /^(?:0|[1-9]\d*)$/;
+  var cloneableTags = {};
+  cloneableTags[argsTag] = cloneableTags[arrayTag] = cloneableTags[arrayBufferTag] = cloneableTags[dataViewTag] = cloneableTags[boolTag] = cloneableTags[dateTag] = cloneableTags[float32Tag] = cloneableTags[float64Tag] = cloneableTags[int8Tag] = cloneableTags[int16Tag] = cloneableTags[int32Tag] = cloneableTags[mapTag] = cloneableTags[numberTag] = cloneableTags[objectTag] = cloneableTags[regexpTag] = cloneableTags[setTag] = cloneableTags[stringTag] = cloneableTags[symbolTag] = cloneableTags[uint8Tag] = cloneableTags[uint8ClampedTag] = cloneableTags[uint16Tag] = cloneableTags[uint32Tag] = true;
+  cloneableTags[errorTag] = cloneableTags[funcTag] = cloneableTags[weakMapTag] = false;
+  var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
+  var freeSelf = typeof self == "object" && self && self.Object === Object && self;
+  var root = freeGlobal || freeSelf || Function("return this")();
+  var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
+  var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
+  var moduleExports = freeModule && freeModule.exports === freeExports;
+  function addMapEntry(map, pair) {
+    map.set(pair[0], pair[1]);
+    return map;
+  }
+  function addSetEntry(set2, value) {
+    set2.add(value);
+    return set2;
+  }
+  function arrayEach(array, iteratee) {
+    var index = -1, length2 = array ? array.length : 0;
+    while (++index < length2) {
+      if (iteratee(array[index], index, array) === false) {
+        break;
       }
     }
-    function hashClear() {
-      this.__data__ = nativeCreate ? nativeCreate(null) : {};
+    return array;
+  }
+  function arrayPush(array, values) {
+    var index = -1, length2 = values.length, offset = array.length;
+    while (++index < length2) {
+      array[offset + index] = values[index];
     }
-    function hashDelete(key) {
-      return this.has(key) && delete this.__data__[key];
+    return array;
+  }
+  function arrayReduce(array, iteratee, accumulator, initAccum) {
+    var index = -1, length2 = array ? array.length : 0;
+    if (initAccum && length2) {
+      accumulator = array[++index];
     }
-    function hashGet(key) {
-      var data2 = this.__data__;
-      if (nativeCreate) {
-        var result = data2[key];
-        return result === HASH_UNDEFINED ? void 0 : result;
-      }
-      return hasOwnProperty.call(data2, key) ? data2[key] : void 0;
+    while (++index < length2) {
+      accumulator = iteratee(accumulator, array[index], index, array);
     }
-    function hashHas(key) {
-      var data2 = this.__data__;
-      return nativeCreate ? data2[key] !== void 0 : hasOwnProperty.call(data2, key);
+    return accumulator;
+  }
+  function baseTimes(n, iteratee) {
+    var index = -1, result = Array(n);
+    while (++index < n) {
+      result[index] = iteratee(index);
     }
-    function hashSet(key, value) {
-      var data2 = this.__data__;
-      data2[key] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
-      return this;
-    }
-    Hash.prototype.clear = hashClear;
-    Hash.prototype["delete"] = hashDelete;
-    Hash.prototype.get = hashGet;
-    Hash.prototype.has = hashHas;
-    Hash.prototype.set = hashSet;
-    function ListCache(entries) {
-      var index = -1, length2 = entries ? entries.length : 0;
-      this.clear();
-      while (++index < length2) {
-        var entry = entries[index];
-        this.set(entry[0], entry[1]);
-      }
-    }
-    function listCacheClear() {
-      this.__data__ = [];
-    }
-    function listCacheDelete(key) {
-      var data2 = this.__data__, index = assocIndexOf(data2, key);
-      if (index < 0) {
-        return false;
-      }
-      var lastIndex = data2.length - 1;
-      if (index == lastIndex) {
-        data2.pop();
-      } else {
-        splice.call(data2, index, 1);
-      }
-      return true;
-    }
-    function listCacheGet(key) {
-      var data2 = this.__data__, index = assocIndexOf(data2, key);
-      return index < 0 ? void 0 : data2[index][1];
-    }
-    function listCacheHas(key) {
-      return assocIndexOf(this.__data__, key) > -1;
-    }
-    function listCacheSet(key, value) {
-      var data2 = this.__data__, index = assocIndexOf(data2, key);
-      if (index < 0) {
-        data2.push([key, value]);
-      } else {
-        data2[index][1] = value;
-      }
-      return this;
-    }
-    ListCache.prototype.clear = listCacheClear;
-    ListCache.prototype["delete"] = listCacheDelete;
-    ListCache.prototype.get = listCacheGet;
-    ListCache.prototype.has = listCacheHas;
-    ListCache.prototype.set = listCacheSet;
-    function MapCache(entries) {
-      var index = -1, length2 = entries ? entries.length : 0;
-      this.clear();
-      while (++index < length2) {
-        var entry = entries[index];
-        this.set(entry[0], entry[1]);
+    return result;
+  }
+  function getValue(object, key) {
+    return object == null ? void 0 : object[key];
+  }
+  function isHostObject(value) {
+    var result = false;
+    if (value != null && typeof value.toString != "function") {
+      try {
+        result = !!(value + "");
+      } catch (e) {
       }
     }
-    function mapCacheClear() {
-      this.__data__ = {
-        "hash": new Hash(),
-        "map": new (Map2 || ListCache)(),
-        "string": new Hash()
-      };
+    return result;
+  }
+  function mapToArray(map) {
+    var index = -1, result = Array(map.size);
+    map.forEach(function(value, key) {
+      result[++index] = [key, value];
+    });
+    return result;
+  }
+  function overArg(func, transform) {
+    return function(arg) {
+      return func(transform(arg));
+    };
+  }
+  function setToArray(set2) {
+    var index = -1, result = Array(set2.size);
+    set2.forEach(function(value) {
+      result[++index] = value;
+    });
+    return result;
+  }
+  var arrayProto = Array.prototype;
+  var funcProto = Function.prototype;
+  var objectProto = Object.prototype;
+  var coreJsData = root["__core-js_shared__"];
+  var maskSrcKey = function() {
+    var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
+    return uid ? "Symbol(src)_1." + uid : "";
+  }();
+  var funcToString = funcProto.toString;
+  var hasOwnProperty = objectProto.hasOwnProperty;
+  var objectToString = objectProto.toString;
+  var reIsNative = RegExp("^" + funcToString.call(hasOwnProperty).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$");
+  var Buffer2 = moduleExports ? root.Buffer : void 0;
+  var Symbol2 = root.Symbol;
+  var Uint8Array2 = root.Uint8Array;
+  var getPrototype = overArg(Object.getPrototypeOf, Object);
+  var objectCreate = Object.create;
+  var propertyIsEnumerable = objectProto.propertyIsEnumerable;
+  var splice = arrayProto.splice;
+  var nativeGetSymbols = Object.getOwnPropertySymbols;
+  var nativeIsBuffer = Buffer2 ? Buffer2.isBuffer : void 0;
+  var nativeKeys = overArg(Object.keys, Object);
+  var DataView2 = getNative(root, "DataView");
+  var Map2 = getNative(root, "Map");
+  var Promise2 = getNative(root, "Promise");
+  var Set2 = getNative(root, "Set");
+  var WeakMap = getNative(root, "WeakMap");
+  var nativeCreate = getNative(Object, "create");
+  var dataViewCtorString = toSource(DataView2);
+  var mapCtorString = toSource(Map2);
+  var promiseCtorString = toSource(Promise2);
+  var setCtorString = toSource(Set2);
+  var weakMapCtorString = toSource(WeakMap);
+  var symbolProto = Symbol2 ? Symbol2.prototype : void 0;
+  var symbolValueOf = symbolProto ? symbolProto.valueOf : void 0;
+  function Hash(entries) {
+    var index = -1, length2 = entries ? entries.length : 0;
+    this.clear();
+    while (++index < length2) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
     }
-    function mapCacheDelete(key) {
-      return getMapData(this, key)["delete"](key);
+  }
+  function hashClear() {
+    this.__data__ = nativeCreate ? nativeCreate(null) : {};
+  }
+  function hashDelete(key) {
+    return this.has(key) && delete this.__data__[key];
+  }
+  function hashGet(key) {
+    var data2 = this.__data__;
+    if (nativeCreate) {
+      var result = data2[key];
+      return result === HASH_UNDEFINED ? void 0 : result;
     }
-    function mapCacheGet(key) {
-      return getMapData(this, key).get(key);
+    return hasOwnProperty.call(data2, key) ? data2[key] : void 0;
+  }
+  function hashHas(key) {
+    var data2 = this.__data__;
+    return nativeCreate ? data2[key] !== void 0 : hasOwnProperty.call(data2, key);
+  }
+  function hashSet(key, value) {
+    var data2 = this.__data__;
+    data2[key] = nativeCreate && value === void 0 ? HASH_UNDEFINED : value;
+    return this;
+  }
+  Hash.prototype.clear = hashClear;
+  Hash.prototype["delete"] = hashDelete;
+  Hash.prototype.get = hashGet;
+  Hash.prototype.has = hashHas;
+  Hash.prototype.set = hashSet;
+  function ListCache(entries) {
+    var index = -1, length2 = entries ? entries.length : 0;
+    this.clear();
+    while (++index < length2) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
     }
-    function mapCacheHas(key) {
-      return getMapData(this, key).has(key);
-    }
-    function mapCacheSet(key, value) {
-      getMapData(this, key).set(key, value);
-      return this;
-    }
-    MapCache.prototype.clear = mapCacheClear;
-    MapCache.prototype["delete"] = mapCacheDelete;
-    MapCache.prototype.get = mapCacheGet;
-    MapCache.prototype.has = mapCacheHas;
-    MapCache.prototype.set = mapCacheSet;
-    function Stack(entries) {
-      this.__data__ = new ListCache(entries);
-    }
-    function stackClear() {
-      this.__data__ = new ListCache();
-    }
-    function stackDelete(key) {
-      return this.__data__["delete"](key);
-    }
-    function stackGet(key) {
-      return this.__data__.get(key);
-    }
-    function stackHas(key) {
-      return this.__data__.has(key);
-    }
-    function stackSet(key, value) {
-      var cache = this.__data__;
-      if (cache instanceof ListCache) {
-        var pairs = cache.__data__;
-        if (!Map2 || pairs.length < LARGE_ARRAY_SIZE - 1) {
-          pairs.push([key, value]);
-          return this;
-        }
-        cache = this.__data__ = new MapCache(pairs);
-      }
-      cache.set(key, value);
-      return this;
-    }
-    Stack.prototype.clear = stackClear;
-    Stack.prototype["delete"] = stackDelete;
-    Stack.prototype.get = stackGet;
-    Stack.prototype.has = stackHas;
-    Stack.prototype.set = stackSet;
-    function arrayLikeKeys(value, inherited) {
-      var result = isArray(value) || isArguments(value) ? baseTimes(value.length, String) : [];
-      var length2 = result.length, skipIndexes = !!length2;
-      for (var key in value) {
-        if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isIndex(key, length2)))) {
-          result.push(key);
-        }
-      }
-      return result;
-    }
-    function assignValue(object, key, value) {
-      var objValue = object[key];
-      if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) || value === void 0 && !(key in object)) {
-        object[key] = value;
-      }
-    }
-    function assocIndexOf(array, key) {
-      var length2 = array.length;
-      while (length2--) {
-        if (eq(array[length2][0], key)) {
-          return length2;
-        }
-      }
-      return -1;
-    }
-    function baseAssign(object, source) {
-      return object && copyObject(source, keys(source), object);
-    }
-    function baseClone(value, isDeep, isFull, customizer, key, object, stack) {
-      var result;
-      if (customizer) {
-        result = object ? customizer(value, key, object, stack) : customizer(value);
-      }
-      if (result !== void 0) {
-        return result;
-      }
-      if (!isObject(value)) {
-        return value;
-      }
-      var isArr = isArray(value);
-      if (isArr) {
-        result = initCloneArray(value);
-        if (!isDeep) {
-          return copyArray(value, result);
-        }
-      } else {
-        var tag = getTag(value), isFunc = tag == funcTag || tag == genTag;
-        if (isBuffer(value)) {
-          return cloneBuffer(value, isDeep);
-        }
-        if (tag == objectTag || tag == argsTag || isFunc && !object) {
-          if (isHostObject(value)) {
-            return object ? value : {};
-          }
-          result = initCloneObject(isFunc ? {} : value);
-          if (!isDeep) {
-            return copySymbols(value, baseAssign(result, value));
-          }
-        } else {
-          if (!cloneableTags[tag]) {
-            return object ? value : {};
-          }
-          result = initCloneByTag(value, tag, baseClone, isDeep);
-        }
-      }
-      stack || (stack = new Stack());
-      var stacked = stack.get(value);
-      if (stacked) {
-        return stacked;
-      }
-      stack.set(value, result);
-      if (!isArr) {
-        var props = isFull ? getAllKeys(value) : keys(value);
-      }
-      arrayEach(props || value, function(subValue, key2) {
-        if (props) {
-          key2 = subValue;
-          subValue = value[key2];
-        }
-        assignValue(result, key2, baseClone(subValue, isDeep, isFull, customizer, key2, value, stack));
-      });
-      return result;
-    }
-    function baseCreate(proto) {
-      return isObject(proto) ? objectCreate(proto) : {};
-    }
-    function baseGetAllKeys(object, keysFunc, symbolsFunc) {
-      var result = keysFunc(object);
-      return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
-    }
-    function baseGetTag(value) {
-      return objectToString.call(value);
-    }
-    function baseIsNative(value) {
-      if (!isObject(value) || isMasked(value)) {
-        return false;
-      }
-      var pattern = isFunction(value) || isHostObject(value) ? reIsNative : reIsHostCtor;
-      return pattern.test(toSource(value));
-    }
-    function baseKeys(object) {
-      if (!isPrototype(object)) {
-        return nativeKeys(object);
-      }
-      var result = [];
-      for (var key in Object(object)) {
-        if (hasOwnProperty.call(object, key) && key != "constructor") {
-          result.push(key);
-        }
-      }
-      return result;
-    }
-    function cloneBuffer(buffer, isDeep) {
-      if (isDeep) {
-        return buffer.slice();
-      }
-      var result = new buffer.constructor(buffer.length);
-      buffer.copy(result);
-      return result;
-    }
-    function cloneArrayBuffer(arrayBuffer) {
-      var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-      new Uint8Array2(result).set(new Uint8Array2(arrayBuffer));
-      return result;
-    }
-    function cloneDataView(dataView, isDeep) {
-      var buffer = isDeep ? cloneArrayBuffer(dataView.buffer) : dataView.buffer;
-      return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
-    }
-    function cloneMap(map, isDeep, cloneFunc) {
-      var array = isDeep ? cloneFunc(mapToArray(map), true) : mapToArray(map);
-      return arrayReduce(array, addMapEntry, new map.constructor());
-    }
-    function cloneRegExp(regexp) {
-      var result = new regexp.constructor(regexp.source, reFlags.exec(regexp));
-      result.lastIndex = regexp.lastIndex;
-      return result;
-    }
-    function cloneSet(set2, isDeep, cloneFunc) {
-      var array = isDeep ? cloneFunc(setToArray(set2), true) : setToArray(set2);
-      return arrayReduce(array, addSetEntry, new set2.constructor());
-    }
-    function cloneSymbol(symbol) {
-      return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
-    }
-    function cloneTypedArray(typedArray, isDeep) {
-      var buffer = isDeep ? cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
-      return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
-    }
-    function copyArray(source, array) {
-      var index = -1, length2 = source.length;
-      array || (array = Array(length2));
-      while (++index < length2) {
-        array[index] = source[index];
-      }
-      return array;
-    }
-    function copyObject(source, props, object, customizer) {
-      object || (object = {});
-      var index = -1, length2 = props.length;
-      while (++index < length2) {
-        var key = props[index];
-        var newValue = customizer ? customizer(object[key], source[key], key, object, source) : void 0;
-        assignValue(object, key, newValue === void 0 ? source[key] : newValue);
-      }
-      return object;
-    }
-    function copySymbols(source, object) {
-      return copyObject(source, getSymbols(source), object);
-    }
-    function getAllKeys(object) {
-      return baseGetAllKeys(object, keys, getSymbols);
-    }
-    function getMapData(map, key) {
-      var data2 = map.__data__;
-      return isKeyable(key) ? data2[typeof key == "string" ? "string" : "hash"] : data2.map;
-    }
-    function getNative(object, key) {
-      var value = getValue(object, key);
-      return baseIsNative(value) ? value : void 0;
-    }
-    var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
-    var getTag = baseGetTag;
-    if (DataView2 && getTag(new DataView2(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap && getTag(new WeakMap()) != weakMapTag) {
-      getTag = function(value) {
-        var result = objectToString.call(value), Ctor = result == objectTag ? value.constructor : void 0, ctorString = Ctor ? toSource(Ctor) : void 0;
-        if (ctorString) {
-          switch (ctorString) {
-            case dataViewCtorString:
-              return dataViewTag;
-            case mapCtorString:
-              return mapTag;
-            case promiseCtorString:
-              return promiseTag;
-            case setCtorString:
-              return setTag;
-            case weakMapCtorString:
-              return weakMapTag;
-          }
-        }
-        return result;
-      };
-    }
-    function initCloneArray(array) {
-      var length2 = array.length, result = array.constructor(length2);
-      if (length2 && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
-        result.index = array.index;
-        result.input = array.input;
-      }
-      return result;
-    }
-    function initCloneObject(object) {
-      return typeof object.constructor == "function" && !isPrototype(object) ? baseCreate(getPrototype(object)) : {};
-    }
-    function initCloneByTag(object, tag, cloneFunc, isDeep) {
-      var Ctor = object.constructor;
-      switch (tag) {
-        case arrayBufferTag:
-          return cloneArrayBuffer(object);
-        case boolTag:
-        case dateTag:
-          return new Ctor(+object);
-        case dataViewTag:
-          return cloneDataView(object, isDeep);
-        case float32Tag:
-        case float64Tag:
-        case int8Tag:
-        case int16Tag:
-        case int32Tag:
-        case uint8Tag:
-        case uint8ClampedTag:
-        case uint16Tag:
-        case uint32Tag:
-          return cloneTypedArray(object, isDeep);
-        case mapTag:
-          return cloneMap(object, isDeep, cloneFunc);
-        case numberTag:
-        case stringTag:
-          return new Ctor(object);
-        case regexpTag:
-          return cloneRegExp(object);
-        case setTag:
-          return cloneSet(object, isDeep, cloneFunc);
-        case symbolTag:
-          return cloneSymbol(object);
-      }
-    }
-    function isIndex(value, length2) {
-      length2 = length2 == null ? MAX_SAFE_INTEGER : length2;
-      return !!length2 && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length2);
-    }
-    function isKeyable(value) {
-      var type = typeof value;
-      return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
-    }
-    function isMasked(func) {
-      return !!maskSrcKey && maskSrcKey in func;
-    }
-    function isPrototype(value) {
-      var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto;
-      return value === proto;
-    }
-    function toSource(func) {
-      if (func != null) {
-        try {
-          return funcToString.call(func);
-        } catch (e) {
-        }
-        try {
-          return func + "";
-        } catch (e) {
-        }
-      }
-      return "";
-    }
-    function cloneDeep2(value) {
-      return baseClone(value, true, true);
-    }
-    function eq(value, other) {
-      return value === other || value !== value && other !== other;
-    }
-    function isArguments(value) {
-      return isArrayLikeObject(value) && hasOwnProperty.call(value, "callee") && (!propertyIsEnumerable.call(value, "callee") || objectToString.call(value) == argsTag);
-    }
-    var isArray = Array.isArray;
-    function isArrayLike(value) {
-      return value != null && isLength(value.length) && !isFunction(value);
-    }
-    function isArrayLikeObject(value) {
-      return isObjectLike(value) && isArrayLike(value);
-    }
-    var isBuffer = nativeIsBuffer || stubFalse;
-    function isFunction(value) {
-      var tag = isObject(value) ? objectToString.call(value) : "";
-      return tag == funcTag || tag == genTag;
-    }
-    function isLength(value) {
-      return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-    }
-    function isObject(value) {
-      var type = typeof value;
-      return !!value && (type == "object" || type == "function");
-    }
-    function isObjectLike(value) {
-      return !!value && typeof value == "object";
-    }
-    function keys(object) {
-      return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
-    }
-    function stubArray() {
-      return [];
-    }
-    function stubFalse() {
+  }
+  function listCacheClear() {
+    this.__data__ = [];
+  }
+  function listCacheDelete(key) {
+    var data2 = this.__data__, index = assocIndexOf(data2, key);
+    if (index < 0) {
       return false;
     }
-    module.exports = cloneDeep2;
+    var lastIndex = data2.length - 1;
+    if (index == lastIndex) {
+      data2.pop();
+    } else {
+      splice.call(data2, index, 1);
+    }
+    return true;
   }
+  function listCacheGet(key) {
+    var data2 = this.__data__, index = assocIndexOf(data2, key);
+    return index < 0 ? void 0 : data2[index][1];
+  }
+  function listCacheHas(key) {
+    return assocIndexOf(this.__data__, key) > -1;
+  }
+  function listCacheSet(key, value) {
+    var data2 = this.__data__, index = assocIndexOf(data2, key);
+    if (index < 0) {
+      data2.push([key, value]);
+    } else {
+      data2[index][1] = value;
+    }
+    return this;
+  }
+  ListCache.prototype.clear = listCacheClear;
+  ListCache.prototype["delete"] = listCacheDelete;
+  ListCache.prototype.get = listCacheGet;
+  ListCache.prototype.has = listCacheHas;
+  ListCache.prototype.set = listCacheSet;
+  function MapCache(entries) {
+    var index = -1, length2 = entries ? entries.length : 0;
+    this.clear();
+    while (++index < length2) {
+      var entry = entries[index];
+      this.set(entry[0], entry[1]);
+    }
+  }
+  function mapCacheClear() {
+    this.__data__ = {
+      hash: new Hash(),
+      map: new (Map2 || ListCache)(),
+      string: new Hash()
+    };
+  }
+  function mapCacheDelete(key) {
+    return getMapData(this, key)["delete"](key);
+  }
+  function mapCacheGet(key) {
+    return getMapData(this, key).get(key);
+  }
+  function mapCacheHas(key) {
+    return getMapData(this, key).has(key);
+  }
+  function mapCacheSet(key, value) {
+    getMapData(this, key).set(key, value);
+    return this;
+  }
+  MapCache.prototype.clear = mapCacheClear;
+  MapCache.prototype["delete"] = mapCacheDelete;
+  MapCache.prototype.get = mapCacheGet;
+  MapCache.prototype.has = mapCacheHas;
+  MapCache.prototype.set = mapCacheSet;
+  function Stack(entries) {
+    this.__data__ = new ListCache(entries);
+  }
+  function stackClear() {
+    this.__data__ = new ListCache();
+  }
+  function stackDelete(key) {
+    return this.__data__["delete"](key);
+  }
+  function stackGet(key) {
+    return this.__data__.get(key);
+  }
+  function stackHas(key) {
+    return this.__data__.has(key);
+  }
+  function stackSet(key, value) {
+    var cache = this.__data__;
+    if (cache instanceof ListCache) {
+      var pairs = cache.__data__;
+      if (!Map2 || pairs.length < LARGE_ARRAY_SIZE - 1) {
+        pairs.push([key, value]);
+        return this;
+      }
+      cache = this.__data__ = new MapCache(pairs);
+    }
+    cache.set(key, value);
+    return this;
+  }
+  Stack.prototype.clear = stackClear;
+  Stack.prototype["delete"] = stackDelete;
+  Stack.prototype.get = stackGet;
+  Stack.prototype.has = stackHas;
+  Stack.prototype.set = stackSet;
+  function arrayLikeKeys(value, inherited) {
+    var result = isArray(value) || isArguments(value) ? baseTimes(value.length, String) : [];
+    var length2 = result.length, skipIndexes = !!length2;
+    for (var key in value) {
+      if ((inherited || hasOwnProperty.call(value, key)) && !(skipIndexes && (key == "length" || isIndex(key, length2)))) {
+        result.push(key);
+      }
+    }
+    return result;
+  }
+  function assignValue(object, key, value) {
+    var objValue = object[key];
+    if (!(hasOwnProperty.call(object, key) && eq(objValue, value)) || value === void 0 && !(key in object)) {
+      object[key] = value;
+    }
+  }
+  function assocIndexOf(array, key) {
+    var length2 = array.length;
+    while (length2--) {
+      if (eq(array[length2][0], key)) {
+        return length2;
+      }
+    }
+    return -1;
+  }
+  function baseAssign(object, source) {
+    return object && copyObject(source, keys(source), object);
+  }
+  function baseClone(value, isDeep, isFull, customizer, key, object, stack) {
+    var result;
+    if (customizer) {
+      result = object ? customizer(value, key, object, stack) : customizer(value);
+    }
+    if (result !== void 0) {
+      return result;
+    }
+    if (!isObject(value)) {
+      return value;
+    }
+    var isArr = isArray(value);
+    if (isArr) {
+      result = initCloneArray(value);
+      if (!isDeep) {
+        return copyArray(value, result);
+      }
+    } else {
+      var tag = getTag(value), isFunc = tag == funcTag || tag == genTag;
+      if (isBuffer(value)) {
+        return cloneBuffer(value, isDeep);
+      }
+      if (tag == objectTag || tag == argsTag || isFunc && !object) {
+        if (isHostObject(value)) {
+          return object ? value : {};
+        }
+        result = initCloneObject(isFunc ? {} : value);
+        if (!isDeep) {
+          return copySymbols(value, baseAssign(result, value));
+        }
+      } else {
+        if (!cloneableTags[tag]) {
+          return object ? value : {};
+        }
+        result = initCloneByTag(value, tag, baseClone, isDeep);
+      }
+    }
+    stack || (stack = new Stack());
+    var stacked = stack.get(value);
+    if (stacked) {
+      return stacked;
+    }
+    stack.set(value, result);
+    if (!isArr) {
+      var props = isFull ? getAllKeys(value) : keys(value);
+    }
+    arrayEach(props || value, function(subValue, key2) {
+      if (props) {
+        key2 = subValue;
+        subValue = value[key2];
+      }
+      assignValue(result, key2, baseClone(subValue, isDeep, isFull, customizer, key2, value, stack));
+    });
+    return result;
+  }
+  function baseCreate(proto) {
+    return isObject(proto) ? objectCreate(proto) : {};
+  }
+  function baseGetAllKeys(object, keysFunc, symbolsFunc) {
+    var result = keysFunc(object);
+    return isArray(object) ? result : arrayPush(result, symbolsFunc(object));
+  }
+  function baseGetTag(value) {
+    return objectToString.call(value);
+  }
+  function baseIsNative(value) {
+    if (!isObject(value) || isMasked(value)) {
+      return false;
+    }
+    var pattern = isFunction(value) || isHostObject(value) ? reIsNative : reIsHostCtor;
+    return pattern.test(toSource(value));
+  }
+  function baseKeys(object) {
+    if (!isPrototype(object)) {
+      return nativeKeys(object);
+    }
+    var result = [];
+    for (var key in Object(object)) {
+      if (hasOwnProperty.call(object, key) && key != "constructor") {
+        result.push(key);
+      }
+    }
+    return result;
+  }
+  function cloneBuffer(buffer, isDeep) {
+    if (isDeep) {
+      return buffer.slice();
+    }
+    var result = new buffer.constructor(buffer.length);
+    buffer.copy(result);
+    return result;
+  }
+  function cloneArrayBuffer(arrayBuffer) {
+    var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
+    new Uint8Array2(result).set(new Uint8Array2(arrayBuffer));
+    return result;
+  }
+  function cloneDataView(dataView, isDeep) {
+    var buffer = isDeep ? cloneArrayBuffer(dataView.buffer) : dataView.buffer;
+    return new dataView.constructor(buffer, dataView.byteOffset, dataView.byteLength);
+  }
+  function cloneMap(map, isDeep, cloneFunc) {
+    var array = isDeep ? cloneFunc(mapToArray(map), true) : mapToArray(map);
+    return arrayReduce(array, addMapEntry, new map.constructor());
+  }
+  function cloneRegExp(regexp) {
+    var result = new regexp.constructor(regexp.source, reFlags.exec(regexp));
+    result.lastIndex = regexp.lastIndex;
+    return result;
+  }
+  function cloneSet(set2, isDeep, cloneFunc) {
+    var array = isDeep ? cloneFunc(setToArray(set2), true) : setToArray(set2);
+    return arrayReduce(array, addSetEntry, new set2.constructor());
+  }
+  function cloneSymbol(symbol) {
+    return symbolValueOf ? Object(symbolValueOf.call(symbol)) : {};
+  }
+  function cloneTypedArray(typedArray, isDeep) {
+    var buffer = isDeep ? cloneArrayBuffer(typedArray.buffer) : typedArray.buffer;
+    return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
+  }
+  function copyArray(source, array) {
+    var index = -1, length2 = source.length;
+    array || (array = Array(length2));
+    while (++index < length2) {
+      array[index] = source[index];
+    }
+    return array;
+  }
+  function copyObject(source, props, object, customizer) {
+    object || (object = {});
+    var index = -1, length2 = props.length;
+    while (++index < length2) {
+      var key = props[index];
+      var newValue = customizer ? customizer(object[key], source[key], key, object, source) : void 0;
+      assignValue(object, key, newValue === void 0 ? source[key] : newValue);
+    }
+    return object;
+  }
+  function copySymbols(source, object) {
+    return copyObject(source, getSymbols(source), object);
+  }
+  function getAllKeys(object) {
+    return baseGetAllKeys(object, keys, getSymbols);
+  }
+  function getMapData(map, key) {
+    var data2 = map.__data__;
+    return isKeyable(key) ? data2[typeof key == "string" ? "string" : "hash"] : data2.map;
+  }
+  function getNative(object, key) {
+    var value = getValue(object, key);
+    return baseIsNative(value) ? value : void 0;
+  }
+  var getSymbols = nativeGetSymbols ? overArg(nativeGetSymbols, Object) : stubArray;
+  var getTag = baseGetTag;
+  if (DataView2 && getTag(new DataView2(new ArrayBuffer(1))) != dataViewTag || Map2 && getTag(new Map2()) != mapTag || Promise2 && getTag(Promise2.resolve()) != promiseTag || Set2 && getTag(new Set2()) != setTag || WeakMap && getTag(new WeakMap()) != weakMapTag) {
+    getTag = function(value) {
+      var result = objectToString.call(value), Ctor = result == objectTag ? value.constructor : void 0, ctorString = Ctor ? toSource(Ctor) : void 0;
+      if (ctorString) {
+        switch (ctorString) {
+          case dataViewCtorString:
+            return dataViewTag;
+          case mapCtorString:
+            return mapTag;
+          case promiseCtorString:
+            return promiseTag;
+          case setCtorString:
+            return setTag;
+          case weakMapCtorString:
+            return weakMapTag;
+        }
+      }
+      return result;
+    };
+  }
+  function initCloneArray(array) {
+    var length2 = array.length, result = array.constructor(length2);
+    if (length2 && typeof array[0] == "string" && hasOwnProperty.call(array, "index")) {
+      result.index = array.index;
+      result.input = array.input;
+    }
+    return result;
+  }
+  function initCloneObject(object) {
+    return typeof object.constructor == "function" && !isPrototype(object) ? baseCreate(getPrototype(object)) : {};
+  }
+  function initCloneByTag(object, tag, cloneFunc, isDeep) {
+    var Ctor = object.constructor;
+    switch (tag) {
+      case arrayBufferTag:
+        return cloneArrayBuffer(object);
+      case boolTag:
+      case dateTag:
+        return new Ctor(+object);
+      case dataViewTag:
+        return cloneDataView(object, isDeep);
+      case float32Tag:
+      case float64Tag:
+      case int8Tag:
+      case int16Tag:
+      case int32Tag:
+      case uint8Tag:
+      case uint8ClampedTag:
+      case uint16Tag:
+      case uint32Tag:
+        return cloneTypedArray(object, isDeep);
+      case mapTag:
+        return cloneMap(object, isDeep, cloneFunc);
+      case numberTag:
+      case stringTag:
+        return new Ctor(object);
+      case regexpTag:
+        return cloneRegExp(object);
+      case setTag:
+        return cloneSet(object, isDeep, cloneFunc);
+      case symbolTag:
+        return cloneSymbol(object);
+    }
+  }
+  function isIndex(value, length2) {
+    length2 = length2 == null ? MAX_SAFE_INTEGER : length2;
+    return !!length2 && (typeof value == "number" || reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length2);
+  }
+  function isKeyable(value) {
+    var type = typeof value;
+    return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
+  }
+  function isMasked(func) {
+    return !!maskSrcKey && maskSrcKey in func;
+  }
+  function isPrototype(value) {
+    var Ctor = value && value.constructor, proto = typeof Ctor == "function" && Ctor.prototype || objectProto;
+    return value === proto;
+  }
+  function toSource(func) {
+    if (func != null) {
+      try {
+        return funcToString.call(func);
+      } catch (e) {
+      }
+      try {
+        return func + "";
+      } catch (e) {
+      }
+    }
+    return "";
+  }
+  function cloneDeep2(value) {
+    return baseClone(value, true, true);
+  }
+  function eq(value, other) {
+    return value === other || value !== value && other !== other;
+  }
+  function isArguments(value) {
+    return isArrayLikeObject(value) && hasOwnProperty.call(value, "callee") && (!propertyIsEnumerable.call(value, "callee") || objectToString.call(value) == argsTag);
+  }
+  var isArray = Array.isArray;
+  function isArrayLike(value) {
+    return value != null && isLength(value.length) && !isFunction(value);
+  }
+  function isArrayLikeObject(value) {
+    return isObjectLike(value) && isArrayLike(value);
+  }
+  var isBuffer = nativeIsBuffer || stubFalse;
+  function isFunction(value) {
+    var tag = isObject(value) ? objectToString.call(value) : "";
+    return tag == funcTag || tag == genTag;
+  }
+  function isLength(value) {
+    return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+  }
+  function isObject(value) {
+    var type = typeof value;
+    return !!value && (type == "object" || type == "function");
+  }
+  function isObjectLike(value) {
+    return !!value && typeof value == "object";
+  }
+  function keys(object) {
+    return isArrayLike(object) ? arrayLikeKeys(object) : baseKeys(object);
+  }
+  function stubArray() {
+    return [];
+  }
+  function stubFalse() {
+    return false;
+  }
+  module.exports = cloneDeep2;
 });
 
 // src/log.js
-var import_loglevelnext = __toESM(require_lib());
+var import_loglevelnext = __toModule(require_lib());
 var log = import_loglevelnext.default.create("dcmjs");
 var validationLog = import_loglevelnext.default.create("validation.dcmjs");
 var log_default = log;
@@ -1229,6 +1181,7 @@ function unpack(bitPixelArray) {
 }
 
 // node_modules/pako/dist/pako.esm.mjs
+/*! pako 2.0.4 https://github.com/nodeca/pako @license (MIT AND Zlib) */
 var Z_FIXED$1 = 4;
 var Z_BINARY = 0;
 var Z_TEXT = 1;
@@ -1257,18 +1210,9 @@ var END_BLOCK = 256;
 var REP_3_6 = 16;
 var REPZ_3_10 = 17;
 var REPZ_11_138 = 18;
-var extra_lbits = (
-  /* extra bits for each length code */
-  new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0])
-);
-var extra_dbits = (
-  /* extra bits for each distance code */
-  new Uint8Array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13])
-);
-var extra_blbits = (
-  /* extra bits for each bit length code */
-  new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7])
-);
+var extra_lbits = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0]);
+var extra_dbits = new Uint8Array([0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13]);
+var extra_blbits = new Uint8Array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 7]);
 var bl_order = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
 var DIST_CODE_LEN = 512;
 var static_ltree = new Array((L_CODES$1 + 2) * 2);
@@ -1318,12 +1262,7 @@ var send_bits = (s, value, length2) => {
   }
 };
 var send_code = (s, c, tree) => {
-  send_bits(
-    s,
-    tree[c * 2],
-    tree[c * 2 + 1]
-    /*.Len*/
-  );
+  send_bits(s, tree[c * 2], tree[c * 2 + 1]);
 };
 var bi_reverse = (code, len2) => {
   let res = 0;
@@ -1612,44 +1551,19 @@ var build_tree = (s, desc) => {
   }
   node = elems;
   do {
-    n = s.heap[
-      1
-      /*SMALLEST*/
-    ];
-    s.heap[
-      1
-      /*SMALLEST*/
-    ] = s.heap[s.heap_len--];
-    pqdownheap(
-      s,
-      tree,
-      1
-      /*SMALLEST*/
-    );
-    m = s.heap[
-      1
-      /*SMALLEST*/
-    ];
+    n = s.heap[1];
+    s.heap[1] = s.heap[s.heap_len--];
+    pqdownheap(s, tree, 1);
+    m = s.heap[1];
     s.heap[--s.heap_max] = n;
     s.heap[--s.heap_max] = m;
     tree[node * 2] = tree[n * 2] + tree[m * 2];
     s.depth[node] = (s.depth[n] >= s.depth[m] ? s.depth[n] : s.depth[m]) + 1;
     tree[n * 2 + 1] = tree[m * 2 + 1] = node;
-    s.heap[
-      1
-      /*SMALLEST*/
-    ] = node++;
-    pqdownheap(
-      s,
-      tree,
-      1
-      /*SMALLEST*/
-    );
+    s.heap[1] = node++;
+    pqdownheap(s, tree, 1);
   } while (s.heap_len >= 2);
-  s.heap[--s.heap_max] = s.heap[
-    1
-    /*SMALLEST*/
-  ];
+  s.heap[--s.heap_max] = s.heap[1];
   gen_bitlen(s, desc);
   gen_codes(tree, max_code, s.bl_count);
 };
@@ -1909,26 +1823,16 @@ var crc32 = (crc, buf, len2, pos) => {
 var crc32_1 = crc32;
 var messages = {
   2: "need dictionary",
-  /* Z_NEED_DICT       2  */
   1: "stream end",
-  /* Z_STREAM_END      1  */
   0: "",
-  /* Z_OK              0  */
   "-1": "file error",
-  /* Z_ERRNO         (-1) */
   "-2": "stream error",
-  /* Z_STREAM_ERROR  (-2) */
   "-3": "data error",
-  /* Z_DATA_ERROR    (-3) */
   "-4": "insufficient memory",
-  /* Z_MEM_ERROR     (-4) */
   "-5": "buffer error",
-  /* Z_BUF_ERROR     (-5) */
   "-6": "incompatible version"
-  /* Z_VERSION_ERROR (-6) */
 };
 var constants$2 = {
-  /* Allowed flush values; see deflate() and inflate() below for details */
   Z_NO_FLUSH: 0,
   Z_PARTIAL_FLUSH: 1,
   Z_SYNC_FLUSH: 2,
@@ -1936,9 +1840,6 @@ var constants$2 = {
   Z_FINISH: 4,
   Z_BLOCK: 5,
   Z_TREES: 6,
-  /* Return codes for the compression/decompression functions. Negative values
-  * are errors, positive values are used for special but normal events.
-  */
   Z_OK: 0,
   Z_STREAM_END: 1,
   Z_NEED_DICT: 2,
@@ -1947,8 +1848,6 @@ var constants$2 = {
   Z_DATA_ERROR: -3,
   Z_MEM_ERROR: -4,
   Z_BUF_ERROR: -5,
-  //Z_VERSION_ERROR: -6,
-  /* compression levels */
   Z_NO_COMPRESSION: 0,
   Z_BEST_SPEED: 1,
   Z_BEST_COMPRESSION: 9,
@@ -1958,16 +1857,12 @@ var constants$2 = {
   Z_RLE: 3,
   Z_FIXED: 4,
   Z_DEFAULT_STRATEGY: 0,
-  /* Possible values of the data_type field (though see inflate()) */
   Z_BINARY: 0,
   Z_TEXT: 1,
-  //Z_ASCII:                1, // = Z_TEXT (deprecated)
   Z_UNKNOWN: 2,
-  /* The deflate compression method */
   Z_DEFLATED: 8
-  //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
-var { _tr_init, _tr_stored_block, _tr_flush_block, _tr_tally, _tr_align } = trees;
+var {_tr_init, _tr_stored_block, _tr_flush_block, _tr_tally, _tr_align} = trees;
 var {
   Z_NO_FLUSH: Z_NO_FLUSH$2,
   Z_PARTIAL_FLUSH,
@@ -2483,27 +2378,16 @@ function Config(good_length, max_lazy, nice_length, max_chain, func) {
   this.func = func;
 }
 var configuration_table = [
-  /*      good lazy nice chain */
   new Config(0, 0, 0, 0, deflate_stored),
-  /* 0 store only */
   new Config(4, 4, 8, 4, deflate_fast),
-  /* 1 max speed, no lazy matches */
   new Config(4, 5, 16, 8, deflate_fast),
-  /* 2 */
   new Config(4, 6, 32, 32, deflate_fast),
-  /* 3 */
   new Config(4, 4, 16, 16, deflate_slow),
-  /* 4 lazy matches */
   new Config(8, 16, 32, 32, deflate_slow),
-  /* 5 */
   new Config(8, 16, 128, 128, deflate_slow),
-  /* 6 */
   new Config(8, 32, 128, 256, deflate_slow),
-  /* 7 */
   new Config(32, 128, 258, 1024, deflate_slow),
-  /* 8 */
   new Config(32, 258, 258, 4096, deflate_slow)
-  /* 9 max compression */
 ];
 var lm_init = (s) => {
   s.window_size = 2 * s.w_size;
@@ -2697,10 +2581,7 @@ var deflate$2 = (strm, flush) => {
         put_byte(s, OS_CODE);
         s.status = BUSY_STATE;
       } else {
-        put_byte(
-          s,
-          (s.gzhead.text ? 1 : 0) + (s.gzhead.hcrc ? 2 : 0) + (!s.gzhead.extra ? 0 : 4) + (!s.gzhead.name ? 0 : 8) + (!s.gzhead.comment ? 0 : 16)
-        );
+        put_byte(s, (s.gzhead.text ? 1 : 0) + (s.gzhead.hcrc ? 2 : 0) + (!s.gzhead.extra ? 0 : 4) + (!s.gzhead.name ? 0 : 8) + (!s.gzhead.comment ? 0 : 16));
         put_byte(s, s.gzhead.time & 255);
         put_byte(s, s.gzhead.time >> 8 & 255);
         put_byte(s, s.gzhead.time >> 16 & 255);
@@ -3222,14 +3103,7 @@ function Deflate$1(options) {
   this.chunks = [];
   this.strm = new zstream();
   this.strm.avail_out = 0;
-  let status = deflate_1$2.deflateInit2(
-    this.strm,
-    opt.level,
-    opt.method,
-    opt.windowBits,
-    opt.memLevel,
-    opt.strategy
-  );
+  let status = deflate_1$2.deflateInit2(this.strm, opt.level, opt.method, opt.windowBits, opt.memLevel, opt.strategy);
   if (status !== Z_OK$2) {
     throw new Error(messages[status]);
   }
@@ -3259,8 +3133,10 @@ Deflate$1.prototype.push = function(data2, flush_mode) {
   if (this.ended) {
     return false;
   }
-  if (flush_mode === ~~flush_mode) _flush_mode = flush_mode;
-  else _flush_mode = flush_mode === true ? Z_FINISH$2 : Z_NO_FLUSH$1;
+  if (flush_mode === ~~flush_mode)
+    _flush_mode = flush_mode;
+  else
+    _flush_mode = flush_mode === true ? Z_FINISH$2 : Z_NO_FLUSH$1;
   if (typeof data2 === "string") {
     strm.input = strings.string2buf(data2);
   } else if (toString$1.call(data2) === "[object ArrayBuffer]") {
@@ -3300,7 +3176,8 @@ Deflate$1.prototype.push = function(data2, flush_mode) {
       strm.avail_out = 0;
       continue;
     }
-    if (strm.avail_in === 0) break;
+    if (strm.avail_in === 0)
+      break;
   }
   return true;
 };
@@ -3573,7 +3450,6 @@ var CODES$1 = 0;
 var LENS$1 = 1;
 var DISTS$1 = 2;
 var lbase = new Uint16Array([
-  /* Length codes 257..285 base */
   3,
   4,
   5,
@@ -3607,7 +3483,6 @@ var lbase = new Uint16Array([
   0
 ]);
 var lext = new Uint8Array([
-  /* Length codes 257..285 extra */
   16,
   16,
   16,
@@ -3641,7 +3516,6 @@ var lext = new Uint8Array([
   78
 ]);
 var dbase = new Uint16Array([
-  /* Distance codes 0..29 base */
   1,
   2,
   3,
@@ -3676,7 +3550,6 @@ var dbase = new Uint16Array([
   0
 ]);
 var dext = new Uint8Array([
-  /* Distance codes 0..29 extra */
   16,
   16,
   16,
@@ -4061,12 +3934,12 @@ var fixedtables = (state) => {
     while (sym < 288) {
       state.lens[sym++] = 8;
     }
-    inftrees(LENS, state.lens, 0, 288, lenfix, 0, state.work, { bits: 9 });
+    inftrees(LENS, state.lens, 0, 288, lenfix, 0, state.work, {bits: 9});
     sym = 0;
     while (sym < 32) {
       state.lens[sym++] = 5;
     }
-    inftrees(DISTS, state.lens, 0, 32, distfix, 0, state.work, { bits: 5 });
+    inftrees(DISTS, state.lens, 0, 32, distfix, 0, state.work, {bits: 5});
     virgin = false;
   }
   state.lencode = lenfix;
@@ -4130,10 +4003,7 @@ var inflate$2 = (strm, flush) => {
   const hbuf = new Uint8Array(4);
   let opts;
   let n;
-  const order = (
-    /* permutation of code lengths */
-    new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15])
-  );
+  const order = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
   if (!strm || !strm.state || !strm.output || !strm.input && strm.avail_in !== 0) {
     return Z_STREAM_ERROR$1;
   }
@@ -4182,8 +4052,7 @@ var inflate$2 = (strm, flush) => {
           if (state.head) {
             state.head.done = false;
           }
-          if (!(state.wrap & 1) || /* check if zlib header allowed */
-          (((hold & 255) << 8) + (hold >> 8)) % 31) {
+          if (!(state.wrap & 1) || (((hold & 255) << 8) + (hold >> 8)) % 31) {
             strm.msg = "incorrect header check";
             state.mode = BAD;
             break;
@@ -4320,16 +4189,7 @@ var inflate$2 = (strm, flush) => {
                 if (!state.head.extra) {
                   state.head.extra = new Uint8Array(state.head.extra_len);
                 }
-                state.head.extra.set(
-                  input.subarray(
-                    next,
-                    // extra field is limited to 65536 bytes
-                    // - no need for additional size check
-                    next + copy2
-                  ),
-                  /*len + copy > state.head.extra_max - len ? state.head.extra_max : copy,*/
-                  len2
-                );
+                state.head.extra.set(input.subarray(next, next + copy2), len2);
               }
               if (state.flags & 512) {
                 state.check = crc32_1(state.check, input, copy2, next);
@@ -4579,7 +4439,7 @@ var inflate$2 = (strm, flush) => {
           }
           state.lencode = state.lendyn;
           state.lenbits = 7;
-          opts = { bits: state.lenbits };
+          opts = {bits: state.lenbits};
           ret = inftrees(CODES, state.lens, 0, 19, state.lencode, 0, state.work, opts);
           state.lenbits = opts.bits;
           if (ret) {
@@ -4684,7 +4544,7 @@ var inflate$2 = (strm, flush) => {
             break;
           }
           state.lenbits = 9;
-          opts = { bits: state.lenbits };
+          opts = {bits: state.lenbits};
           ret = inftrees(LENS, state.lens, 0, state.nlen, state.lencode, 0, state.work, opts);
           state.lenbits = opts.bits;
           if (ret) {
@@ -4694,7 +4554,7 @@ var inflate$2 = (strm, flush) => {
           }
           state.distbits = 6;
           state.distcode = state.distdyn;
-          opts = { bits: state.distbits };
+          opts = {bits: state.distbits};
           ret = inftrees(DISTS, state.lens, state.nlen, state.ndist, state.distcode, 0, state.work, opts);
           state.distbits = opts.bits;
           if (ret) {
@@ -4942,8 +4802,7 @@ var inflate$2 = (strm, flush) => {
             strm.total_out += _out;
             state.total += _out;
             if (_out) {
-              strm.adler = state.check = /*UPDATE(state.check, put - _out, _out);*/
-              state.flags ? crc32_1(state.check, output, _out, put - _out) : adler32_1(state.check, output, _out, put - _out);
+              strm.adler = state.check = state.flags ? crc32_1(state.check, output, _out, put - _out) : adler32_1(state.check, output, _out, put - _out);
             }
             _out = left;
             if ((state.flags ? hold : zswap32(hold)) !== state.check) {
@@ -4994,7 +4853,8 @@ var inflate$2 = (strm, flush) => {
   state.hold = hold;
   state.bits = bits;
   if (state.wsize || _out !== strm.avail_out && state.mode < BAD && (state.mode < CHECK || flush !== Z_FINISH$1)) {
-    if (updatewindow(strm, strm.output, strm.next_out, _out - strm.avail_out)) ;
+    if (updatewindow(strm, strm.output, strm.next_out, _out - strm.avail_out))
+      ;
   }
   _in -= strm.avail_in;
   _out -= strm.avail_out;
@@ -5002,8 +4862,7 @@ var inflate$2 = (strm, flush) => {
   strm.total_out += _out;
   state.total += _out;
   if (state.wrap && _out) {
-    strm.adler = state.check = /*UPDATE(state.check, strm.next_out - _out, _out);*/
-    state.flags ? crc32_1(state.check, output, _out, strm.next_out - _out) : adler32_1(state.check, output, _out, strm.next_out - _out);
+    strm.adler = state.check = state.flags ? crc32_1(state.check, output, _out, strm.next_out - _out) : adler32_1(state.check, output, _out, strm.next_out - _out);
   }
   strm.data_type = state.bits + (state.last ? 64 : 0) + (state.mode === TYPE ? 128 : 0) + (state.mode === LEN_ || state.mode === COPY_ ? 256 : 0);
   if ((_in === 0 && _out === 0 || flush === Z_FINISH$1) && ret === Z_OK$1) {
@@ -5134,10 +4993,7 @@ function Inflate$1(options) {
   this.chunks = [];
   this.strm = new zstream();
   this.strm.avail_out = 0;
-  let status = inflate_1$2.inflateInit2(
-    this.strm,
-    opt.windowBits
-  );
+  let status = inflate_1$2.inflateInit2(this.strm, opt.windowBits);
   if (status !== Z_OK) {
     throw new Error(messages[status]);
   }
@@ -5162,9 +5018,12 @@ Inflate$1.prototype.push = function(data2, flush_mode) {
   const chunkSize = this.options.chunkSize;
   const dictionary2 = this.options.dictionary;
   let status, _flush_mode, last_avail_out;
-  if (this.ended) return false;
-  if (flush_mode === ~~flush_mode) _flush_mode = flush_mode;
-  else _flush_mode = flush_mode === true ? Z_FINISH : Z_NO_FLUSH;
+  if (this.ended)
+    return false;
+  if (flush_mode === ~~flush_mode)
+    _flush_mode = flush_mode;
+  else
+    _flush_mode = flush_mode === true ? Z_FINISH : Z_NO_FLUSH;
   if (toString.call(data2) === "[object ArrayBuffer]") {
     strm.input = new Uint8Array(data2);
   } else {
@@ -5209,21 +5068,24 @@ Inflate$1.prototype.push = function(data2, flush_mode) {
           let utf8str = strings.buf2string(strm.output, next_out_utf8);
           strm.next_out = tail;
           strm.avail_out = chunkSize - tail;
-          if (tail) strm.output.set(strm.output.subarray(next_out_utf8, next_out_utf8 + tail), 0);
+          if (tail)
+            strm.output.set(strm.output.subarray(next_out_utf8, next_out_utf8 + tail), 0);
           this.onData(utf8str);
         } else {
           this.onData(strm.output.length === strm.next_out ? strm.output : strm.output.subarray(0, strm.next_out));
         }
       }
     }
-    if (status === Z_OK && last_avail_out === 0) continue;
+    if (status === Z_OK && last_avail_out === 0)
+      continue;
     if (status === Z_STREAM_END) {
       status = inflate_1$2.inflateEnd(this.strm);
       this.onEnd(status);
       this.ended = true;
       return true;
     }
-    if (strm.avail_in === 0) break;
+    if (strm.avail_in === 0)
+      break;
   }
   return true;
 };
@@ -5245,7 +5107,8 @@ Inflate$1.prototype.onEnd = function(status) {
 function inflate$1(input, options) {
   const inflator = new Inflate$1(options);
   inflator.push(input);
-  if (inflator.err) throw inflator.msg || messages[inflator.err];
+  if (inflator.err)
+    throw inflator.msg || messages[inflator.err];
   return inflator.result;
 }
 function inflateRaw$1(input, options) {
@@ -5265,8 +5128,8 @@ var inflate_1$1 = {
   ungzip: ungzip$1,
   constants
 };
-var { Deflate, deflate, deflateRaw, gzip } = deflate_1$1;
-var { Inflate, inflate, inflateRaw, ungzip } = inflate_1$1;
+var {Deflate, deflate, deflateRaw, gzip} = deflate_1$1;
+var {Inflate, inflate, inflateRaw, ungzip} = inflate_1$1;
 var Deflate_1 = Deflate;
 var deflate_1 = deflate;
 var deflateRaw_1 = deflateRaw;
@@ -5294,12 +5157,14 @@ function toInt(val) {
     throw new Error("Not a number: " + val);
   } else if (typeof val == "string") {
     return parseInt(val);
-  } else return val;
+  } else
+    return val;
 }
 function toFloat(val) {
   if (typeof val == "string") {
     return parseFloat(val);
-  } else return val;
+  } else
+    return val;
 }
 var BufferStream = class {
   constructor(sizeOrBuffer, littleEndian) {
@@ -5344,11 +5209,7 @@ var BufferStream = class {
     const first = value >> 16;
     const second = value & 65535;
     this.view.setUint16(this.offset, toInt(first), this.isLittleEndian);
-    this.view.setUint16(
-      this.offset + 2,
-      toInt(second),
-      this.isLittleEndian
-    );
+    this.view.setUint16(this.offset + 2, toInt(second), this.isLittleEndian);
     return this.increment(4);
   }
   writeInt16(value) {
@@ -5493,18 +5354,12 @@ var BufferStream = class {
       let newbuf = new ArrayBuffer(this.offset + stream.size);
       let int8 = new Uint8Array(newbuf);
       int8.set(new Uint8Array(this.getBuffer(0, this.offset)));
-      int8.set(
-        new Uint8Array(stream.getBuffer(0, stream.size)),
-        this.offset
-      );
+      int8.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
       this.buffer = newbuf;
       this.view = new DataView(this.buffer);
     } else {
       let int8 = new Uint8Array(this.buffer);
-      int8.set(
-        new Uint8Array(stream.getBuffer(0, stream.size)),
-        this.offset
-      );
+      int8.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
     }
     this.offset += stream.size;
     this.size = this.offset;
@@ -5628,9 +5483,7 @@ var ReadBufferStream = class extends BufferStream {
 };
 var DeflatedReadBufferStream = class extends ReadBufferStream {
   constructor(stream, options) {
-    const inflatedBuffer = pako.inflateRaw(
-      stream.getBuffer(stream.offset, stream.size)
-    );
+    const inflatedBuffer = pako.inflateRaw(stream.getBuffer(stream.offset, stream.size));
     super(inflatedBuffer.buffer, stream.littleEndian, options);
   }
 };
@@ -5659,13 +5512,11 @@ function pnStringToObject(value, multiple = true) {
   if (typeof value === "string" || value instanceof String) {
     const values = value.split(String.fromCharCode(VM_DELIMITER)).filter(Boolean);
     const pnObj = values.map(function(v2) {
-      const components = v2.split(
-        String.fromCharCode(PN_COMPONENT_DELIMITER)
-      );
+      const components = v2.split(String.fromCharCode(PN_COMPONENT_DELIMITER));
       return {
-        ...components[0] ? { Alphabetic: components[0] } : {},
-        ...components[1] ? { Ideographic: components[1] } : {},
-        ...components[2] ? { Phonetic: components[2] } : {}
+        ...components[0] ? {Alphabetic: components[0]} : {},
+        ...components[1] ? {Ideographic: components[1]} : {},
+        ...components[2] ? {Phonetic: components[2]} : {}
       };
     });
     return multiple ? pnObj : pnObj[0];
@@ -5693,13 +5544,11 @@ function pnObjectToString(value) {
 }
 function pnAddValueAccessors(value) {
   if (!value.__hasValueAccessors) {
-    Object.defineProperty(value, "__hasValueAccessors", { value: true });
+    Object.defineProperty(value, "__hasValueAccessors", {value: true});
     Object.defineProperty(value, "toJSON", {
       value: function() {
         if (Array.isArray(this)) {
-          return this.filter(Boolean).map(
-            (x) => pnStringToObject(x, false)
-          );
+          return this.filter(Boolean).map((x) => pnStringToObject(x, false));
         } else {
           return pnStringToObject(this);
         }
@@ -59987,14 +59836,11 @@ var dictionary_default = dictionary;
 
 // src/utilities/addAccessors.js
 var handler = {
-  /**
-   * Get a proxied value from the array or property value
-   * Note that the property value get works even if you update the underlying object.
-   * Also, return true of proxy.__isProxy in order to distinguish proxies and not double proxy them.
-   */
   get: (target, prop) => {
-    if (prop == "__isProxy") return true;
-    if (prop in target) return target[prop];
+    if (prop == "__isProxy")
+      return true;
+    if (prop in target)
+      return target[prop];
     return target[0][prop];
   },
   set: (obj, prop, value) => {
@@ -60009,11 +59855,14 @@ var handler = {
   }
 };
 var addAccessors = (dest, sqZero) => {
-  if (dest.__isProxy) return dest;
+  if (dest.__isProxy)
+    return dest;
   let itemZero = sqZero;
   if (itemZero === void 0) {
-    if (typeof dest !== "object") return dest;
-    if (Array.isArray(dest) && dest.length !== 1) return dest;
+    if (typeof dest !== "object")
+      return dest;
+    if (Array.isArray(dest) && dest.length !== 1)
+      return dest;
     itemZero = Array.isArray(dest) ? dest[0] : dest;
   }
   if (Array.isArray(dest)) {
@@ -60027,11 +59876,10 @@ var addAccessors = (dest, sqZero) => {
 var addAccessors_default = addAccessors;
 
 // src/DicomMetaDictionary.js
-var DicomMetaDictionary = class _DicomMetaDictionary {
-  // intakes a custom dictionary that will be used to parse/denaturalize the dataset
+var DicomMetaDictionary = class {
   constructor(customDictionary) {
     this.customDictionary = customDictionary;
-    this.customNameMap = _DicomMetaDictionary._generateCustomNameMap(customDictionary);
+    this.customNameMap = DicomMetaDictionary._generateCustomNameMap(customDictionary);
   }
   static punctuateTag(rawTag) {
     if (rawTag.indexOf(",") !== -1) {
@@ -60049,22 +59897,17 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     return tag.substring(1, 10).replace(",", "");
   }
   static parseIntFromTag(tag) {
-    const integerValue = parseInt(
-      "0x" + _DicomMetaDictionary.unpunctuateTag(tag)
-    );
+    const integerValue = parseInt("0x" + DicomMetaDictionary.unpunctuateTag(tag));
     return integerValue;
   }
   static tagAsIntegerFromName(name) {
-    const item = _DicomMetaDictionary.nameMap[name];
+    const item = DicomMetaDictionary.nameMap[name];
     if (item != void 0) {
       return this.parseIntFromTag(item.tag);
     } else {
       return void 0;
     }
   }
-  // fixes some common errors in VRs
-  // TODO: if this gets longer it could go in ValueRepresentation.js
-  // or in a dedicated class
   static cleanDataset(dataset) {
     const cleanedDataset = {};
     Object.keys(dataset).forEach((tag) => {
@@ -60072,9 +59915,7 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
       if (data2.vr == "SQ") {
         const cleanedValues = [];
         Object.keys(data2.Value).forEach((index) => {
-          cleanedValues.push(
-            _DicomMetaDictionary.cleanDataset(data2.Value[index])
-          );
+          cleanedValues.push(DicomMetaDictionary.cleanDataset(data2.Value[index]));
         });
         data2.Value = cleanedValues;
       } else {
@@ -60090,9 +59931,6 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     });
     return cleanedDataset;
   }
-  // unlike naturalizeDataset, this only
-  // changes the names of the member variables
-  // but leaves the values intact
   static namifyDataset(dataset) {
     var namedDataset = {};
     Object.keys(dataset).forEach((tag) => {
@@ -60100,14 +59938,12 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
       if (data2.vr == "SQ") {
         var namedValues = [];
         Object.keys(data2.Value).forEach((index) => {
-          namedValues.push(
-            _DicomMetaDictionary.namifyDataset(data2.Value[index])
-          );
+          namedValues.push(DicomMetaDictionary.namifyDataset(data2.Value[index]));
         });
         data2.Value = namedValues;
       }
-      var punctuatedTag = _DicomMetaDictionary.punctuateTag(tag);
-      var entry = _DicomMetaDictionary.dictionary[punctuatedTag];
+      var punctuatedTag = DicomMetaDictionary.punctuateTag(tag);
+      var entry = DicomMetaDictionary.dictionary[punctuatedTag];
       var name = tag;
       if (entry) {
         name = entry.name;
@@ -60116,21 +59952,14 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     });
     return namedDataset;
   }
-  /** converts from DICOM JSON Model dataset to a natural dataset
-   * - sequences become lists
-   * - single element lists are replaced by their first element,
-   *     with single element lists remaining lists, but being a
-   *     proxy for the child values, see addAccessors for examples
-   * - object member names are dictionary, not group/element tag
-   */
   static naturalizeDataset(dataset) {
     const naturalDataset = ValueRepresentation.addTagAccessors({
       _vrMap: {}
     });
     Object.keys(dataset).forEach((tag) => {
       const data2 = dataset[tag];
-      const punctuatedTag = _DicomMetaDictionary.punctuateTag(tag);
-      const entry = _DicomMetaDictionary.dictionary[punctuatedTag];
+      const punctuatedTag = DicomMetaDictionary.punctuateTag(tag);
+      const entry = DicomMetaDictionary.dictionary[punctuatedTag];
       let naturalName = tag;
       if (entry) {
         naturalName = entry.name;
@@ -60153,11 +59982,7 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
         if (data2.vr === "SQ") {
           const naturalValues = [];
           Object.keys(data2.Value).forEach((index) => {
-            naturalValues.push(
-              _DicomMetaDictionary.naturalizeDataset(
-                data2.Value[index]
-              )
-            );
+            naturalValues.push(DicomMetaDictionary.naturalizeDataset(data2.Value[index]));
           });
           naturalDataset[naturalName] = naturalValues;
         } else {
@@ -60166,10 +59991,7 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
         if (naturalDataset[naturalName].length === 1) {
           const sqZero = naturalDataset[naturalName][0];
           if (sqZero && typeof sqZero === "object" && !sqZero.length) {
-            naturalDataset[naturalName] = addAccessors_default(
-              naturalDataset[naturalName],
-              sqZero
-            );
+            naturalDataset[naturalName] = addAccessors_default(naturalDataset[naturalName], sqZero);
           } else {
             naturalDataset[naturalName] = sqZero;
           }
@@ -60183,22 +60005,15 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     if (!Array.isArray(value)) {
       value = [value];
     } else {
-      const thereIsUndefinedValues = naturalValue.some(
-        (item) => item === void 0
-      );
+      const thereIsUndefinedValues = naturalValue.some((item) => item === void 0);
       if (thereIsUndefinedValues) {
-        throw new Error(
-          "There are undefined values at the array naturalValue in DicomMetaDictionary.denaturalizeValue"
-        );
+        throw new Error("There are undefined values at the array naturalValue in DicomMetaDictionary.denaturalizeValue");
       }
     }
-    value = value.map(
-      (entry) => entry.constructor.name == "Number" ? String(entry) : entry
-    );
+    value = value.map((entry) => entry.constructor.name == "Number" ? String(entry) : entry);
     return value;
   }
-  // keep the static function to support previous calls to the class
-  static denaturalizeDataset(dataset, nameMap = _DicomMetaDictionary.nameMap) {
+  static denaturalizeDataset(dataset, nameMap = DicomMetaDictionary.nameMap) {
     var unnaturalDataset = {};
     Object.keys(dataset).forEach((naturalName) => {
       var name = naturalName;
@@ -60217,37 +60032,23 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
             if (dataset._vrMap && dataset._vrMap[naturalName]) {
               dataItem.vr = dataset._vrMap[naturalName];
             } else {
-              log_default.error(
-                "No value representation given for",
-                naturalName
-              );
+              log_default.error("No value representation given for", naturalName);
             }
           }
-          let vr = ValueRepresentation.createByTypeString(
-            dataItem.vr
-          );
-          dataItem.Value = _DicomMetaDictionary.denaturalizeValue(
-            dataItem.Value
-          );
+          let vr = ValueRepresentation.createByTypeString(dataItem.vr);
+          dataItem.Value = DicomMetaDictionary.denaturalizeValue(dataItem.Value);
           if (entry.vr == "SQ") {
             var unnaturalValues = [];
             for (let datasetIndex = 0; datasetIndex < dataItem.Value.length; datasetIndex++) {
               const nestedDataset = dataItem.Value[datasetIndex];
-              unnaturalValues.push(
-                _DicomMetaDictionary.denaturalizeDataset(
-                  nestedDataset,
-                  nameMap
-                )
-              );
+              unnaturalValues.push(DicomMetaDictionary.denaturalizeDataset(nestedDataset, nameMap));
             }
             dataItem.Value = unnaturalValues;
           }
           if (!vr.isBinary() && vr.maxLength) {
             dataItem.Value = dataItem.Value.map((value) => {
               if (value.length > vr.maxLength) {
-                log_default.warn(
-                  `Truncating value ${value} of ${naturalName} because it is longer than ${vr.maxLength}`
-                );
+                log_default.warn(`Truncating value ${value} of ${naturalName} because it is longer than ${vr.maxLength}`);
                 return value.slice(0, vr.maxLength);
               } else {
                 return value;
@@ -60255,17 +60056,12 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
             });
           }
         }
-        var tag = _DicomMetaDictionary.unpunctuateTag(entry.tag);
+        var tag = DicomMetaDictionary.unpunctuateTag(entry.tag);
         unnaturalDataset[tag] = dataItem;
       } else {
         const validMetaNames = ["_vrMap", "_meta"];
         if (validMetaNames.indexOf(name) == -1) {
-          log_default.warn(
-            "Unknown name in dataset",
-            name,
-            ":",
-            dataset[name]
-          );
+          log_default.warn("Unknown name in dataset", name, ":", dataset[name]);
         }
       }
     });
@@ -60278,25 +60074,24 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     }
     return uid;
   }
-  // date and time in UTC
   static date() {
-    let now = /* @__PURE__ */ new Date();
+    let now = new Date();
     return now.toISOString().replace(/-/g, "").slice(0, 8);
   }
   static time() {
-    let now = /* @__PURE__ */ new Date();
+    let now = new Date();
     return now.toISOString().replace(/:/g, "").slice(11, 17);
   }
   static dateTime() {
-    let now = /* @__PURE__ */ new Date();
+    let now = new Date();
     return now.toISOString().replace(/[:\-TZ]/g, "");
   }
   static _generateNameMap() {
-    _DicomMetaDictionary.nameMap = {};
-    Object.keys(_DicomMetaDictionary.dictionary).forEach((tag) => {
-      var dict = _DicomMetaDictionary.dictionary[tag];
+    DicomMetaDictionary.nameMap = {};
+    Object.keys(DicomMetaDictionary.dictionary).forEach((tag) => {
+      var dict = DicomMetaDictionary.dictionary[tag];
       if (dict.version != "PrivateTag") {
-        _DicomMetaDictionary.nameMap[dict.name] = dict;
+        DicomMetaDictionary.nameMap[dict.name] = dict;
       }
     });
   }
@@ -60311,18 +60106,14 @@ var DicomMetaDictionary = class _DicomMetaDictionary {
     return nameMap;
   }
   static _generateUIDMap() {
-    _DicomMetaDictionary.sopClassUIDsByName = {};
-    Object.keys(_DicomMetaDictionary.sopClassNamesByUID).forEach((uid) => {
-      var name = _DicomMetaDictionary.sopClassNamesByUID[uid];
-      _DicomMetaDictionary.sopClassUIDsByName[name] = uid;
+    DicomMetaDictionary.sopClassUIDsByName = {};
+    Object.keys(DicomMetaDictionary.sopClassNamesByUID).forEach((uid) => {
+      var name = DicomMetaDictionary.sopClassNamesByUID[uid];
+      DicomMetaDictionary.sopClassUIDsByName[name] = uid;
     });
   }
-  // denaturalizes dataset using custom dictionary and nameMap
   denaturalizeDataset(dataset) {
-    return _DicomMetaDictionary.denaturalizeDataset(
-      dataset,
-      this.customNameMap
-    );
+    return DicomMetaDictionary.denaturalizeDataset(dataset, this.customNameMap);
   }
 };
 DicomMetaDictionary.sopClassNamesByUID = {
@@ -60363,12 +60154,8 @@ var tagProxyHandler = {
     var vrType;
     if (["values", "Value"].includes(prop) && target.vr && ValueRepresentation.hasValueAccessors(target.vr)) {
       vrType = ValueRepresentation.createByTypeString(target.vr);
-    } else if (prop in DicomMetaDictionary.nameMap && ValueRepresentation.hasValueAccessors(
-      DicomMetaDictionary.nameMap[prop].vr
-    )) {
-      vrType = ValueRepresentation.createByTypeString(
-        DicomMetaDictionary.nameMap[prop].vr
-      );
+    } else if (prop in DicomMetaDictionary.nameMap && ValueRepresentation.hasValueAccessors(DicomMetaDictionary.nameMap[prop].vr)) {
+      vrType = ValueRepresentation.createByTypeString(DicomMetaDictionary.nameMap[prop].vr);
     } else {
       target[prop] = value;
       return true;
@@ -60381,19 +60168,14 @@ function rtrim(str2) {
   return str2.replace(/\s*$/g, "");
 }
 function toWindows(inputArray, size) {
-  return Array.from(
-    { length: inputArray.length - (size - 1) },
-    //get the appropriate length
-    (_, index) => inputArray.slice(index, index + size)
-    //create the windows
-  );
+  return Array.from({length: inputArray.length - (size - 1)}, (_, index) => inputArray.slice(index, index + size));
 }
 var DicomMessage;
 var Tag;
 var binaryVRs = ["FL", "FD", "SL", "SS", "UL", "US", "AT"];
 var explicitVRs = ["OB", "OW", "OF", "SQ", "UC", "UR", "UT", "UN"];
 var singleVRs = ["SQ", "OF", "OW", "OB", "UN"];
-var ValueRepresentation = class _ValueRepresentation {
+var ValueRepresentation = class {
   constructor(type) {
     this.type = type;
     this.multi = false;
@@ -60419,27 +60201,19 @@ var ValueRepresentation = class _ValueRepresentation {
   addValueAccessors(value) {
     return value;
   }
-  /**
-   * Replaces a tag with a Proxy which assigns value accessors based on the vr field
-   * of the tag being given to it. If the tag object does not have a vr or vr.type
-   * property, the proxy will look for the prop name in the natural name map.
-   * @param {any} tag object to add accessors to
-   * @returns {any} either the same object if no accessor needed, or a Proxy
-   */
   static addTagAccessors(tag) {
-    if (!tag.__hasTagAccessors && _ValueRepresentation.hasValueAccessors(tag.vr?.type || tag.vr)) {
-      Object.defineProperty(tag, "__hasTagAccessors", { value: true });
+    if (!tag.__hasTagAccessors && ValueRepresentation.hasValueAccessors(tag.vr?.type || tag.vr)) {
+      Object.defineProperty(tag, "__hasTagAccessors", {value: true});
       return new Proxy(tag, tagProxyHandler);
     }
     return tag;
   }
   read(stream, length2, syntax) {
     if (this.fixed && this.maxLength) {
-      if (!length2) return this.defaultValue;
+      if (!length2)
+        return this.defaultValue;
       if (this.maxLength != length2)
-        log.error(
-          "Invalid length for fixed length tag, vr " + this.type + ", length " + this.maxLength + " != " + length2
-        );
+        log.error("Invalid length for fixed length tag, vr " + this.type + ", length " + this.maxLength + " != " + length2);
     }
     return this.readBytes(stream, length2, syntax);
   }
@@ -60447,7 +60221,8 @@ var ValueRepresentation = class _ValueRepresentation {
     return stream.readAsciiString(length2);
   }
   readPaddedAsciiString(stream, length2) {
-    if (!length2) return "";
+    if (!length2)
+      return "";
     if (stream.peekUint8(length2 - 1) !== this.padByte) {
       return stream.readAsciiString(length2);
     } else {
@@ -60457,7 +60232,8 @@ var ValueRepresentation = class _ValueRepresentation {
     }
   }
   readPaddedEncodedString(stream, length2) {
-    if (!length2) return "";
+    if (!length2)
+      return "";
     const val = stream.readEncodedString(length2);
     if (val.length && val[val.length - 1] !== String.fromCharCode(this.padByte)) {
       return val;
@@ -60491,8 +60267,8 @@ var ValueRepresentation = class _ValueRepresentation {
       return written;
     }
   }
-  writeBytes(stream, value, lengths, writeOptions = { allowInvalidVRLength: false }) {
-    const { allowInvalidVRLength } = writeOptions;
+  writeBytes(stream, value, lengths, writeOptions = {allowInvalidVRLength: false}) {
+    const {allowInvalidVRLength} = writeOptions;
     var valid = true, valarr = Array.isArray(value) ? value : [value], total = 0;
     for (var i = 0; i < valarr.length; i++) {
       var checkValue = valarr[i], checklen = lengths[i], isString = false, displaylen = checklen;
@@ -60510,8 +60286,10 @@ var ValueRepresentation = class _ValueRepresentation {
       }
       if (!valid) {
         var errmsg = "Value exceeds max length, vr: " + this.type + ", value: " + checkValue + ", length: " + displaylen;
-        if (isString) log.log(errmsg);
-        else throw new Error(errmsg);
+        if (isString)
+          log.log(errmsg);
+        else
+          throw new Error(errmsg);
       }
       total += checklen;
     }
@@ -60527,7 +60305,7 @@ var ValueRepresentation = class _ValueRepresentation {
   }
   static hasValueAccessors(type) {
     if (type in VRinstances) {
-      return VRinstances[type].addValueAccessors !== _ValueRepresentation.prototype.addValueAccessors;
+      return VRinstances[type].addValueAccessors !== ValueRepresentation.prototype.addValueAccessors;
     }
     return type === void 0;
   }
@@ -60582,7 +60360,7 @@ var BinaryRepresentation = class extends ValueRepresentation {
   writeBytes(stream, value, syntax, isEncapsulated, writeOptions = {}) {
     var i;
     var binaryStream;
-    var { fragmentMultiframe = true } = writeOptions;
+    var {fragmentMultiframe = true} = writeOptions;
     value = value === null || value === void 0 ? [] : value;
     if (isEncapsulated) {
       var fragmentSize = 1024 * 20, frames = value.length, startOffset = [];
@@ -60592,25 +60370,18 @@ var BinaryRepresentation = class extends ValueRepresentation {
         bufferLength += value[i].byteLength + (needsPadding ? 1 : 0);
         let fragmentsLength2 = 1;
         if (fragmentMultiframe) {
-          fragmentsLength2 = Math.ceil(
-            value[i].byteLength / fragmentSize
-          );
+          fragmentsLength2 = Math.ceil(value[i].byteLength / fragmentSize);
         }
         bufferLength += fragmentsLength2 * 8;
       }
-      binaryStream = new WriteBufferStream(
-        bufferLength,
-        stream.isLittleEndian
-      );
+      binaryStream = new WriteBufferStream(bufferLength, stream.isLittleEndian);
       for (i = 0; i < frames; i++) {
         const needsPadding = Boolean(value[i].byteLength & 1);
         startOffset.push(binaryStream.size);
         var frameBuffer = value[i], frameStream = new ReadBufferStream(frameBuffer);
         var fragmentsLength = 1;
         if (fragmentMultiframe) {
-          fragmentsLength = Math.ceil(
-            frameStream.size / fragmentSize
-          );
+          fragmentsLength = Math.ceil(frameStream.size / fragmentSize);
         }
         for (var j = 0, fragmentStart = 0; j < fragmentsLength; j++) {
           const isFinalFragment = j === fragmentsLength - 1;
@@ -60621,16 +60392,12 @@ var BinaryRepresentation = class extends ValueRepresentation {
           if (isFinalFragment) {
             fragmentEnd = frameStream.size;
           }
-          var fragStream = new ReadBufferStream(
-            frameStream.getBuffer(fragmentStart, fragmentEnd)
-          );
+          var fragStream = new ReadBufferStream(frameStream.getBuffer(fragmentStart, fragmentEnd));
           fragmentStart = fragmentEnd;
           binaryStream.writeUint16(65534);
           binaryStream.writeUint16(57344);
           const addPaddingByte = isFinalFragment && needsPadding;
-          binaryStream.writeUint32(
-            fragStream.size + (addPaddingByte ? 1 : 0)
-          );
+          binaryStream.writeUint32(fragStream.size + (addPaddingByte ? 1 : 0));
           binaryStream.concat(fragStream);
           if (addPaddingByte) {
             binaryStream.writeInt8(this.padByte);
@@ -60652,12 +60419,7 @@ var BinaryRepresentation = class extends ValueRepresentation {
       var binaryData = value[0];
       binaryStream = new ReadBufferStream(binaryData);
       stream.concat(binaryStream);
-      return super.writeBytes(
-        stream,
-        binaryData,
-        [binaryStream.size],
-        writeOptions
-      );
+      return super.writeBytes(stream, binaryData, [binaryStream.size], writeOptions);
     }
   }
   readBytes(stream, length2) {
@@ -60680,17 +60442,12 @@ var BinaryRepresentation = class extends ValueRepresentation {
           const nextTag = Tag.readTag(stream2);
           if (nextTag.is(SequenceItemTag)) {
             const itemLength2 = stream2.readUint32();
-            const buffer = stream2.getBuffer(
-              stream2.offset,
-              stream2.offset + itemLength2
-            );
+            const buffer = stream2.getBuffer(stream2.offset, stream2.offset + itemLength2);
             stream2.increment(itemLength2);
             return buffer;
           } else if (nextTag.is(SequenceDelimiterTag)) {
             if (stream2.readUint32() !== 0) {
-              throw Error(
-                "SequenceDelimiterItem tag value was not zero"
-              );
+              throw Error("SequenceDelimiterItem tag value was not zero");
             }
             return null;
           }
@@ -60702,15 +60459,11 @@ var BinaryRepresentation = class extends ValueRepresentation {
           frames = toWindows(offsets, 2).map((range) => {
             const fragments = [];
             const [start, stop] = range;
-            const rangeStream = new ReadBufferStream(
-              stream.buffer,
-              stream.isLittleEndian,
-              {
-                start,
-                stop,
-                noCopy: stream.noCopy
-              }
-            );
+            const rangeStream = new ReadBufferStream(stream.buffer, stream.isLittleEndian, {
+              start,
+              stop,
+              noCopy: stream.noCopy
+            });
             let frameSize = 0;
             while (!rangeStream.end()) {
               const buf = getNextSequenceItemData(rangeStream);
@@ -60746,9 +60499,7 @@ var BinaryRepresentation = class extends ValueRepresentation {
           }
         }
       } else {
-        throw new Error(
-          "Item tag not found after undefined binary length"
-        );
+        throw new Error("Item tag not found after undefined binary length");
       }
       return frames;
     } else {
@@ -60800,12 +60551,7 @@ var AttributeTag = class extends ValueRepresentation {
     return Tag.readTag(stream).value;
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "TwoUint16s", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "TwoUint16s", value), writeOptions);
   }
 };
 var DateValue = class extends AsciiStringRepresentation {
@@ -60835,7 +60581,8 @@ var DecimalString = class extends AsciiStringRepresentation {
     return ds;
   }
   formatValue(value) {
-    if (value === null) return "";
+    if (value === null)
+      return "";
     let str2 = String(value);
     if (str2.length > this.maxLength) {
       const sign_chars = value < 0 ? 1 : 0;
@@ -60843,13 +60590,13 @@ var DecimalString = class extends AsciiStringRepresentation {
       const use_scientific = logval < -4 || logval >= 14 - sign_chars;
       if (use_scientific) {
         const trunc_str = value.toExponential(16 - sign_chars);
-        if (trunc_str.length <= 16) return trunc_str;
-        return value.toExponential(
-          16 - (trunc_str.length - 16) - sign_chars
-        );
+        if (trunc_str.length <= 16)
+          return trunc_str;
+        return value.toExponential(16 - (trunc_str.length - 16) - sign_chars);
       } else {
         const trunc_str = value.toFixed(16 - sign_chars);
-        if (trunc_str.length <= 16) return trunc_str;
+        if (trunc_str.length <= 16)
+          return trunc_str;
         return value.toFixed(16 - sign_chars - (trunc_str.length - 16));
       }
     }
@@ -60879,12 +60626,7 @@ var FloatingPointSingle = class extends ValueRepresentation {
     return Number(stream.readFloat());
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Float", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Float", value), writeOptions);
   }
 };
 var FloatingPointDouble = class extends ValueRepresentation {
@@ -60899,12 +60641,7 @@ var FloatingPointDouble = class extends ValueRepresentation {
     return Number(stream.readDouble());
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Double", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Double", value), writeOptions);
   }
 };
 var IntegerString = class extends AsciiStringRepresentation {
@@ -60953,7 +60690,7 @@ var LongText = class extends EncodedStringRepresentation {
     return rtrim(stream.readEncodedString(length2));
   }
 };
-var PersonName = class _PersonName extends EncodedStringRepresentation {
+var PersonName = class extends EncodedStringRepresentation {
   constructor() {
     super("PN");
     this.maxLength = null;
@@ -60962,13 +60699,11 @@ var PersonName = class _PersonName extends EncodedStringRepresentation {
   static checkComponentLengths(components) {
     for (var i in components) {
       var cmp = components[i];
-      if (cmp.length > 64) return false;
+      if (cmp.length > 64)
+        return false;
     }
     return true;
   }
-  // Adds toJSON and toString accessors to normalize PersonName output; ie toJSON
-  // always returns a dicom+json object, and toString always returns a part10
-  // style string, regardless of typeof value
   addValueAccessors(value) {
     if (typeof value === "string") {
       value = new String(value);
@@ -60977,29 +60712,24 @@ var PersonName = class _PersonName extends EncodedStringRepresentation {
       if (typeof value === "object") {
         return dicomJson_default.pnAddValueAccessors(value);
       } else {
-        throw new Error(
-          "Cannot add accessors to non-string primitives"
-        );
+        throw new Error("Cannot add accessors to non-string primitives");
       }
     }
     return value;
   }
-  // Only checked on write, not on read nor creation
   checkLength(value) {
     if (Array.isArray(value)) {
       for (const pnValue of value) {
-        const components = Object.keys(pnValue).forEach(
-          (key) => value[key]
-        );
-        if (!_PersonName.checkComponentLengths(components)) return false;
+        const components = Object.keys(pnValue).forEach((key) => value[key]);
+        if (!PersonName.checkComponentLengths(components))
+          return false;
       }
     } else if (typeof value === "string" || value instanceof String) {
       const values = value.split(String.fromCharCode(VM_DELIMITER));
       for (var pnString of values) {
-        const components = pnString.split(
-          String.fromCharCode(PN_COMPONENT_DELIMITER)
-        );
-        if (!_PersonName.checkComponentLengths(components)) return false;
+        const components = pnString.split(String.fromCharCode(PN_COMPONENT_DELIMITER));
+        if (!PersonName.checkComponentLengths(components))
+          return false;
       }
     }
     return true;
@@ -61009,11 +60739,7 @@ var PersonName = class _PersonName extends EncodedStringRepresentation {
     return dicomJson_default.pnConvertToJsonObject(result);
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      dicomJson_default.pnObjectToString(value),
-      writeOptions
-    );
+    return super.writeBytes(stream, dicomJson_default.pnObjectToString(value), writeOptions);
   }
 };
 var ShortString = class extends EncodedStringRepresentation {
@@ -61038,12 +60764,7 @@ var SignedLong = class extends ValueRepresentation {
     return stream.readInt32();
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Int32", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Int32", value), writeOptions);
   }
 };
 var SequenceOfItems = class extends ValueRepresentation {
@@ -61111,7 +60832,8 @@ var SequenceOfItems = class extends ValueRepresentation {
             stream.increment(undef ? -toRead - 8 : 0);
             itemStream = stream.more(toRead);
             read += toRead;
-            if (undef) stream.increment(8);
+            if (undef)
+              stream.increment(8);
             var items = DicomMessage._read(itemStream, syntax);
             elements.push(items);
           }
@@ -61131,12 +60853,7 @@ var SequenceOfItems = class extends ValueRepresentation {
         super.write(stream, "Uint16", 65534);
         super.write(stream, "Uint16", 57344);
         super.write(stream, "Uint32", 4294967295);
-        written += DicomMessage.write(
-          item,
-          stream,
-          syntax,
-          writeOptions
-        );
+        written += DicomMessage.write(item, stream, syntax, writeOptions);
         super.write(stream, "Uint16", 65534);
         super.write(stream, "Uint16", 57357);
         super.write(stream, "Uint32", 0);
@@ -61163,12 +60880,7 @@ var SignedShort = class extends ValueRepresentation {
     return stream.readInt16();
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Int16", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Int16", value), writeOptions);
   }
 };
 var ShortText = class extends EncodedStringRepresentation {
@@ -61224,12 +60936,7 @@ var UnsignedShort = class extends ValueRepresentation {
     return stream.readUint16();
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Uint16", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Uint16", value), writeOptions);
   }
 };
 var UnsignedLong = class extends ValueRepresentation {
@@ -61244,12 +60951,7 @@ var UnsignedLong = class extends ValueRepresentation {
     return stream.readUint32();
   }
   writeBytes(stream, value, writeOptions) {
-    return super.writeBytes(
-      stream,
-      value,
-      super.write(stream, "Uint32", value),
-      writeOptions
-    );
+    return super.writeBytes(stream, value, super.write(stream, "Uint32", value), writeOptions);
   }
 };
 var UniqueIdentifier = class extends AsciiStringRepresentation {
@@ -61402,11 +61104,11 @@ var DicomDict = class {
     if (this.dict[tag]) {
       this.dict[tag].Value = values;
     } else {
-      this.dict[tag] = ValueRepresentation.addTagAccessors({ vr });
+      this.dict[tag] = ValueRepresentation.addTagAccessors({vr});
       this.dict[tag].Value = values;
     }
   }
-  write(writeOptions = { allowInvalidVRLength: false }) {
+  write(writeOptions = {allowInvalidVRLength: false}) {
     var metaSyntax = EXPLICIT_LITTLE_ENDIAN2;
     var fileStream = new WriteBufferStream(4096, true);
     fileStream.writeUint8Repeat(0, 128);
@@ -61419,20 +61121,12 @@ var DicomDict = class {
       };
     }
     DicomMessage2.write(this.meta, metaStream, metaSyntax, writeOptions);
-    DicomMessage2.writeTagObject(
-      fileStream,
-      "00020000",
-      "UL",
-      metaStream.size,
-      metaSyntax,
-      writeOptions
-    );
+    DicomMessage2.writeTagObject(fileStream, "00020000", "UL", metaStream.size, metaSyntax, writeOptions);
     fileStream.concat(metaStream);
     var useSyntax = this.meta["00020010"].Value[0];
     DicomMessage2.write(this.dict, fileStream, useSyntax, writeOptions);
     return fileStream.getBuffer();
   }
-  /** Helper method to avoid circular dependencies */
   static setDicomMessageClass(dicomMessageClass) {
     DicomMessage2 = dicomMessageClass;
   }
@@ -61443,11 +61137,10 @@ function paddingLeft(paddingValue, string) {
   return String(paddingValue + string).slice(-paddingValue.length);
 }
 var DicomMessage3;
-var Tag2 = class _Tag {
+var Tag2 = class {
   constructor(value) {
     this.value = value;
   }
-  /** Helper method to avoid circular dependencies */
   static setDicomMessageClass(dicomMessageClass) {
     DicomMessage3 = dicomMessageClass;
   }
@@ -61476,18 +61169,18 @@ var Tag2 = class _Tag {
   }
   static fromString(str2) {
     var group = parseInt(str2.substring(0, 4), 16), element = parseInt(str2.substring(4), 16);
-    return _Tag.fromNumbers(group, element);
+    return Tag2.fromNumbers(group, element);
   }
   static fromPString(str2) {
     var group = parseInt(str2.substring(1, 5), 16), element = parseInt(str2.substring(6, 10), 16);
-    return _Tag.fromNumbers(group, element);
+    return Tag2.fromNumbers(group, element);
   }
   static fromNumbers(group, element) {
-    return new _Tag((group << 16 | element) >>> 0);
+    return new Tag2((group << 16 | element) >>> 0);
   }
   static readTag(stream) {
     var group = stream.readUint16(), element = stream.readUint16();
-    return _Tag.fromNumbers(group, element);
+    return Tag2.fromNumbers(group, element);
   }
   write(stream, vrType, values, syntax, writeOptions) {
     var vr = ValueRepresentation.createByTypeString(vrType), useSyntax = DicomMessage3._normalizeSyntax(syntax);
@@ -61499,20 +61192,9 @@ var Tag2 = class _Tag {
     var tagStream = new WriteBufferStream(256), valueLength;
     tagStream.setEndian(isLittleEndian);
     if (vrType == "OW" || vrType == "OB" || vrType == "UN") {
-      valueLength = vr.writeBytes(
-        tagStream,
-        values,
-        useSyntax,
-        isEncapsulated,
-        writeOptions
-      );
+      valueLength = vr.writeBytes(tagStream, values, useSyntax, isEncapsulated, writeOptions);
     } else if (vrType == "SQ") {
-      valueLength = vr.writeBytes(
-        tagStream,
-        values,
-        useSyntax,
-        writeOptions
-      );
+      valueLength = vr.writeBytes(tagStream, values, useSyntax, writeOptions);
     } else {
       valueLength = vr.writeBytes(tagStream, values, writeOptions);
     }
@@ -61601,7 +61283,7 @@ var encapsulatedSyntaxes = [
   "1.2.840.10008.1.2.4.202",
   "1.2.840.10008.1.2.4.203"
 ];
-var DicomMessage4 = class _DicomMessage {
+var DicomMessage4 = class {
   static read(bufferStream, syntax, ignoreErrors, untilTag = null, includeUntilTagValue = false) {
     log.warn("DicomMessage.read to be deprecated after dcmjs 0.24.x");
     return this._read(bufferStream, syntax, {
@@ -61622,15 +61304,11 @@ var DicomMessage4 = class _DicomMessage {
     untilTag: null,
     includeUntilTagValue: false
   }) {
-    const { ignoreErrors, untilTag } = options;
+    const {ignoreErrors, untilTag} = options;
     var dict = {};
     try {
       while (!bufferStream.end()) {
-        const readInfo = _DicomMessage._readTag(
-          bufferStream,
-          syntax,
-          options
-        );
+        const readInfo = DicomMessage4._readTag(bufferStream, syntax, options);
         const cleanTagString = readInfo.tag.toCleanString();
         if (cleanTagString === "00080005") {
           if (readInfo.values.length > 0) {
@@ -61640,23 +61318,16 @@ var DicomMessage4 = class _DicomMessage {
               coding = encodingMapping[coding];
               bufferStream.setDecoder(new TextDecoder(coding));
             } else if (ignoreErrors) {
-              log.warn(
-                `Unsupported character set: ${coding}, using default character set`
-              );
+              log.warn(`Unsupported character set: ${coding}, using default character set`);
             } else {
               throw Error(`Unsupported character set: ${coding}`);
             }
           }
           if (readInfo.values.length > 1) {
             if (ignoreErrors) {
-              log.warn(
-                "Using multiple character sets is not supported, proceeding with just the first character set",
-                readInfo.values
-              );
+              log.warn("Using multiple character sets is not supported, proceeding with just the first character set", readInfo.values);
             } else {
-              throw Error(
-                `Using multiple character sets is not supported: ${readInfo.values}`
-              );
+              throw Error(`Using multiple character sets is not supported: ${readInfo.values}`);
             }
           }
           readInfo.values = ["ISO_IR 192"];
@@ -61702,23 +61373,21 @@ var DicomMessage4 = class _DicomMessage {
     if (stream.readAsciiString(4) !== "DICM") {
       throw new Error("Invalid DICOM file, expected header is missing");
     }
-    var el = _DicomMessage._readTag(stream, useSyntax);
+    var el = DicomMessage4._readTag(stream, useSyntax);
     if (el.tag.toCleanString() !== "00020000") {
-      throw new Error(
-        "Invalid DICOM file, meta length tag is malformed or not present."
-      );
+      throw new Error("Invalid DICOM file, meta length tag is malformed or not present.");
     }
     var metaLength = el.values[0];
     var metaStream = stream.more(metaLength);
-    var metaHeader = _DicomMessage._read(metaStream, useSyntax, options);
+    var metaHeader = DicomMessage4._read(metaStream, useSyntax, options);
     var mainSyntax = metaHeader["00020010"].Value[0];
     if (mainSyntax === DEFLATED_EXPLICIT_LITTLE_ENDIAN) {
       stream = new DeflatedReadBufferStream(stream, {
         noCopy: options.noCopy
       });
     }
-    mainSyntax = _DicomMessage._normalizeSyntax(mainSyntax);
-    var objects = _DicomMessage._read(stream, mainSyntax, options);
+    mainSyntax = DicomMessage4._normalizeSyntax(mainSyntax);
+    var objects = DicomMessage4._read(stream, mainSyntax, options);
     var dicomDict = new DicomDict(metaHeader);
     dicomDict.dict = objects;
     return dicomDict;
@@ -61732,13 +61401,7 @@ var DicomMessage4 = class _DicomMessage {
     var sortedTags = Object.keys(jsonObjects).sort();
     sortedTags.forEach(function(tagString) {
       var tag = Tag2.fromString(tagString), tagObject = jsonObjects[tagString], vrType = tagObject.vr, values = tagObject.Value;
-      written += tag.write(
-        useStream,
-        vrType,
-        values,
-        syntax,
-        writeOptions
-      );
+      written += tag.write(useStream, vrType, values, syntax, writeOptions);
     });
     return written;
   }
@@ -61746,20 +61409,20 @@ var DicomMessage4 = class _DicomMessage {
     untilTag: null,
     includeUntilTagValue: false
   }) {
-    const { untilTag, includeUntilTagValue } = options;
+    const {untilTag, includeUntilTagValue} = options;
     var implicit = syntax == IMPLICIT_LITTLE_ENDIAN ? true : false, isLittleEndian = syntax == IMPLICIT_LITTLE_ENDIAN || syntax == EXPLICIT_LITTLE_ENDIAN ? true : false;
     var oldEndian = stream.isLittleEndian;
     stream.setEndian(isLittleEndian);
     var tag = Tag2.readTag(stream);
     if (untilTag === tag.toCleanString() && untilTag !== null) {
       if (!includeUntilTagValue) {
-        return { tag, vr: 0, values: 0 };
+        return {tag, vr: 0, values: 0};
       }
     }
     var length2 = null, vr = null, vrType;
     if (implicit) {
       length2 = stream.readUint32();
-      var elementData = _DicomMessage.lookupTag(tag);
+      var elementData = DicomMessage4.lookupTag(tag);
       if (elementData) {
         vrType = elementData.vr;
       } else {
@@ -61778,8 +61441,8 @@ var DicomMessage4 = class _DicomMessage {
       vr = ValueRepresentation.createByTypeString(vrType);
     } else {
       vrType = stream.readVR();
-      if (vrType === "UN" && _DicomMessage.lookupTag(tag) && _DicomMessage.lookupTag(tag).vr) {
-        vrType = _DicomMessage.lookupTag(tag).vr;
+      if (vrType === "UN" && DicomMessage4.lookupTag(tag) && DicomMessage4.lookupTag(tag).vr) {
+        vrType = DicomMessage4.lookupTag(tag).vr;
         vr = ValueRepresentation.parseUnknownVr(vrType);
       } else {
         vr = ValueRepresentation.createByTypeString(vrType);
@@ -61826,19 +61489,7 @@ var DicomMessage4 = class _DicomMessage {
 };
 
 // src/dicomweb.js
-var DICOMWEB = class _DICOMWEB {
-  /*
-      JavaScript DICOMweb REST API for browser use.
-  
-      Design:
-      * map rest api to high-level code with modern conventions
-      ** ES6: classes, arrow functions, let...
-      ** promises
-      ** json converted to objects
-  
-     examples: see tests() method below.
-  
-    */
+var DICOMWEB = class {
   constructor(options = {}) {
     this.rootURL = options.rootURL;
     this.progressCallback = options.progressCallback;
@@ -61849,7 +61500,6 @@ var DICOMWEB = class _DICOMWEB {
     };
     return types[endpoint] ? types[endpoint] : "json";
   }
-  // which URL service to use for each of the high level services
   static endpointService(endpoint) {
     const services = {
       wado: ""
@@ -61860,8 +61510,8 @@ var DICOMWEB = class _DICOMWEB {
     return array[Math.floor(Math.random() * array.length)];
   }
   request(endpoint, parameters = {}, payload) {
-    let responseType = _DICOMWEB.responseType(endpoint);
-    let service = _DICOMWEB.endpointService(endpoint);
+    let responseType = DICOMWEB.responseType(endpoint);
+    let service = DICOMWEB.endpointService(endpoint);
     let url = this.rootURL + "/" + service + endpoint;
     let firstParameter = true;
     Object.keys(parameters).forEach((parameter) => {
@@ -61894,10 +61544,10 @@ var DICOMWEB = class _DICOMWEB {
     return this.request("patients");
   }
   studies(patientID) {
-    return this.request("studies", { PatientID: patientID });
+    return this.request("studies", {PatientID: patientID});
   }
   series(studyInstanceUID) {
-    return this.request("series", { StudyInstanceUID: studyInstanceUID });
+    return this.request("series", {StudyInstanceUID: studyInstanceUID});
   }
   instances(studyInstanceUID, seriesInstanceUID) {
     return this.request("instances", {
@@ -61916,8 +61566,8 @@ var DICOMWEB = class _DICOMWEB {
   }
   tests() {
     let testingServerURL = "http://quantome.org:4242/dcm4chee-arc/aets/DCM4CHEE";
-    let testOptions = { rootURL: testingServerURL };
-    new _DICOMWEB(testOptions).patients().then((responses) => {
+    let testOptions = {rootURL: testingServerURL};
+    new DICOMWEB(testOptions).patients().then((responses) => {
       responses.forEach((patient) => {
         log_default.log(patient);
       });
@@ -61926,38 +61576,32 @@ var DICOMWEB = class _DICOMWEB {
 };
 
 // src/colors.js
-var Colors = class _Colors {
+var Colors = class {
   static d65WhitePointXYZ() {
     return [0.950456, 1, 1.088754];
   }
   static dicomlab2RGB(dicomlab) {
-    return _Colors.lab2RGB(_Colors.dicomlab2LAB(dicomlab));
+    return Colors.lab2RGB(Colors.dicomlab2LAB(dicomlab));
   }
   static rgb2DICOMLAB(rgb) {
-    return _Colors.lab2DICOMLAB(_Colors.rgb2LAB(rgb));
+    return Colors.lab2DICOMLAB(Colors.rgb2LAB(rgb));
   }
   static dicomlab2LAB(dicomlab) {
     return [
       dicomlab[0] * 100 / 65535,
-      // results in 0 <= L <= 100
       dicomlab[1] * 255 / 65535 - 128,
-      // results in -128 <= a <= 127
       dicomlab[2] * 255 / 65535 - 128
-      // results in -128 <= b <= 127
     ];
   }
   static lab2DICOMLAB(lab) {
     return [
       lab[0] * 65535 / 100,
-      // results in 0 <= L <= 65535
       (lab[1] + 128) * 65535 / 255,
-      // results in 0 <= a <= 65535
       (lab[2] + 128) * 65535 / 255
-      // results in 0 <= b <= 65535
     ];
   }
   static rgb2LAB(rgb) {
-    return _Colors.xyz2LAB(_Colors.rgb2XYZ(rgb));
+    return Colors.xyz2LAB(Colors.rgb2XYZ(rgb));
   }
   static gammaCorrection(n) {
     if (n <= 0.0031306684425005883) {
@@ -61974,9 +61618,9 @@ var Colors = class _Colors {
     }
   }
   static rgb2XYZ(rgb) {
-    let R = _Colors.invGammaCorrection(rgb[0]);
-    let G = _Colors.invGammaCorrection(rgb[1]);
-    let B = _Colors.invGammaCorrection(rgb[2]);
+    let R = Colors.invGammaCorrection(rgb[0]);
+    let G = Colors.invGammaCorrection(rgb[1]);
+    let B = Colors.invGammaCorrection(rgb[2]);
     return [
       0.41239558896741424 * R + 0.3575834307637148 * G + 0.18049264738170157 * B,
       0.21258623078559555 * R + 0.7151703037034108 * G + 0.07220049864333623 * B,
@@ -61984,27 +61628,27 @@ var Colors = class _Colors {
     ];
   }
   static xyz2LAB(xyz) {
-    let whitePoint = _Colors.d65WhitePointXYZ();
+    let whitePoint = Colors.d65WhitePointXYZ();
     let X = xyz[0] / whitePoint[0];
     let Y = xyz[1] / whitePoint[1];
     let Z = xyz[2] / whitePoint[2];
-    X = _Colors.labf(X);
-    Y = _Colors.labf(Y);
-    Z = _Colors.labf(Z);
+    X = Colors.labf(X);
+    Y = Colors.labf(Y);
+    Z = Colors.labf(Z);
     return [116 * Y - 16, 500 * (X - Y), 200 * (Y - Z)];
   }
   static lab2RGB(lab) {
-    return _Colors.xyz2RGB(_Colors.lab2XYZ(lab));
+    return Colors.xyz2RGB(Colors.lab2XYZ(lab));
   }
   static lab2XYZ(lab) {
     let L = (lab[0] + 16) / 116;
     let a = L + lab[1] / 500;
     let b = L - lab[2] / 200;
-    let whitePoint = _Colors.d65WhitePointXYZ();
+    let whitePoint = Colors.d65WhitePointXYZ();
     return [
-      whitePoint[0] * _Colors.labfInv(a),
-      whitePoint[1] * _Colors.labfInv(L),
-      whitePoint[2] * _Colors.labfInv(b)
+      whitePoint[0] * Colors.labfInv(a),
+      whitePoint[1] * Colors.labfInv(L),
+      whitePoint[2] * Colors.labfInv(b)
     ];
   }
   static xyz2RGB(xyz) {
@@ -62019,9 +61663,9 @@ var Colors = class _Colors {
       B1 -= minimumComponent;
     }
     return [
-      _Colors.gammaCorrection(R1),
-      _Colors.gammaCorrection(G1),
-      _Colors.gammaCorrection(B1)
+      Colors.gammaCorrection(R1),
+      Colors.gammaCorrection(G1),
+      Colors.gammaCorrection(B1)
     ];
   }
   static labf(n) {
@@ -62054,9 +61698,7 @@ function datasetToDict(dataset) {
     ImplementationClassUID: "2.25.80302813137786398554742050926734630921603366648225212145404",
     FileMetaInformationVersion: fileMetaInformationVersionArray.buffer
   };
-  const denaturalized = DicomMetaDictionary.denaturalizeDataset(
-    dataset._meta
-  );
+  const denaturalized = DicomMetaDictionary.denaturalizeDataset(dataset._meta);
   const dicomDict = new DicomDict(denaturalized);
   dicomDict.dict = DicomMetaDictionary.denaturalizeDataset(dataset);
   return dicomDict;
@@ -62066,7 +61708,7 @@ function datasetToBuffer(dataset) {
 }
 function datasetToBlob(dataset) {
   const buffer = datasetToBuffer(dataset);
-  return new Blob([buffer], { type: "application/dicom" });
+  return new Blob([buffer], {type: "application/dicom"});
 }
 
 // src/derivations/DerivedDataset.js
@@ -62105,9 +61747,7 @@ var DerivedDataset = class {
     Object.keys(data2).forEach((key) => this.dataset[key] = data2[key]);
   }
   assignFromReference(tags) {
-    tags.forEach(
-      (tag) => this.dataset[tag] = this.referencedDataset[tag] || ""
-    );
+    tags.forEach((tag) => this.dataset[tag] = this.referencedDataset[tag] || "");
   }
   assignFromOptions(tags) {
     tags.forEach((tag) => this.dataset[tag] = this.options[tag] || "");
@@ -62148,9 +61788,10 @@ var DerivedDataset = class {
     return JSON.parse(JSON.stringify(dataset));
   }
 };
+var DerivedDataset_default = DerivedDataset;
 
 // src/derivations/DerivedPixels.js
-var DerivedPixels = class extends DerivedDataset {
+var DerivedPixels = class extends DerivedDataset_default {
   constructor(datasets, options = {}) {
     super(datasets, options);
     let o = this.options;
@@ -62158,8 +61799,6 @@ var DerivedPixels = class extends DerivedDataset {
     o.ContentDescription = options.ContentDescription || "";
     o.ContentCreatorName = options.ContentCreatorName || "";
   }
-  // this assumes a normalized multiframe input and will create
-  // a multiframe derived image
   derive() {
     super.derive();
     this.assignToDataset({
@@ -62186,23 +61825,18 @@ var DerivedPixels = class extends DerivedDataset {
       "ContentCreatorName"
     ]);
     if (this.referencedDataset.SharedFunctionalGroupsSequence) {
-      this.dataset.SharedFunctionalGroupsSequence = DerivedDataset.copyDataset(
-        this.referencedDataset.SharedFunctionalGroupsSequence
-      );
+      this.dataset.SharedFunctionalGroupsSequence = DerivedDataset_default.copyDataset(this.referencedDataset.SharedFunctionalGroupsSequence);
     }
     if (this.referencedDataset.PerFrameFunctionalGroupsSequence) {
-      this.dataset.PerFrameFunctionalGroupsSequence = DerivedDataset.copyDataset(
-        this.referencedDataset.PerFrameFunctionalGroupsSequence
-      );
+      this.dataset.PerFrameFunctionalGroupsSequence = DerivedDataset_default.copyDataset(this.referencedDataset.PerFrameFunctionalGroupsSequence);
     }
-    this.dataset.PixelData = new ArrayBuffer(
-      this.referencedDataset.PixelData.byteLength
-    );
+    this.dataset.PixelData = new ArrayBuffer(this.referencedDataset.PixelData.byteLength);
   }
 };
+var DerivedPixels_default = DerivedPixels;
 
 // src/derivations/DerivedImage.js
-var DerivedImage = class extends DerivedPixels {
+var DerivedImage = class extends DerivedPixels_default {
   constructor(datasets, options = {}) {
     super(datasets, options);
   }
@@ -62225,9 +61859,10 @@ var DerivedImage = class extends DerivedPixels {
     ]);
   }
 };
+var DerivedImage_default = DerivedImage;
 
 // src/normalizers.js
-var Normalizer = class _Normalizer {
+var Normalizer = class {
   constructor(datasets) {
     this.datasets = datasets;
     this.dataset = void 0;
@@ -62242,11 +61877,7 @@ var Normalizer = class _Normalizer {
         sopClassUID = dataset.SOPClassUID;
       }
       if (dataset.SOPClassUID !== sopClassUID) {
-        log_default.error(
-          "inconsistent sopClassUIDs: ",
-          dataset.SOPClassUID,
-          sopClassUID
-        );
+        log_default.error("inconsistent sopClassUIDs: ", dataset.SOPClassUID, sopClassUID);
         return void 0;
       }
     });
@@ -62290,14 +61921,14 @@ var Normalizer = class _Normalizer {
   }
   static isMultiframeDataset(ds = this.dataset) {
     const sopClassUID = ds.SOPClassUID.replace(/[^0-9.]/g, "");
-    return _Normalizer.isMultiframeSOPClassUID(sopClassUID);
+    return Normalizer.isMultiframeSOPClassUID(sopClassUID);
   }
   normalize() {
     return "No normalization defined";
   }
   static normalizeToDataset(datasets) {
-    let sopClassUID = _Normalizer.consistentSOPClassUIDs(datasets);
-    let normalizerClass = _Normalizer.normalizerForSOPClassUID(sopClassUID);
+    let sopClassUID = Normalizer.consistentSOPClassUIDs(datasets);
+    let normalizerClass = Normalizer.normalizerForSOPClassUID(sopClassUID);
     if (!normalizerClass) {
       log_default.error("no normalizerClass for ", sopClassUID);
       return void 0;
@@ -62307,7 +61938,7 @@ var Normalizer = class _Normalizer {
     return normalizer.dataset;
   }
 };
-var ImageNormalizer = class _ImageNormalizer extends Normalizer {
+var ImageNormalizer = class extends Normalizer {
   normalize() {
     this.convertToMultiframe();
     this.normalizeMultiframe();
@@ -62335,7 +61966,7 @@ var ImageNormalizer = class _ImageNormalizer extends Normalizer {
       this.dataset = this.datasets[0];
       return;
     }
-    this.derivation = new DerivedImage(this.datasets);
+    this.derivation = new DerivedImage_default(this.datasets);
     this.dataset = this.derivation.dataset;
     let ds = this.dataset;
     let referenceDataset = this.datasets[0];
@@ -62350,33 +61981,25 @@ var ImageNormalizer = class _ImageNormalizer extends Normalizer {
     let referencePosition = referenceDataset.ImagePositionPatient;
     let rowVector = referenceDataset.ImageOrientationPatient.slice(0, 3);
     let columnVector = referenceDataset.ImageOrientationPatient.slice(3, 6);
-    let scanAxis = _ImageNormalizer.vec3CrossProduct(
-      rowVector,
-      columnVector
-    );
+    let scanAxis = ImageNormalizer.vec3CrossProduct(rowVector, columnVector);
     let distanceDatasetPairs = [];
     this.datasets.forEach(function(dataset) {
       let position = dataset.ImagePositionPatient.slice();
-      let positionVector = _ImageNormalizer.vec3Subtract(
-        position,
-        referencePosition
-      );
-      let distance2 = _ImageNormalizer.vec3Dot(positionVector, scanAxis);
+      let positionVector = ImageNormalizer.vec3Subtract(position, referencePosition);
+      let distance2 = ImageNormalizer.vec3Dot(positionVector, scanAxis);
       distanceDatasetPairs.push([distance2, dataset]);
     });
     distanceDatasetPairs.sort(function(a, b) {
       return b[0] - a[0];
     });
     if (ds.BitsAllocated !== 16) {
-      log_default.error(
-        "Only works with 16 bit data, not " + String(this.dataset.BitsAllocated)
-      );
+      log_default.error("Only works with 16 bit data, not " + String(this.dataset.BitsAllocated));
     }
     if (referenceDataset._vrMap && !referenceDataset._vrMap.PixelData) {
       log_default.warn("No vr map given for pixel data, using OW");
-      ds._vrMap = { PixelData: "OW" };
+      ds._vrMap = {PixelData: "OW"};
     } else {
-      ds._vrMap = { PixelData: referenceDataset._vrMap.PixelData };
+      ds._vrMap = {PixelData: referenceDataset._vrMap.PixelData};
     }
     let frameSize = referenceDataset.PixelData.byteLength;
     ds.PixelData = new ArrayBuffer(ds.NumberOfFrames * frameSize);
@@ -62384,11 +62007,7 @@ var ImageNormalizer = class _ImageNormalizer extends Normalizer {
     distanceDatasetPairs.forEach(function(pair) {
       let dataset = pair[1];
       let pixels = new Uint16Array(dataset.PixelData);
-      let frameView = new Uint16Array(
-        ds.PixelData,
-        frame * frameSize,
-        frameSize / 2
-      );
+      let frameView = new Uint16Array(ds.PixelData, frame * frameSize, frameSize / 2);
       try {
         frameView.set(pixels);
       } catch (e) {
@@ -62404,9 +62023,7 @@ dataset PixelData size ${dataset.PixelData.length}`;
       frame++;
     });
     if (ds.NumberOfFrames < 2) {
-      log_default.error(
-        "Cannot populate shared groups uniquely without multiple frames"
-      );
+      log_default.error("Cannot populate shared groups uniquely without multiple frames");
     }
     let [distance0, dataset0] = distanceDatasetPairs[0];
     let distance1 = distanceDatasetPairs[1][0];
@@ -62451,7 +62068,6 @@ dataset PixelData size ${dataset.PixelData.length}`;
         DimensionOrganizationUID: dimensionUID,
         DimensionIndexPointer: 2097202,
         FunctionalGroupPointer: 2134291,
-        // PlanePositionSequence
         DimensionDescriptionLabel: "ImagePositionPatient"
       }
     ];
@@ -62476,9 +62092,7 @@ dataset PixelData size ${dataset.PixelData.length}`;
       ds.PresentationLUTShape = "IDENTITY";
     }
     if (!ds.SharedFunctionalGroupsSequence) {
-      log_default.error(
-        "Can only process multiframe data with SharedFunctionalGroupsSequence"
-      );
+      log_default.error("Can only process multiframe data with SharedFunctionalGroupsSequence");
     }
     if (ds.BodyPartExamined === "PROSTATE") {
       ds.SharedFunctionalGroupsSequence.FrameAnatomySequence = {
@@ -62529,7 +62143,7 @@ dataset PixelData size ${dataset.PixelData.length}`;
       ds.WindowCenter = [];
       ds.WindowWidth = [];
       if (ds.PerFrameFunctionalGroupsSequence) {
-        let wcww = { center: 0, width: 0, count: 0 };
+        let wcww = {center: 0, width: 0, count: 0};
         ds.PerFrameFunctionalGroupsSequence.forEach(function(functionalGroup) {
           if (functionalGroup.FrameVOILUT) {
             let wc = functionalGroup.FrameVOILUTSequence.WindowCenter;
@@ -62628,9 +62242,7 @@ var PMImageNormalizer = class extends ImageNormalizer {
     super.normalize();
     let ds = this.datasets[0];
     if (ds.BitsAllocated !== 32) {
-      log_default.error(
-        "Only works with 32 bit data, not " + String(ds.BitsAllocated)
-      );
+      log_default.error("Only works with 32 bit data, not " + String(ds.BitsAllocated));
     }
   }
 };
@@ -62641,8 +62253,8 @@ var DSRNormalizer = class extends Normalizer {
 };
 
 // src/derivations/Segmentation.js
-var Segmentation = class extends DerivedPixels {
-  constructor(datasets, options = { includeSliceSpacing: true }) {
+var Segmentation = class extends DerivedPixels_default {
+  constructor(datasets, options = {includeSliceSpacing: true}) {
     super(datasets, options);
   }
   derive() {
@@ -62669,22 +62281,18 @@ var Segmentation = class extends DerivedPixels {
         DimensionOrganizationUID: dimensionUID,
         DimensionIndexPointer: 6422539,
         FunctionalGroupPointer: 6422538,
-        // SegmentIdentificationSequence
         DimensionDescriptionLabel: "ReferencedSegmentNumber"
       },
       {
         DimensionOrganizationUID: dimensionUID,
         DimensionIndexPointer: 2097202,
         FunctionalGroupPointer: 2134291,
-        // PlanePositionSequence
         DimensionDescriptionLabel: "ImagePositionPatient"
       }
     ];
     this.dataset.SegmentSequence = [];
     if (this.referencedDataset.ReferencedSeriesSequence) {
-      this.dataset.ReferencedSeriesSequence = DerivedDataset.copyDataset(
-        this.referencedDataset.ReferencedSeriesSequence
-      );
+      this.dataset.ReferencedSeriesSequence = DerivedDataset_default.copyDataset(this.referencedDataset.ReferencedSeriesSequence);
     } else {
       const ReferencedInstanceSequence = [];
       for (let i = 0; i < this.referencedDatasets.length; i++) {
@@ -62709,30 +62317,14 @@ var Segmentation = class extends DerivedPixels {
     this.dataset.NumberOfFrames = 0;
     this.dataset.PerFrameFunctionalGroupsSequence = [];
   }
-  /**
-   * setNumberOfFrames - Sets the number of frames of the segmentation object
-   * and allocates (non-bitpacked) memory for the PixelData for constuction.
-   *
-   * @param  {type} NumberOfFrames The number of segmentation frames.
-   */
   setNumberOfFrames(NumberOfFrames) {
     const dataset = this.dataset;
     dataset.NumberOfFrames = NumberOfFrames;
-    dataset.PixelData = new ArrayBuffer(
-      dataset.Rows * dataset.Columns * NumberOfFrames
-    );
+    dataset.PixelData = new ArrayBuffer(dataset.Rows * dataset.Columns * NumberOfFrames);
   }
-  /**
-   * bitPackPixelData - Bitpacks the pixeldata, should be called after all
-   * segments are addded.
-   *
-   * @returns {type}  description
-   */
   bitPackPixelData() {
     if (this.isBitpacked) {
-      console.warn(
-        `This.bitPackPixelData has already been called, it should only be called once, when all frames have been added. Exiting.`
-      );
+      console.warn(`This.bitPackPixelData has already been called, it should only be called once, when all frames have been added. Exiting.`);
     }
     const dataset = this.dataset;
     const unpackedPixelData = dataset.PixelData;
@@ -62741,44 +62333,20 @@ var Segmentation = class extends DerivedPixels {
     dataset.PixelData = bitPackedPixelData.buffer;
     this.isBitpacked = true;
   }
-  /**
-   * addSegmentFromLabelmap - Adds a segment to the dataset,
-   * where the labelmaps are a set of 2D labelmaps, from which to extract the binary maps.
-   *
-   * @param  {type} Segment   The segment metadata.
-   * @param  {Uint8Array[]} labelmaps labelmap arrays for each index of referencedFrameNumbers.
-   * @param  {number}  segmentIndexInLabelmap The segment index to extract from the labelmap
-   *    (might be different to the segment metadata depending on implementation).
-   * @param  {number[]} referencedFrameNumbers  The frames that the
-   *                                            segmentation references.
-   *
-   */
   addSegmentFromLabelmap(Segment, labelmaps, segmentIndexInLabelmap, referencedFrameNumbers) {
     if (this.dataset.NumberOfFrames === 0) {
-      throw new Error(
-        "Must set the total number of frames via setNumberOfFrames() before adding segments to the segmentation."
-      );
+      throw new Error("Must set the total number of frames via setNumberOfFrames() before adding segments to the segmentation.");
     }
-    this._addSegmentPixelDataFromLabelmaps(
-      labelmaps,
-      segmentIndexInLabelmap
-    );
+    this._addSegmentPixelDataFromLabelmaps(labelmaps, segmentIndexInLabelmap);
     const ReferencedSegmentNumber = this._addSegmentMetadata(Segment);
-    this._addPerFrameFunctionalGroups(
-      ReferencedSegmentNumber,
-      referencedFrameNumbers
-    );
+    this._addPerFrameFunctionalGroups(ReferencedSegmentNumber, referencedFrameNumbers);
   }
   _addSegmentPixelDataFromLabelmaps(labelmaps, segmentIndex) {
     const dataset = this.dataset;
     const existingFrames = dataset.PerFrameFunctionalGroupsSequence.length;
     const sliceLength = dataset.Rows * dataset.Columns;
     const byteOffset = existingFrames * sliceLength;
-    const pixelDataUInt8View = new Uint8Array(
-      dataset.PixelData,
-      byteOffset,
-      labelmaps.length * sliceLength
-    );
+    const pixelDataUInt8View = new Uint8Array(dataset.PixelData, byteOffset, labelmaps.length * sliceLength);
     const occupiedValue = this._getOccupiedValue();
     for (let l = 0; l < labelmaps.length; l++) {
       const labelmap = labelmaps[l];
@@ -62795,39 +62363,20 @@ var Segmentation = class extends DerivedPixels {
     }
     return 1;
   }
-  /**
-   * addSegment - Adds a segment to the dataset.
-   *
-   * @param  {type} Segment   The segment metadata.
-   * @param  {Uint8Array} pixelData The pixelData array containing all frames
-   *                                of the segmentation.
-   * @param  {Number[]} referencedFrameNumbers  The frames that the
-   *                                            segmentation references.
-   *
-   */
   addSegment(Segment, pixelData, referencedFrameNumbers) {
     if (this.dataset.NumberOfFrames === 0) {
-      throw new Error(
-        "Must set the total number of frames via setNumberOfFrames() before adding segments to the segmentation."
-      );
+      throw new Error("Must set the total number of frames via setNumberOfFrames() before adding segments to the segmentation.");
     }
     this._addSegmentPixelData(pixelData);
     const ReferencedSegmentNumber = this._addSegmentMetadata(Segment);
-    this._addPerFrameFunctionalGroups(
-      ReferencedSegmentNumber,
-      referencedFrameNumbers
-    );
+    this._addPerFrameFunctionalGroups(ReferencedSegmentNumber, referencedFrameNumbers);
   }
   _addSegmentPixelData(pixelData) {
     const dataset = this.dataset;
     const existingFrames = dataset.PerFrameFunctionalGroupsSequence.length;
     const sliceLength = dataset.Rows * dataset.Columns;
     const byteOffset = existingFrames * sliceLength;
-    const pixelDataUInt8View = new Uint8Array(
-      dataset.PixelData,
-      byteOffset,
-      pixelData.length
-    );
+    const pixelDataUInt8View = new Uint8Array(dataset.PixelData, byteOffset, pixelData.length);
     for (let i = 0; i < pixelData.length; i++) {
       pixelDataUInt8View[i] = pixelData[i];
     }
@@ -62838,13 +62387,9 @@ var Segmentation = class extends DerivedPixels {
     for (let i = 0; i < referencedFrameNumbers.length; i++) {
       const frameNumber = referencedFrameNumbers[i];
       const perFrameFunctionalGroups = {};
-      perFrameFunctionalGroups.PlanePositionSequence = DerivedDataset.copyDataset(
-        this.referencedDataset.PerFrameFunctionalGroupsSequence[frameNumber - 1].PlanePositionSequence
-      );
+      perFrameFunctionalGroups.PlanePositionSequence = DerivedDataset_default.copyDataset(this.referencedDataset.PerFrameFunctionalGroupsSequence[frameNumber - 1].PlanePositionSequence);
       if (!this.dataset.SharedFunctionalGroupsSequence.PlaneOrientationSequence) {
-        perFrameFunctionalGroups.PlaneOrientationSequence = DerivedDataset.copyDataset(
-          this.referencedDataset.PerFrameFunctionalGroupsSequence[frameNumber - 1].PlaneOrientationSequence
-        );
+        perFrameFunctionalGroups.PlaneOrientationSequence = DerivedDataset_default.copyDataset(this.referencedDataset.PerFrameFunctionalGroupsSequence[frameNumber - 1].PlaneOrientationSequence);
       }
       perFrameFunctionalGroups.FrameContentSequence = {
         DimensionIndexValues: [ReferencedSegmentNumber, frameNumber]
@@ -62908,27 +62453,21 @@ var Segmentation = class extends DerivedPixels {
   }
   _addSegmentMetadata(Segment) {
     if (!Segment.SegmentLabel || !Segment.SegmentedPropertyCategoryCodeSequence || !Segment.SegmentedPropertyTypeCodeSequence || !Segment.SegmentAlgorithmType) {
-      throw new Error(
-        `Segment does not contain all the required fields.`
-      );
+      throw new Error(`Segment does not contain all the required fields.`);
     }
     Segment.SegmentAlgorithmType = Segment.SegmentAlgorithmType.toUpperCase();
     switch (Segment.SegmentAlgorithmType) {
       case "AUTOMATIC":
       case "SEMIAUTOMATIC":
         if (!Segment.SegmentAlgorithmName) {
-          throw new Error(
-            `If the SegmentAlgorithmType is SEMIAUTOMATIC or AUTOMATIC,
-          SegmentAlgorithmName must be provided`
-          );
+          throw new Error(`If the SegmentAlgorithmType is SEMIAUTOMATIC or AUTOMATIC,
+          SegmentAlgorithmName must be provided`);
         }
         break;
       case "MANUAL":
         break;
       default:
-        throw new Error(
-          `SegmentAlgorithmType ${Segment.SegmentAlgorithmType} invalid.`
-        );
+        throw new Error(`SegmentAlgorithmType ${Segment.SegmentAlgorithmType} invalid.`);
     }
     const SegmentSequence = this.dataset.SegmentSequence;
     const SegmentAlgorithmType = Segment.SegmentAlgorithmType;
@@ -62947,30 +62486,26 @@ var Segmentation = class extends DerivedPixels {
     return reNumberedSegmentCopy.SegmentNumber;
   }
 };
+var Segmentation_default = Segmentation;
 
 // src/derivations/ParametricMap.js
-var ParametricMap = class extends DerivedDataset {
+var ParametricMap = class extends DerivedDataset_default {
   constructor(datasets, options = {}) {
     super(datasets, options);
   }
-  // this assumes a normalized multiframe input and will create
-  // a multiframe derived image
   derive() {
     super.derive();
-    this.assignToDataset({
-      // TODO: ???
-    });
+    this.assignToDataset({});
     this.assignFromReference([]);
   }
 };
+var ParametricMap_default = ParametricMap;
 
 // src/derivations/StructuredReport.js
-var StructuredReport = class extends DerivedDataset {
+var StructuredReport = class extends DerivedDataset_default {
   constructor(datasets, options = {}) {
     super(datasets, options);
   }
-  // this assumes a normalized multiframe input and will create
-  // a multiframe derived image
   derive() {
     super.derive();
     this.assignToDataset({
@@ -62981,6 +62516,7 @@ var StructuredReport = class extends DerivedDataset {
     this.assignFromReference([]);
   }
 };
+var StructuredReport_default = StructuredReport;
 
 // src/utilities/TID1500/TID1500MeasurementReport.js
 var TID1500MeasurementReport = class {
@@ -63097,9 +62633,7 @@ var TID1500MeasurementReport = class {
     if (options.PersonName) {
       this.PersonObserverName.PersonName = options.PersonName;
     }
-    const derivationSourceDatasets = Array.isArray(
-      derivationSourceDatasetOrDatasets
-    ) ? derivationSourceDatasetOrDatasets : [derivationSourceDatasetOrDatasets];
+    const derivationSourceDatasets = Array.isArray(derivationSourceDatasetOrDatasets) ? derivationSourceDatasetOrDatasets : [derivationSourceDatasetOrDatasets];
     this.addTID1501MeasurementGroups(derivationSourceDatasets, options);
     return this.tid1500;
   }
@@ -63108,13 +62642,11 @@ var TID1500MeasurementReport = class {
       CurrentRequestedProcedureEvidenceSequence,
       ImageLibraryContentSequence
     } = this;
-    const { sopInstanceUIDsToSeriesInstanceUIDMap } = options;
+    const {sopInstanceUIDsToSeriesInstanceUIDMap} = options;
     if (derivationSourceDatasets.length > 1 && sopInstanceUIDsToSeriesInstanceUIDMap === void 0) {
-      throw new Error(
-        `addTID1501MeasurementGroups provided with ${derivationSourceDatasets.length} derivationSourceDatasets, with no sopInstanceUIDsToSeriesInstanceUIDMap in options.`
-      );
+      throw new Error(`addTID1501MeasurementGroups provided with ${derivationSourceDatasets.length} derivationSourceDatasets, with no sopInstanceUIDsToSeriesInstanceUIDMap in options.`);
     }
-    const { TID1501MeasurementGroups } = this.TIDIncludeGroups;
+    const {TID1501MeasurementGroups} = this.TIDIncludeGroups;
     if (!TID1501MeasurementGroups) {
       return;
     }
@@ -63125,7 +62657,7 @@ var TID1500MeasurementReport = class {
     const parsedSOPInstances = [];
     TID1501MeasurementGroups.forEach((measurementGroup) => {
       measurementGroup.TID300Measurements.forEach((measurement) => {
-        const { ReferencedSOPInstanceUID } = measurement.ReferencedSOPSequence;
+        const {ReferencedSOPInstanceUID} = measurement.ReferencedSOPSequence;
         if (!parsedSOPInstances.includes(ReferencedSOPInstanceUID)) {
           ImageLibraryContentSequence.push({
             RelationshipType: "CONTAINS",
@@ -63137,9 +62669,7 @@ var TID1500MeasurementReport = class {
             derivationSourceDataset = derivationSourceDatasets[0];
           } else {
             const SeriesInstanceUID = sopInstanceUIDsToSeriesInstanceUIDMap[ReferencedSOPInstanceUID];
-            derivationSourceDataset = derivationSourceDatasets.find(
-              (dsd) => dsd.SeriesInstanceUID === SeriesInstanceUID
-            );
+            derivationSourceDataset = derivationSourceDatasets.find((dsd) => dsd.SeriesInstanceUID === SeriesInstanceUID);
           }
           CurrentRequestedProcedureEvidenceSequence.push({
             StudyInstanceUID: derivationSourceDataset.StudyInstanceUID,
@@ -63159,7 +62689,6 @@ var TID1500MeasurementReport = class {
         CodeValue: "126010",
         CodingSchemeDesignator: "DCM",
         CodeMeaning: "Imaging Measurements"
-        // TODO: would be nice to abstract the code sequences (in a dictionary? a service?)
       },
       ContinuityOfContent: "SEPARATE",
       ContentSequence: ContentSequence3
@@ -63167,6 +62696,7 @@ var TID1500MeasurementReport = class {
     this.tid1500.ContentSequence.push(ImagingMeasurments);
   }
 };
+var TID1500MeasurementReport_default = TID1500MeasurementReport;
 
 // src/utilities/TID1500/TID1501MeasurementGroup.js
 var TID1501MeasurementGroup = class {
@@ -63174,12 +62704,10 @@ var TID1501MeasurementGroup = class {
     this.TID300Measurements = TID300Measurements;
   }
   contentItem() {
-    const { TID300Measurements } = this;
+    const {TID300Measurements} = this;
     let measurementGroups = [];
     TID300Measurements.forEach((TID300Measurement2) => {
-      measurementGroups.push(
-        this.getMeasurementGroup(TID300Measurement2.contentItem())
-      );
+      measurementGroups.push(this.getMeasurementGroup(TID300Measurement2.contentItem()));
     });
     return measurementGroups;
   }
@@ -63197,6 +62725,7 @@ var TID1501MeasurementGroup = class {
     };
   }
 };
+var TID1501MeasurementGroup_default = TID1501MeasurementGroup;
 
 // src/adapters/helpers.js
 var toArray = function(x) {
@@ -63214,13 +62743,14 @@ var graphicTypeEquals = (graphicType) => {
 };
 
 // src/adapters/Cornerstone/MeasurementReport.js
-var FINDING = { CodingSchemeDesignator: "DCM", CodeValue: "121071" };
-var FINDING_SITE = { CodingSchemeDesignator: "SCT", CodeValue: "363698007" };
-var FINDING_SITE_OLD = { CodingSchemeDesignator: "SRT", CodeValue: "G-C0E3" };
+var FINDING = {CodingSchemeDesignator: "DCM", CodeValue: "121071"};
+var FINDING_SITE = {CodingSchemeDesignator: "SCT", CodeValue: "363698007"};
+var FINDING_SITE_OLD = {CodingSchemeDesignator: "SRT", CodeValue: "G-C0E3"};
 var codeValueMatch = (group, code, oldCode) => {
-  const { ConceptNameCodeSequence } = group;
-  if (!ConceptNameCodeSequence) return;
-  const { CodingSchemeDesignator: CodingSchemeDesignator3, CodeValue } = ConceptNameCodeSequence;
+  const {ConceptNameCodeSequence} = group;
+  if (!ConceptNameCodeSequence)
+    return;
+  const {CodingSchemeDesignator: CodingSchemeDesignator3, CodeValue} = ConceptNameCodeSequence;
   return CodingSchemeDesignator3 == code.CodingSchemeDesignator && CodeValue == code.CodeValue || oldCode && CodingSchemeDesignator3 == oldCode.CodingSchemeDesignator && CodeValue == oldCode.CodeValue;
 };
 function getTID300ContentItem(tool, toolType, ReferencedSOPSequence, toolClass) {
@@ -63236,35 +62766,22 @@ function getMeasurementGroup(toolType, toolData, ReferencedSOPSequence) {
     return;
   }
   const Measurements = toolTypeData.data.map((tool) => {
-    return getTID300ContentItem(
-      tool,
-      toolType,
-      ReferencedSOPSequence,
-      toolClass
-    );
+    return getTID300ContentItem(tool, toolType, ReferencedSOPSequence, toolClass);
   });
-  return new TID1501MeasurementGroup(Measurements);
+  return new TID1501MeasurementGroup_default(Measurements);
 }
-var MeasurementReport = class _MeasurementReport {
+var MeasurementReport = class {
   constructor() {
   }
   static getSetupMeasurementData(MeasurementGroup) {
-    const { ContentSequence: ContentSequence3 } = MeasurementGroup;
+    const {ContentSequence: ContentSequence3} = MeasurementGroup;
     const contentSequenceArr = toArray(ContentSequence3);
-    const findingGroup = contentSequenceArr.find(
-      (group) => codeValueMatch(group, FINDING)
-    );
-    const findingSiteGroups = contentSequenceArr.filter(
-      (group) => codeValueMatch(group, FINDING_SITE, FINDING_SITE_OLD)
-    ) || [];
-    const NUMGroup = contentSequenceArr.find(
-      (group) => group.ValueType === "NUM"
-    );
-    const SCOORDGroup = toArray(NUMGroup.ContentSequence).find(
-      (group) => group.ValueType === "SCOORD"
-    );
-    const { ReferencedSOPSequence } = SCOORDGroup.ContentSequence;
-    const { ReferencedSOPInstanceUID, ReferencedFrameNumber } = ReferencedSOPSequence;
+    const findingGroup = contentSequenceArr.find((group) => codeValueMatch(group, FINDING));
+    const findingSiteGroups = contentSequenceArr.filter((group) => codeValueMatch(group, FINDING_SITE, FINDING_SITE_OLD)) || [];
+    const NUMGroup = contentSequenceArr.find((group) => group.ValueType === "NUM");
+    const SCOORDGroup = toArray(NUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
+    const {ReferencedSOPSequence} = SCOORDGroup.ContentSequence;
+    const {ReferencedSOPInstanceUID, ReferencedFrameNumber} = ReferencedSOPSequence;
     const defaultState = {
       sopInstanceUid: ReferencedSOPInstanceUID,
       frameIndex: ReferencedFrameNumber || 1,
@@ -63298,16 +62815,10 @@ var MeasurementReport = class _MeasurementReport {
     if (!firstImageId) {
       throw new Error("No measurements provided.");
     }
-    const generalSeriesModule = metadataProvider.get(
-      "generalSeriesModule",
-      firstImageId
-    );
-    const { studyInstanceUID, seriesInstanceUID } = generalSeriesModule;
+    const generalSeriesModule = metadataProvider.get("generalSeriesModule", firstImageId);
+    const {studyInstanceUID, seriesInstanceUID} = generalSeriesModule;
     Object.keys(toolState).forEach((imageId) => {
-      const sopCommonModule = metadataProvider.get(
-        "sopCommonModule",
-        imageId
-      );
+      const sopCommonModule = metadataProvider.get("sopCommonModule", imageId);
       const frameNumber = metadataProvider.get("frameNumber", imageId);
       const toolData = toolState[imageId];
       const toolTypes = Object.keys(toolData);
@@ -63320,43 +62831,31 @@ var MeasurementReport = class _MeasurementReport {
       }
       const measurementGroups = [];
       toolTypes.forEach((toolType) => {
-        const group = getMeasurementGroup(
-          toolType,
-          toolData,
-          ReferencedSOPSequence
-        );
+        const group = getMeasurementGroup(toolType, toolData, ReferencedSOPSequence);
         if (group) {
           measurementGroups.push(group);
         }
       });
       allMeasurementGroups = allMeasurementGroups.concat(measurementGroups);
     });
-    const MeasurementReport5 = new TID1500MeasurementReport(
-      { TID1501MeasurementGroups: allMeasurementGroups },
-      options
-    );
+    const MeasurementReport5 = new TID1500MeasurementReport_default({TID1501MeasurementGroups: allMeasurementGroups}, options);
     const fileMetaInformationVersionArray = new Uint8Array(2);
     fileMetaInformationVersionArray[1] = 1;
     const derivationSourceDataset = {
       StudyInstanceUID: studyInstanceUID,
       SeriesInstanceUID: seriesInstanceUID
-      //SOPInstanceUID: sopInstanceUID, // TODO: Necessary?
-      //SOPClassUID: sopClassUID,
     };
     const _meta = {
       FileMetaInformationVersion: {
         Value: [fileMetaInformationVersionArray.buffer],
         vr: "OB"
       },
-      //MediaStorageSOPClassUID
-      //MediaStorageSOPInstanceUID: sopCommonModule.sopInstanceUID,
       TransferSyntaxUID: {
         Value: ["1.2.840.10008.1.2.1"],
         vr: "UI"
       },
       ImplementationClassUID: {
         Value: [DicomMetaDictionary.uid()],
-        // TODO: could be git hash or other valid id
         vr: "UI"
       },
       ImplementationVersionName: {
@@ -63369,60 +62868,33 @@ var MeasurementReport = class _MeasurementReport {
     };
     derivationSourceDataset._meta = _meta;
     derivationSourceDataset._vrMap = _vrMap;
-    const report = new StructuredReport([derivationSourceDataset]);
-    const contentItem = MeasurementReport5.contentItem(
-      derivationSourceDataset
-    );
+    const report = new StructuredReport_default([derivationSourceDataset]);
+    const contentItem = MeasurementReport5.contentItem(derivationSourceDataset);
     report.dataset = Object.assign(report.dataset, contentItem);
     report.dataset._meta = _meta;
     return report;
   }
-  /**
-   * Generate Cornerstone tool state from dataset
-   * @param {object} dataset dataset
-   * @param {object} hooks
-   * @param {function} hooks.getToolClass Function to map dataset to a tool class
-   * @returns
-   */
   static generateToolState(dataset, hooks = {}) {
     if (dataset.ContentTemplateSequence.TemplateIdentifier !== "1500") {
-      throw new Error(
-        "This package can currently only interpret DICOM SR TID 1500"
-      );
+      throw new Error("This package can currently only interpret DICOM SR TID 1500");
     }
     const REPORT = "Imaging Measurements";
     const GROUP = "Measurement Group";
     const TRACKING_IDENTIFIER = "Tracking Identifier";
-    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(
-      codeMeaningEquals(REPORT)
-    );
-    const measurementGroups = toArray(
-      imagingMeasurementContent.ContentSequence
-    ).filter(codeMeaningEquals(GROUP));
+    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(codeMeaningEquals(REPORT));
+    const measurementGroups = toArray(imagingMeasurementContent.ContentSequence).filter(codeMeaningEquals(GROUP));
     const measurementData = {};
-    const cornerstoneToolClasses = _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE;
+    const cornerstoneToolClasses = MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE;
     const registeredToolClasses = [];
     Object.keys(cornerstoneToolClasses).forEach((key) => {
       registeredToolClasses.push(cornerstoneToolClasses[key]);
       measurementData[key] = [];
     });
     measurementGroups.forEach((measurementGroup) => {
-      const measurementGroupContentSequence = toArray(
-        measurementGroup.ContentSequence
-      );
-      const TrackingIdentifierGroup = measurementGroupContentSequence.find(
-        (contentItem) => contentItem.ConceptNameCodeSequence.CodeMeaning === TRACKING_IDENTIFIER
-      );
+      const measurementGroupContentSequence = toArray(measurementGroup.ContentSequence);
+      const TrackingIdentifierGroup = measurementGroupContentSequence.find((contentItem) => contentItem.ConceptNameCodeSequence.CodeMeaning === TRACKING_IDENTIFIER);
       const TrackingIdentifierValue = TrackingIdentifierGroup.TextValue;
-      const toolClass = hooks.getToolClass ? hooks.getToolClass(
-        measurementGroup,
-        dataset,
-        registeredToolClasses
-      ) : registeredToolClasses.find(
-        (tc) => tc.isValidCornerstoneTrackingIdentifier(
-          TrackingIdentifierValue
-        )
-      );
+      const toolClass = hooks.getToolClass ? hooks.getToolClass(measurementGroup, dataset, registeredToolClasses) : registeredToolClasses.find((tc) => tc.isValidCornerstoneTrackingIdentifier(TrackingIdentifierValue));
       if (toolClass) {
         const measurement = toolClass.getMeasurementData(measurementGroup);
         console.log(`=== ${toolClass.toolType} ===`);
@@ -63433,11 +62905,12 @@ var MeasurementReport = class _MeasurementReport {
     return measurementData;
   }
   static registerTool(toolClass) {
-    _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
-    _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.toolType] = toolClass;
-    _MeasurementReport.MEASUREMENT_BY_TOOLTYPE[toolClass.toolType] = toolClass.utilityToolType;
+    MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
+    MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.toolType] = toolClass;
+    MeasurementReport.MEASUREMENT_BY_TOOLTYPE[toolClass.toolType] = toolClass.utilityToolType;
   }
 };
+var MeasurementReport_default = MeasurementReport;
 MeasurementReport.MEASUREMENT_BY_TOOLTYPE = {};
 MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE = {};
 MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE = {};
@@ -63457,7 +62930,7 @@ var TID300Measurement = class {
     ];
   }
   getTrackingGroups() {
-    let { trackingIdentifierTextValue: trackingIdentifierTextValue7 } = this.props;
+    let {trackingIdentifierTextValue: trackingIdentifierTextValue7} = this.props;
     return [
       {
         RelationshipType: "HAS OBS CONTEXT",
@@ -63486,7 +62959,7 @@ var TID300Measurement = class {
     if (!finding) {
       return [];
     }
-    const { CodeValue, CodingSchemeDesignator: CodingSchemeDesignator3, CodeMeaning } = finding;
+    const {CodeValue, CodingSchemeDesignator: CodingSchemeDesignator3, CodeMeaning} = finding;
     return [
       {
         RelationshipType: "CONTAINS",
@@ -63498,11 +62971,8 @@ var TID300Measurement = class {
         }),
         ConceptCodeSequence: addAccessors_default({
           CodeValue,
-          //: "SAMPLE FINDING",
           CodingSchemeDesignator: CodingSchemeDesignator3,
-          //: "99dcmjs",
           CodeMeaning
-          //: "Sample Finding"
         })
       }
     ];
@@ -63510,7 +62980,7 @@ var TID300Measurement = class {
   getFindingSiteGroups() {
     let findingSites = this.props.findingSites || [];
     return findingSites.map((findingSite) => {
-      const { CodeValue, CodingSchemeDesignator: CodingSchemeDesignator3, CodeMeaning } = findingSite;
+      const {CodeValue, CodingSchemeDesignator: CodingSchemeDesignator3, CodeMeaning} = findingSite;
       return {
         RelationshipType: "CONTAINS",
         ValueType: "CODE",
@@ -63521,16 +62991,14 @@ var TID300Measurement = class {
         }),
         ConceptCodeSequence: addAccessors_default({
           CodeValue,
-          //: "SAMPLE FINDING SITE",
           CodingSchemeDesignator: CodingSchemeDesignator3,
-          //: "99dcmjs",
           CodeMeaning
-          //: "Sample Finding Site"
         })
       };
     });
   }
 };
+var TID300Measurement_default = TID300Measurement;
 
 // src/utilities/TID300/unit2CodingValue.js
 var MM_UNIT = {
@@ -63560,7 +63028,8 @@ var measurementMap = {
   "px\xB2": NO2_UNIT
 };
 var unit2CodingValue = (units) => {
-  if (!units) return NO_UNIT;
+  if (!units)
+    return NO_UNIT;
   const space = units.indexOf(" ");
   const baseUnit = space === -1 ? units : units.substring(0, space);
   const codingUnit = measurementMap[units] || measurementMap[baseUnit];
@@ -63574,7 +63043,7 @@ unit2CodingValue.measurementMap = measurementMap;
 var unit2CodingValue_default = unit2CodingValue;
 
 // src/utilities/TID300/Length.js
-var Length = class extends TID300Measurement {
+var Length = class extends TID300Measurement_default {
   contentItem() {
     const {
       point1,
@@ -63611,22 +63080,22 @@ var Length = class extends TID300Measurement {
     ]);
   }
 };
+var Length_default = Length;
 
 // src/adapters/Cornerstone/cornerstone4Tag.js
 var cornerstone4Tag_default = "cornerstoneTools@^4.0.0";
 
 // src/adapters/Cornerstone/Length.js
 var LENGTH2 = "Length";
-var Length2 = class _Length {
+var Length2 = class {
   constructor() {
   }
-  // TODO: this function is required for all Cornerstone Tool Adapters, since it is called by MeasurementReport.
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, NUMGroup, SCOORDGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, NUMGroup, SCOORDGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const state = {
       ...defaultState,
       length: NUMGroup.MeasuredValueSequence.NumericValue,
-      toolType: _Length.toolType,
+      toolType: Length2.toolType,
       handles: {
         start: {},
         end: {},
@@ -63648,7 +63117,7 @@ var Length2 = class _Length {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { handles, finding, findingSites } = tool;
+    const {handles, finding, findingSites} = tool;
     const point1 = handles.start;
     const point2 = handles.end;
     const distance2 = tool.length;
@@ -63665,7 +63134,7 @@ var Length2 = class _Length {
 };
 Length2.toolType = LENGTH2;
 Length2.utilityToolType = LENGTH2;
-Length2.TID300Representation = Length;
+Length2.TID300Representation = Length_default;
 Length2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -63676,8 +63145,8 @@ Length2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === LENGTH2;
 };
-MeasurementReport.registerTool(Length2);
-var Length_default = Length2;
+MeasurementReport_default.registerTool(Length2);
+var Length_default2 = Length2;
 
 // src/utilities/TID300/Polyline.js
 function expandPoints(points) {
@@ -63691,7 +63160,7 @@ function expandPoints(points) {
   });
   return allPoints;
 }
-var Polyline = class extends TID300Measurement {
+var Polyline = class extends TID300Measurement_default {
   contentItem() {
     const {
       points,
@@ -63729,14 +63198,12 @@ var Polyline = class extends TID300Measurement {
         }
       },
       {
-        // TODO: This feels weird to repeat the GraphicData
         RelationshipType: "CONTAINS",
         ValueType: "NUM",
         ConceptNameCodeSequence: {
           CodeValue: "G-A166",
           CodingSchemeDesignator: "SRT",
           CodeMeaning: "Area"
-          // TODO: Look this up from a Code Meaning dictionary
         },
         MeasuredValueSequence: {
           MeasurementUnitsCodeSequence: unit2CodingValue_default(areaUnit),
@@ -63757,16 +63224,17 @@ var Polyline = class extends TID300Measurement {
     ]);
   }
 };
+var Polyline_default = Polyline;
 
 // src/adapters/Cornerstone/FreehandRoi.js
-var FreehandRoi = class _FreehandRoi {
+var FreehandRoi = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, SCOORDGroup, NUMGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, SCOORDGroup, NUMGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const state = {
       ...defaultState,
-      toolType: _FreehandRoi.toolType,
+      toolType: FreehandRoi.toolType,
       handles: {
         points: [],
         textBox: {
@@ -63784,7 +63252,7 @@ var FreehandRoi = class _FreehandRoi {
       color: void 0,
       invalidated: true
     };
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     for (let i = 0; i < GraphicData.length; i += 2) {
       state.handles.points.push({
         x: GraphicData[i],
@@ -63794,9 +63262,9 @@ var FreehandRoi = class _FreehandRoi {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { handles, finding, findingSites, cachedStats = {} } = tool;
-    const { points } = handles;
-    const { area = 0, perimeter = 0 } = cachedStats;
+    const {handles, finding, findingSites, cachedStats = {}} = tool;
+    const {points} = handles;
+    const {area = 0, perimeter = 0} = cachedStats;
     const trackingIdentifierTextValue7 = "cornerstoneTools@^4.0.0:FreehandRoi";
     return {
       points,
@@ -63810,7 +63278,7 @@ var FreehandRoi = class _FreehandRoi {
 };
 FreehandRoi.toolType = "FreehandRoi";
 FreehandRoi.utilityToolType = "FreehandRoi";
-FreehandRoi.TID300Representation = Polyline;
+FreehandRoi.TID300Representation = Polyline_default;
 FreehandRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -63821,11 +63289,11 @@ FreehandRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === FreehandRoi.toolType;
 };
-MeasurementReport.registerTool(FreehandRoi);
+MeasurementReport_default.registerTool(FreehandRoi);
 var FreehandRoi_default = FreehandRoi;
 
 // src/utilities/TID300/Bidirectional.js
-var Bidirectional = class extends TID300Measurement {
+var Bidirectional = class extends TID300Measurement_default {
   contentItem() {
     const {
       longAxis,
@@ -63897,6 +63365,7 @@ var Bidirectional = class extends TID300Measurement {
     ]);
   }
 };
+var Bidirectional_default = Bidirectional;
 
 // src/adapters/Cornerstone/Bidirectional.js
 var BIDIRECTIONAL = "Bidirectional";
@@ -63904,56 +63373,29 @@ var LONG_AXIS = "Long Axis";
 var SHORT_AXIS = "Short Axis";
 var FINDING2 = "121071";
 var FINDING_SITE2 = "G-C0E3";
-var Bidirectional2 = class _Bidirectional {
+var Bidirectional2 = class {
   constructor() {
   }
-  // TODO: this function is required for all Cornerstone Tool Adapters, since it is called by MeasurementReport.
   static getMeasurementData(MeasurementGroup) {
-    const { ContentSequence: ContentSequence3 } = MeasurementGroup;
-    const findingGroup = toArray(ContentSequence3).find(
-      (group) => group.ConceptNameCodeSequence.CodeValue === FINDING2
-    );
-    const findingSiteGroups = toArray(ContentSequence3).filter(
-      (group) => group.ConceptNameCodeSequence.CodeValue === FINDING_SITE2
-    );
-    const longAxisNUMGroup = toArray(ContentSequence3).find(
-      (group) => group.ConceptNameCodeSequence.CodeMeaning === LONG_AXIS
-    );
-    const longAxisSCOORDGroup = toArray(
-      longAxisNUMGroup.ContentSequence
-    ).find((group) => group.ValueType === "SCOORD");
-    const shortAxisNUMGroup = toArray(ContentSequence3).find(
-      (group) => group.ConceptNameCodeSequence.CodeMeaning === SHORT_AXIS
-    );
-    const shortAxisSCOORDGroup = toArray(
-      shortAxisNUMGroup.ContentSequence
-    ).find((group) => group.ValueType === "SCOORD");
-    const { ReferencedSOPSequence } = longAxisSCOORDGroup.ContentSequence;
-    const { ReferencedSOPInstanceUID, ReferencedFrameNumber } = ReferencedSOPSequence;
-    const longestDiameter = String(
-      longAxisNUMGroup.MeasuredValueSequence.NumericValue
-    );
-    const shortestDiameter = String(
-      shortAxisNUMGroup.MeasuredValueSequence.NumericValue
-    );
+    const {ContentSequence: ContentSequence3} = MeasurementGroup;
+    const findingGroup = toArray(ContentSequence3).find((group) => group.ConceptNameCodeSequence.CodeValue === FINDING2);
+    const findingSiteGroups = toArray(ContentSequence3).filter((group) => group.ConceptNameCodeSequence.CodeValue === FINDING_SITE2);
+    const longAxisNUMGroup = toArray(ContentSequence3).find((group) => group.ConceptNameCodeSequence.CodeMeaning === LONG_AXIS);
+    const longAxisSCOORDGroup = toArray(longAxisNUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
+    const shortAxisNUMGroup = toArray(ContentSequence3).find((group) => group.ConceptNameCodeSequence.CodeMeaning === SHORT_AXIS);
+    const shortAxisSCOORDGroup = toArray(shortAxisNUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
+    const {ReferencedSOPSequence} = longAxisSCOORDGroup.ContentSequence;
+    const {ReferencedSOPInstanceUID, ReferencedFrameNumber} = ReferencedSOPSequence;
+    const longestDiameter = String(longAxisNUMGroup.MeasuredValueSequence.NumericValue);
+    const shortestDiameter = String(shortAxisNUMGroup.MeasuredValueSequence.NumericValue);
     const bottomRight = {
-      x: Math.max(
-        longAxisSCOORDGroup.GraphicData[0],
-        longAxisSCOORDGroup.GraphicData[2],
-        shortAxisSCOORDGroup.GraphicData[0],
-        shortAxisSCOORDGroup.GraphicData[2]
-      ),
-      y: Math.max(
-        longAxisSCOORDGroup.GraphicData[1],
-        longAxisSCOORDGroup.GraphicData[3],
-        shortAxisSCOORDGroup.GraphicData[1],
-        shortAxisSCOORDGroup.GraphicData[3]
-      )
+      x: Math.max(longAxisSCOORDGroup.GraphicData[0], longAxisSCOORDGroup.GraphicData[2], shortAxisSCOORDGroup.GraphicData[0], shortAxisSCOORDGroup.GraphicData[2]),
+      y: Math.max(longAxisSCOORDGroup.GraphicData[1], longAxisSCOORDGroup.GraphicData[3], shortAxisSCOORDGroup.GraphicData[1], shortAxisSCOORDGroup.GraphicData[3])
     };
     const state = {
       sopInstanceUid: ReferencedSOPInstanceUID,
       frameIndex: ReferencedFrameNumber || 1,
-      toolType: _Bidirectional.toolType,
+      toolType: Bidirectional2.toolType,
       active: false,
       handles: {
         start: {
@@ -64017,8 +63459,8 @@ var Bidirectional2 = class _Bidirectional {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { start, end, perpendicularStart, perpendicularEnd } = tool.handles;
-    const { shortestDiameter, longestDiameter, finding, findingSites } = tool;
+    const {start, end, perpendicularStart, perpendicularEnd} = tool.handles;
+    const {shortestDiameter, longestDiameter, finding, findingSites} = tool;
     const trackingIdentifierTextValue7 = "cornerstoneTools@^4.0.0:Bidirectional";
     return {
       longAxis: {
@@ -64039,7 +63481,7 @@ var Bidirectional2 = class _Bidirectional {
 };
 Bidirectional2.toolType = BIDIRECTIONAL;
 Bidirectional2.utilityToolType = BIDIRECTIONAL;
-Bidirectional2.TID300Representation = Bidirectional;
+Bidirectional2.TID300Representation = Bidirectional_default;
 Bidirectional2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -64050,8 +63492,8 @@ Bidirectional2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === BIDIRECTIONAL;
 };
-MeasurementReport.registerTool(Bidirectional2);
-var Bidirectional_default = Bidirectional2;
+MeasurementReport_default.registerTool(Bidirectional2);
+var Bidirectional_default2 = Bidirectional2;
 
 // src/utilities/TID300/Ellipse.js
 function expandPoints2(points) {
@@ -64062,9 +63504,9 @@ function expandPoints2(points) {
   });
   return allPoints;
 }
-var Ellipse = class extends TID300Measurement {
+var Ellipse = class extends TID300Measurement_default {
   contentItem() {
-    const { points, ReferencedSOPSequence, area, areaUnit } = this.props;
+    const {points, ReferencedSOPSequence, area, areaUnit} = this.props;
     const GraphicData = expandPoints2(points);
     return this.getMeasurement([
       {
@@ -64094,27 +63536,25 @@ var Ellipse = class extends TID300Measurement {
     ]);
   }
 };
+var Ellipse_default = Ellipse;
 
 // src/adapters/Cornerstone/EllipticalRoi.js
 var ELLIPTICALROI = "EllipticalRoi";
-var EllipticalRoi = class _EllipticalRoi {
+var EllipticalRoi = class {
   constructor() {
   }
-  // TODO: this function is required for all Cornerstone Tool Adapters, since it is called by MeasurementReport.
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, NUMGroup, SCOORDGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
-    const { GraphicData } = SCOORDGroup;
+    const {defaultState, NUMGroup, SCOORDGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
+    const {GraphicData} = SCOORDGroup;
     const majorAxis = [
-      { x: GraphicData[0], y: GraphicData[1] },
-      { x: GraphicData[2], y: GraphicData[3] }
+      {x: GraphicData[0], y: GraphicData[1]},
+      {x: GraphicData[2], y: GraphicData[3]}
     ];
     const minorAxis = [
-      { x: GraphicData[4], y: GraphicData[5] },
-      { x: GraphicData[6], y: GraphicData[7] }
+      {x: GraphicData[4], y: GraphicData[5]},
+      {x: GraphicData[6], y: GraphicData[7]}
     ];
-    const minorAxisLength = Math.sqrt(
-      Math.pow(minorAxis[0].x - minorAxis[1].x, 2) + Math.pow(minorAxis[0].y - minorAxis[1].y, 2)
-    );
+    const minorAxisLength = Math.sqrt(Math.pow(minorAxis[0].x - minorAxis[1].x, 2) + Math.pow(minorAxis[0].y - minorAxis[1].y, 2));
     const minorAxisDirection = {
       x: (minorAxis[1].x - minorAxis[0].x) / minorAxisLength,
       y: (minorAxis[1].y - minorAxis[0].y) / minorAxisLength
@@ -64130,7 +63570,7 @@ var EllipticalRoi = class _EllipticalRoi {
     };
     const state = {
       ...defaultState,
-      toolType: _EllipticalRoi.toolType,
+      toolType: EllipticalRoi.toolType,
       active: false,
       cachedStats: {
         area: NUMGroup ? NUMGroup.MeasuredValueSequence.NumericValue : 0
@@ -64163,23 +63603,23 @@ var EllipticalRoi = class _EllipticalRoi {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { cachedStats = {}, handles, finding, findingSites } = tool;
-    const { start, end } = handles;
-    const { area } = cachedStats;
+    const {cachedStats = {}, handles, finding, findingSites} = tool;
+    const {start, end} = handles;
+    const {area} = cachedStats;
     const halfXLength = Math.abs(start.x - end.x) / 2;
     const halfYLength = Math.abs(start.y - end.y) / 2;
     const points = [];
-    const center = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+    const center = {x: (start.x + end.x) / 2, y: (start.y + end.y) / 2};
     if (halfXLength > halfYLength) {
-      points.push({ x: center.x - halfXLength, y: center.y });
-      points.push({ x: center.x + halfXLength, y: center.y });
-      points.push({ x: center.x, y: center.y - halfYLength });
-      points.push({ x: center.x, y: center.y + halfYLength });
+      points.push({x: center.x - halfXLength, y: center.y});
+      points.push({x: center.x + halfXLength, y: center.y});
+      points.push({x: center.x, y: center.y - halfYLength});
+      points.push({x: center.x, y: center.y + halfYLength});
     } else {
-      points.push({ x: center.x, y: center.y - halfYLength });
-      points.push({ x: center.x, y: center.y + halfYLength });
-      points.push({ x: center.x - halfXLength, y: center.y });
-      points.push({ x: center.x + halfXLength, y: center.y });
+      points.push({x: center.x, y: center.y - halfYLength});
+      points.push({x: center.x, y: center.y + halfYLength});
+      points.push({x: center.x - halfXLength, y: center.y});
+      points.push({x: center.x + halfXLength, y: center.y});
     }
     const trackingIdentifierTextValue7 = "cornerstoneTools@^4.0.0:EllipticalRoi";
     return {
@@ -64193,7 +63633,7 @@ var EllipticalRoi = class _EllipticalRoi {
 };
 EllipticalRoi.toolType = ELLIPTICALROI;
 EllipticalRoi.utilityToolType = ELLIPTICALROI;
-EllipticalRoi.TID300Representation = Ellipse;
+EllipticalRoi.TID300Representation = Ellipse_default;
 EllipticalRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -64204,7 +63644,7 @@ EllipticalRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === ELLIPTICALROI;
 };
-MeasurementReport.registerTool(EllipticalRoi);
+MeasurementReport_default.registerTool(EllipticalRoi);
 var EllipticalRoi_default = EllipticalRoi;
 
 // src/utilities/TID300/Circle.js
@@ -64216,7 +63656,7 @@ function expandPoints3(points) {
   });
   return allPoints;
 }
-var Circle = class extends TID300Measurement {
+var Circle = class extends TID300Measurement_default {
   contentItem() {
     const {
       points,
@@ -64236,7 +63676,6 @@ var Circle = class extends TID300Measurement {
           CodeValue: "G-A197",
           CodingSchemeDesignator: "SRT",
           CodeMeaning: "Perimeter"
-          // TODO: Look this up from a Code Meaning dictionary
         },
         MeasuredValueSequence: {
           MeasurementUnitsCodeSequence: unit2CodingValue_default(unit),
@@ -64255,14 +63694,12 @@ var Circle = class extends TID300Measurement {
         }
       },
       {
-        // TODO: This feels weird to repeat the GraphicData
         RelationshipType: "CONTAINS",
         ValueType: "NUM",
         ConceptNameCodeSequence: {
           CodeValue: "G-A166",
           CodingSchemeDesignator: "SRT",
           CodeMeaning: "Area"
-          // TODO: Look this up from a Code Meaning dictionary
         },
         MeasuredValueSequence: {
           MeasurementUnitsCodeSequence: unit2CodingValue_default(areaUnit),
@@ -64283,25 +63720,24 @@ var Circle = class extends TID300Measurement {
     ]);
   }
 };
+var Circle_default = Circle;
 
 // src/adapters/Cornerstone/CircleRoi.js
 var CIRCLEROI = "CircleRoi";
-var CircleRoi = class _CircleRoi {
+var CircleRoi = class {
   constructor() {
   }
-  /** Gets the measurement data for cornerstone, given DICOM SR measurement data. */
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, NUMGroup, SCOORDGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
-    const { GraphicData } = SCOORDGroup;
-    const center = { x: GraphicData[0], y: GraphicData[1] };
-    const end = { x: GraphicData[2], y: GraphicData[3] };
+    const {defaultState, NUMGroup, SCOORDGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
+    const {GraphicData} = SCOORDGroup;
+    const center = {x: GraphicData[0], y: GraphicData[1]};
+    const end = {x: GraphicData[2], y: GraphicData[3]};
     const state = {
       ...defaultState,
-      toolType: _CircleRoi.toolType,
+      toolType: CircleRoi.toolType,
       active: false,
       cachedStats: {
         area: NUMGroup ? NUMGroup.MeasuredValueSequence.NumericValue : 0,
-        // Dummy values to be updated by cornerstone
         radius: 0,
         perimeter: 0
       },
@@ -64330,16 +63766,10 @@ var CircleRoi = class _CircleRoi {
     };
     return state;
   }
-  /**
-   * Gets the TID 300 representation of a circle, given the cornerstone representation.
-   *
-   * @param {Object} tool
-   * @returns
-   */
   static getTID300RepresentationArguments(tool) {
-    const { cachedStats = {}, handles, finding, findingSites } = tool;
-    const { start: center, end } = handles;
-    const { area, areaUnit = "mm2", unit = "mm", radius } = cachedStats;
+    const {cachedStats = {}, handles, finding, findingSites} = tool;
+    const {start: center, end} = handles;
+    const {area, areaUnit = "mm2", unit = "mm", radius} = cachedStats;
     const perimeter = 2 * Math.PI * radius;
     const points = [];
     points.push(center);
@@ -64360,7 +63790,7 @@ var CircleRoi = class _CircleRoi {
 };
 CircleRoi.toolType = CIRCLEROI;
 CircleRoi.utilityToolType = CIRCLEROI;
-CircleRoi.TID300Representation = Circle;
+CircleRoi.TID300Representation = Circle_default;
 CircleRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -64371,11 +63801,11 @@ CircleRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === CIRCLEROI;
 };
-MeasurementReport.registerTool(CircleRoi);
+MeasurementReport_default.registerTool(CircleRoi);
 var CircleRoi_default = CircleRoi;
 
 // src/utilities/TID300/Point.js
-var Point = class extends TID300Measurement {
+var Point = class extends TID300Measurement_default {
   contentItem() {
     const {
       points,
@@ -64386,7 +63816,8 @@ var Point = class extends TID300Measurement {
     if (points.length == 2) {
       GraphicData.push(points[1].x);
       GraphicData.push(points[1].y);
-      if (use3DSpatialCoordinates) GraphicData.push(points[1].z);
+      if (use3DSpatialCoordinates)
+        GraphicData.push(points[1].z);
     }
     return this.getMeasurement([
       {
@@ -64397,7 +63828,6 @@ var Point = class extends TID300Measurement {
           CodingSchemeDesignator: "DCM",
           CodeMeaning: "Center"
         },
-        //MeasuredValueSequence: ,
         ContentSequence: {
           RelationshipType: "INFERRED FROM",
           ValueType: use3DSpatialCoordinates ? "SCOORD3D" : "SCOORD",
@@ -64413,20 +63843,21 @@ var Point = class extends TID300Measurement {
     ]);
   }
 };
+var Point_default = Point;
 
 // src/adapters/Cornerstone/ArrowAnnotate.js
 var ARROW_ANNOTATE = "ArrowAnnotate";
 var CORNERSTONEFREETEXT = "CORNERSTONEFREETEXT";
-var ArrowAnnotate = class _ArrowAnnotate {
+var ArrowAnnotate = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, SCOORDGroup, findingGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, SCOORDGroup, findingGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const text = findingGroup.ConceptCodeSequence.CodeMeaning;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const state = {
       ...defaultState,
-      toolType: _ArrowAnnotate.toolType,
+      toolType: ArrowAnnotate.toolType,
       active: false,
       handles: {
         start: {
@@ -64435,8 +63866,6 @@ var ArrowAnnotate = class _ArrowAnnotate {
           highlight: true,
           active: false
         },
-        // Use a generic offset if the stored data doesn't have the endpoint, otherwise
-        // use the actual endpoint.
         end: {
           x: GraphicData.length == 4 ? GraphicData[2] : GraphicData[0] + 20,
           y: GraphicData.length == 4 ? GraphicData[3] : GraphicData[1] + 20,
@@ -64459,7 +63888,7 @@ var ArrowAnnotate = class _ArrowAnnotate {
   }
   static getTID300RepresentationArguments(tool) {
     const points = [tool.handles.start, tool.handles.end];
-    let { finding, findingSites } = tool;
+    let {finding, findingSites} = tool;
     const TID300RepresentationArguments = {
       points,
       trackingIdentifierTextValue: `cornerstoneTools@^4.0.0:ArrowAnnotate`,
@@ -64478,7 +63907,7 @@ var ArrowAnnotate = class _ArrowAnnotate {
 };
 ArrowAnnotate.toolType = ARROW_ANNOTATE;
 ArrowAnnotate.utilityToolType = ARROW_ANNOTATE;
-ArrowAnnotate.TID300Representation = Point;
+ArrowAnnotate.TID300Representation = Point_default;
 ArrowAnnotate.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -64489,11 +63918,11 @@ ArrowAnnotate.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === ARROW_ANNOTATE;
 };
-MeasurementReport.registerTool(ArrowAnnotate);
+MeasurementReport_default.registerTool(ArrowAnnotate);
 var ArrowAnnotate_default = ArrowAnnotate;
 
 // src/adapters/Cornerstone/Segmentation_3X.js
-var import_ndarray3 = __toESM(require_ndarray());
+var import_ndarray3 = __toModule(require_ndarray());
 
 // src/utilities/orientation/index.js
 var orientation_exports = {};
@@ -64518,27 +63947,12 @@ function crossProduct3D_default(a, b) {
 
 // src/utilities/orientation/flipImageOrientationPatient.js
 var flipImageOrientationPatient = {
-  /**
-   * h: Flips ImageOrientationPatient in the horizontal direction.
-   * @param {Number[6]} iop - ImageOrientationPatient
-   * @returns {Number[6]} The transformed ImageOrientationPatient
-   */
   h: (iop) => {
     return [iop[0], iop[1], iop[2], -iop[3], -iop[4], -iop[5]];
   },
-  /**
-   * v: Flips ImageOrientationPatient in the vertical direction.
-   * @param {Number[6]} iop - ImageOrientationPatient
-   * @returns {Number[6]} The transformed ImageOrientationPatient
-   */
   v: (iop) => {
     return [-iop[0], -iop[1], -iop[2], iop[3], iop[4], iop[5]];
   },
-  /**
-   * hv: Flips ImageOrientationPatient in the horizontal and vertical directions.
-   * @param {Number[6]} iop - ImageOrientationPatient
-   * @returns {Number[6]} The transformed ImageOrientationPatient
-   */
   hv: (iop) => {
     return [-iop[0], -iop[1], -iop[2], -iop[3], -iop[4], -iop[5]];
   }
@@ -64570,7 +63984,7 @@ function rotateDirectionCosinesInPlane_default(iop, theta) {
 }
 
 // src/utilities/orientation/flipMatrix2D.js
-var import_ndarray = __toESM(require_ndarray());
+var import_ndarray = __toModule(require_ndarray());
 var flipMatrix2D = {
   h,
   v
@@ -64597,7 +64011,7 @@ function v(matrix) {
 }
 
 // src/utilities/orientation/rotateMatrix902D.js
-var import_ndarray2 = __toESM(require_ndarray());
+var import_ndarray2 = __toModule(require_ndarray());
 function rotateMatrix902D_default(matrix) {
   const [rows, cols] = matrix.shape;
   let result = (0, import_ndarray2.default)(new Uint8Array(rows * cols), [cols, rows]);
@@ -64630,8 +64044,8 @@ var Segmentation2 = {
   generateToolState
 };
 var Segmentation_3X_default = Segmentation2;
-function generateSegmentation(images, brushData, options = { includeSliceSpacing: true }) {
-  const { toolState, segments: segments2 } = brushData;
+function generateSegmentation(images, brushData, options = {includeSliceSpacing: true}) {
+  const {toolState, segments: segments2} = brushData;
   const image0 = images[0];
   const dims = {
     x: image0.columns,
@@ -64645,7 +64059,7 @@ function generateSegmentation(images, brushData, options = { includeSliceSpacing
   }
   const isMultiframe = image0.imageId.includes("?frame");
   const seg = _createSegFromImages(images, isMultiframe, options);
-  const { referencedFramesPerSegment, segmentIndicies } = _getNumberOfFramesPerSegment(toolState, images, segments2);
+  const {referencedFramesPerSegment, segmentIndicies} = _getNumberOfFramesPerSegment(toolState, images, segments2);
   let NumberOfFrames = 0;
   for (let i = 0; i < referencedFramesPerSegment.length; i++) {
     NumberOfFrames += referencedFramesPerSegment[i].length;
@@ -64658,17 +64072,7 @@ function generateSegmentation(images, brushData, options = { includeSliceSpacing
       return element + 1;
     });
     const segment = segments2[segmentIndex];
-    seg.addSegment(
-      segment,
-      _extractCornerstoneToolsPixelData(
-        segmentIndex,
-        referencedFrameIndicies,
-        toolState,
-        images,
-        dims
-      ),
-      referencedFrameNumbers
-    );
+    seg.addSegment(segment, _extractCornerstoneToolsPixelData(segmentIndex, referencedFrameIndicies, toolState, images, dims), referencedFrameNumbers);
   }
   seg.bitPackPixelData();
   const segBlob = datasetToBlob(seg.dataset);
@@ -64736,25 +64140,20 @@ function _createSegFromImages(images, isMultiframe, options) {
       const image = images[i];
       const arrayBuffer = image.data.byteArray.buffer;
       const dicomData = DicomMessage4.readFile(arrayBuffer);
-      const dataset = DicomMetaDictionary.naturalizeDataset(
-        dicomData.dict
-      );
+      const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
       dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
       datasets.push(dataset);
     }
   }
   const multiframe = Normalizer.normalizeToDataset(datasets);
-  return new Segmentation([multiframe], options);
+  return new Segmentation_default([multiframe], options);
 }
 function generateToolState(imageIds, arrayBuffer, metadataProvider) {
   const dicomData = DicomMessage4.readFile(arrayBuffer);
   const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
   dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
   const multiframe = Normalizer.normalizeToDataset([dataset]);
-  const imagePlaneModule = metadataProvider.get(
-    "imagePlaneModule",
-    imageIds[0]
-  );
+  const imagePlaneModule = metadataProvider.get("imagePlaneModule", imageIds[0]);
   if (!imagePlaneModule) {
     console.warn("Insufficient metadata, imagePlaneModule missing.");
   }
@@ -64778,19 +64177,10 @@ function generateToolState(imageIds, arrayBuffer, metadataProvider) {
   for (let i = 0; i < PerFrameFunctionalGroupsSequence.length; i++) {
     const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[i];
     const ImageOrientationPatientI = sharedImageOrientationPatient || PerFrameFunctionalGroups.PlaneOrientationSequence.ImageOrientationPatient;
-    const pixelDataI2D = (0, import_ndarray3.default)(
-      new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength),
-      [multiframe.Rows, multiframe.Columns]
-    );
-    const alignedPixelDataI = alignPixelDataWithSourceData(
-      pixelDataI2D,
-      ImageOrientationPatientI,
-      validOrientations
-    );
+    const pixelDataI2D = (0, import_ndarray3.default)(new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength), [multiframe.Rows, multiframe.Columns]);
+    const alignedPixelDataI = alignPixelDataWithSourceData(pixelDataI2D, ImageOrientationPatientI, validOrientations);
     if (!alignedPixelDataI) {
-      console.warn(
-        "This segmentation object is not in-plane with the source data. Bailing out of IO. It'd be better to render this with vtkjs. "
-      );
+      console.warn("This segmentation object is not in-plane with the source data. Bailing out of IO. It'd be better to render this with vtkjs. ");
       inPlane = false;
       break;
     }
@@ -64801,22 +64191,13 @@ function generateToolState(imageIds, arrayBuffer, metadataProvider) {
     } else {
       SourceImageSequence = PerFrameFunctionalGroups.DerivationImageSequence.SourceImageSequence;
     }
-    const imageId = getImageIdOfSourceImage(
-      SourceImageSequence,
-      imageIds,
-      metadataProvider
-    );
-    addImageIdSpecificBrushToolState(
-      toolState,
-      imageId,
-      segmentIndex,
-      alignedPixelDataI
-    );
+    const imageId = getImageIdOfSourceImage(SourceImageSequence, imageIds, metadataProvider);
+    addImageIdSpecificBrushToolState(toolState, imageId, segmentIndex, alignedPixelDataI);
   }
   if (!inPlane) {
     return;
   }
-  return { toolState, segMetadata };
+  return {toolState, segMetadata};
 }
 function unpackPixelData(multiframe) {
   const segType = multiframe.SegmentationType;
@@ -64827,14 +64208,10 @@ function unpackPixelData(multiframe) {
   const max2 = multiframe.MaximumFractionalValue;
   const onlyMaxAndZero = pixelData.find((element) => element !== 0 && element !== max2) === void 0;
   if (!onlyMaxAndZero) {
-    log_default.warn(
-      "This is a fractional segmentation, which is not currently supported."
-    );
+    log_default.warn("This is a fractional segmentation, which is not currently supported.");
     return;
   }
-  log_default.warn(
-    "This segmentation object is actually binary... processing as such."
-  );
+  log_default.warn("This segmentation object is actually binary... processing as such.");
   return pixelData;
 }
 function addImageIdSpecificBrushToolState(toolState, imageId, segmentIndex, pixelData2D) {
@@ -64862,24 +64239,12 @@ function addImageIdSpecificBrushToolState(toolState, imageId, segmentIndex, pixe
   }
 }
 function getImageIdOfSourceImage(SourceImageSequence, imageIds, metadataProvider) {
-  const { ReferencedSOPInstanceUID, ReferencedFrameNumber } = SourceImageSequence;
-  return ReferencedFrameNumber ? getImageIdOfReferencedFrame(
-    ReferencedSOPInstanceUID,
-    ReferencedFrameNumber,
-    imageIds,
-    metadataProvider
-  ) : getImageIdOfReferencedSingleFramedSOPInstance(
-    ReferencedSOPInstanceUID,
-    imageIds,
-    metadataProvider
-  );
+  const {ReferencedSOPInstanceUID, ReferencedFrameNumber} = SourceImageSequence;
+  return ReferencedFrameNumber ? getImageIdOfReferencedFrame(ReferencedSOPInstanceUID, ReferencedFrameNumber, imageIds, metadataProvider) : getImageIdOfReferencedSingleFramedSOPInstance(ReferencedSOPInstanceUID, imageIds, metadataProvider);
 }
 function getImageIdOfReferencedSingleFramedSOPInstance(sopInstanceUid, imageIds, metadataProvider) {
   return imageIds.find((imageId) => {
-    const sopCommonModule = metadataProvider.get(
-      "sopCommonModule",
-      imageId
-    );
+    const sopCommonModule = metadataProvider.get("sopCommonModule", imageId);
     if (!sopCommonModule) {
       return;
     }
@@ -64888,18 +64253,12 @@ function getImageIdOfReferencedSingleFramedSOPInstance(sopInstanceUid, imageIds,
 }
 function getImageIdOfReferencedFrame(sopInstanceUid, frameNumber, imageIds, metadataProvider) {
   const imageId = imageIds.find((imageId2) => {
-    const sopCommonModule = metadataProvider.get(
-      "sopCommonModule",
-      imageId2
-    );
+    const sopCommonModule = metadataProvider.get("sopCommonModule", imageId2);
     if (!sopCommonModule) {
       return;
     }
     const imageIdFrameNumber = Number(imageId2.split("frame=")[1]);
-    return (
-      //frameNumber is zero indexed for cornerstoneWADOImageLoader image Ids.
-      sopCommonModule.sopInstanceUID === sopInstanceUid && imageIdFrameNumber === frameNumber - 1
-    );
+    return sopCommonModule.sopInstanceUID === sopInstanceUid && imageIdFrameNumber === frameNumber - 1;
   });
   return imageId;
 }
@@ -64932,9 +64291,7 @@ function alignPixelDataWithSourceData(pixelData2D, iop, orientations) {
   } else if (compareIOP(iop, orientations[6])) {
     return rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D));
   } else if (compareIOP(iop, orientations[7])) {
-    return rotateMatrix902D_default(
-      rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D))
-    );
+    return rotateMatrix902D_default(rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D)));
   }
 }
 var dx = 1e-5;
@@ -64958,20 +64315,21 @@ function getSegmentMetadata(multiframe) {
 }
 
 // src/adapters/Cornerstone/Segmentation_4X.js
-var import_ndarray4 = __toESM(require_ndarray());
+var import_ndarray4 = __toModule(require_ndarray());
 
 // node_modules/gl-matrix/esm/common.js
 var EPSILON = 1e-6;
 var ARRAY_TYPE = typeof Float32Array !== "undefined" ? Float32Array : Array;
 var RANDOM = Math.random;
 var degree = Math.PI / 180;
-if (!Math.hypot) Math.hypot = function() {
-  var y = 0, i = arguments.length;
-  while (i--) {
-    y += arguments[i] * arguments[i];
-  }
-  return Math.sqrt(y);
-};
+if (!Math.hypot)
+  Math.hypot = function() {
+    var y = 0, i = arguments.length;
+    while (i--) {
+      y += arguments[i] * arguments[i];
+    }
+    return Math.sqrt(y);
+  };
 
 // node_modules/gl-matrix/esm/vec3.js
 var vec3_exports = {};
@@ -65369,9 +64727,7 @@ function encode(buffer, numberOfFrames, rows, cols) {
   let encodedFrames = [];
   for (let frame = 0; frame < numberOfFrames; frame++) {
     const frameOffset = frameLength * frame;
-    encodedFrames.push(
-      encodeFrame(buffer, frameOffset, rows, cols, header)
-    );
+    encodedFrames.push(encodeFrame(buffer, frameOffset, rows, cols, header));
   }
   return encodedFrames;
 }
@@ -65451,11 +64807,7 @@ function decode(rleEncodedFrames, rows, cols) {
   const frameLength = rows * cols;
   for (let i = 0; i < rleEncodedFrames.length; i++) {
     const rleEncodedFrame = rleEncodedFrames[i];
-    const uint8FrameView = new Uint8Array(
-      buffer,
-      i * frameLength,
-      frameLength
-    );
+    const uint8FrameView = new Uint8Array(buffer, i * frameLength, frameLength);
     decodeFrame(rleEncodedFrame, uint8FrameView);
   }
   return pixelData;
@@ -65463,15 +64815,11 @@ function decode(rleEncodedFrames, rows, cols) {
 function decodeFrame(rleEncodedFrame, pixelData) {
   const header = new Uint32Array(rleEncodedFrame, 0, 16);
   if (header[0] !== 1) {
-    log_default.error(
-      `rleSingleSamplePerPixel only supports fragments with single Byte Segments (for rle encoded segmentation data) at the current time. This rleEncodedFrame has ${header[0]} Byte Segments.`
-    );
+    log_default.error(`rleSingleSamplePerPixel only supports fragments with single Byte Segments (for rle encoded segmentation data) at the current time. This rleEncodedFrame has ${header[0]} Byte Segments.`);
     return;
   }
   if (header[1] !== 64) {
-    log_default.error(
-      "Data offset of Byte Segment 1 should be 64 bytes, this rle fragment is encoded incorrectly."
-    );
+    log_default.error("Data offset of Byte Segment 1 should be 64 bytes, this rle fragment is encoded incorrectly.");
     return;
   }
   const uInt8Frame = new Uint8Array(rleEncodedFrame, 64);
@@ -65507,7 +64855,7 @@ function decodeFrame(rleEncodedFrame, pixelData) {
 }
 
 // src/adapters/Cornerstone/Segmentation_4X.js
-var import_lodash = __toESM(require_lodash());
+var import_lodash = __toModule(require_lodash());
 var Segmentation3 = {
   generateSegmentation: generateSegmentation2,
   generateToolState: generateToolState2,
@@ -65520,25 +64868,17 @@ var generateSegmentationDefaultOptions = {
 };
 function generateSegmentation2(images, inputLabelmaps3D, userOptions = {}) {
   const isMultiframe = images[0].imageId.includes("?frame");
-  const segmentation = _createSegFromImages2(
-    images,
-    isMultiframe,
-    userOptions
-  );
+  const segmentation = _createSegFromImages2(images, isMultiframe, userOptions);
   return fillSegmentation(segmentation, inputLabelmaps3D, userOptions);
 }
 function fillSegmentation(segmentation, inputLabelmaps3D, userOptions = {}) {
-  const options = Object.assign(
-    {},
-    generateSegmentationDefaultOptions,
-    userOptions
-  );
+  const options = Object.assign({}, generateSegmentationDefaultOptions, userOptions);
   const labelmaps3D = Array.isArray(inputLabelmaps3D) ? inputLabelmaps3D : [inputLabelmaps3D];
   let numberOfFrames = 0;
   const referencedFramesPerLabelmap = [];
   for (let labelmapIndex = 0; labelmapIndex < labelmaps3D.length; labelmapIndex++) {
     const labelmap3D = labelmaps3D[labelmapIndex];
-    const { labelmaps2D, metadata } = labelmap3D;
+    const {labelmaps2D, metadata} = labelmap3D;
     const referencedFramesPerSegment = [];
     for (let i = 1; i < metadata.length; i++) {
       if (metadata[i]) {
@@ -65548,7 +64888,7 @@ function fillSegmentation(segmentation, inputLabelmaps3D, userOptions = {}) {
     for (let i = 0; i < labelmaps2D.length; i++) {
       const labelmap2D = labelmaps2D[i];
       if (labelmaps2D[i]) {
-        const { segmentsOnLabelmap } = labelmap2D;
+        const {segmentsOnLabelmap} = labelmap2D;
         segmentsOnLabelmap.forEach((segmentIndex) => {
           if (segmentIndex !== 0) {
             referencedFramesPerSegment[segmentIndex].push(i);
@@ -65563,36 +64903,21 @@ function fillSegmentation(segmentation, inputLabelmaps3D, userOptions = {}) {
   for (let labelmapIndex = 0; labelmapIndex < labelmaps3D.length; labelmapIndex++) {
     const referencedFramesPerSegment = referencedFramesPerLabelmap[labelmapIndex];
     const labelmap3D = labelmaps3D[labelmapIndex];
-    const { metadata } = labelmap3D;
+    const {metadata} = labelmap3D;
     for (let segmentIndex = 1; segmentIndex < referencedFramesPerSegment.length; segmentIndex++) {
       const referencedFrameIndicies = referencedFramesPerSegment[segmentIndex];
       if (referencedFrameIndicies) {
-        const referencedFrameNumbers = referencedFrameIndicies.map(
-          (element) => {
-            return element + 1;
-          }
-        );
+        const referencedFrameNumbers = referencedFrameIndicies.map((element) => {
+          return element + 1;
+        });
         const segmentMetadata = metadata[segmentIndex];
-        const labelmaps = _getLabelmapsFromRefernecedFrameIndicies(
-          labelmap3D,
-          referencedFrameIndicies
-        );
-        segmentation.addSegmentFromLabelmap(
-          segmentMetadata,
-          labelmaps,
-          segmentIndex,
-          referencedFrameNumbers
-        );
+        const labelmaps = _getLabelmapsFromRefernecedFrameIndicies(labelmap3D, referencedFrameIndicies);
+        segmentation.addSegmentFromLabelmap(segmentMetadata, labelmaps, segmentIndex, referencedFrameNumbers);
       }
     }
   }
   if (options.rleEncode) {
-    const rleEncodedFrames = encode(
-      segmentation.dataset.PixelData,
-      numberOfFrames,
-      segmentation.dataset.Rows,
-      segmentation.dataset.Columns
-    );
+    const rleEncodedFrames = encode(segmentation.dataset.PixelData, numberOfFrames, segmentation.dataset.Rows, segmentation.dataset.Columns);
     segmentation.assignToDataset({
       BitsAllocated: "8",
       BitsStored: "8",
@@ -65614,7 +64939,7 @@ function fillSegmentation(segmentation, inputLabelmaps3D, userOptions = {}) {
   return segBlob;
 }
 function _getLabelmapsFromRefernecedFrameIndicies(labelmap3D, referencedFrameIndicies) {
-  const { labelmaps2D } = labelmap3D;
+  const {labelmaps2D} = labelmap3D;
   const labelmaps = [];
   for (let i = 0; i < referencedFrameIndicies.length; i++) {
     const frame = referencedFrameIndicies[i];
@@ -65636,29 +64961,21 @@ function _createSegFromImages2(images, isMultiframe, options) {
       const image = images[i];
       const arrayBuffer = image.data.byteArray.buffer;
       const dicomData = DicomMessage4.readFile(arrayBuffer);
-      const dataset = DicomMetaDictionary.naturalizeDataset(
-        dicomData.dict
-      );
+      const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
       dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
       datasets.push(dataset);
     }
   }
   const multiframe = Normalizer.normalizeToDataset(datasets);
-  return new Segmentation([multiframe], options);
+  return new Segmentation_default([multiframe], options);
 }
 function generateToolState2(imageIds, arrayBuffer, metadataProvider, skipOverlapping = false, tolerance = 1e-3) {
   const dicomData = DicomMessage4.readFile(arrayBuffer);
   const dataset = DicomMetaDictionary.naturalizeDataset(dicomData.dict);
   dataset._meta = DicomMetaDictionary.namifyDataset(dicomData.meta);
   const multiframe = Normalizer.normalizeToDataset([dataset]);
-  const imagePlaneModule = metadataProvider.get(
-    "imagePlaneModule",
-    imageIds[0]
-  );
-  const generalSeriesModule = metadataProvider.get(
-    "generalSeriesModule",
-    imageIds[0]
-  );
+  const imagePlaneModule = metadataProvider.get("imagePlaneModule", imageIds[0]);
+  const generalSeriesModule = metadataProvider.get("generalSeriesModule", imageIds[0]);
   const SeriesInstanceUID = generalSeriesModule.seriesInstanceUID;
   let ImageOrientationPatient;
   let validOrientations;
@@ -65686,11 +65003,7 @@ function generateToolState2(imageIds, arrayBuffer, metadataProvider, skipOverlap
   let pixelData;
   if (TransferSyntaxUID === "1.2.840.10008.1.2.5") {
     const rleEncodedFrames = Array.isArray(multiframe.PixelData) ? multiframe.PixelData : [multiframe.PixelData];
-    pixelData = decode(
-      rleEncodedFrames,
-      multiframe.Rows,
-      multiframe.Columns
-    );
+    pixelData = decode(rleEncodedFrames, multiframe.Rows, multiframe.Columns);
     if (multiframe.BitsStored === 1) {
       console.warn("No implementation for rle + bitbacking.");
       return;
@@ -65703,25 +65016,13 @@ function generateToolState2(imageIds, arrayBuffer, metadataProvider, skipOverlap
   }
   let orientation;
   if (hasCoordinateSystem) {
-    orientation = checkOrientation(
-      multiframe,
-      validOrientations,
-      [imagePlaneModule.rows, imagePlaneModule.columns, imageIds.length],
-      tolerance
-    );
+    orientation = checkOrientation(multiframe, validOrientations, [imagePlaneModule.rows, imagePlaneModule.columns, imageIds.length], tolerance);
   } else {
     orientation = "Planar";
   }
   let overlapping = false;
   if (!skipOverlapping) {
-    overlapping = checkSEGsOverlapping(
-      pixelData,
-      multiframe,
-      imageIds,
-      validOrientations,
-      metadataProvider,
-      tolerance
-    );
+    overlapping = checkSEGsOverlapping(pixelData, multiframe, imageIds, validOrientations, metadataProvider, tolerance);
   }
   let insertFunction;
   switch (orientation) {
@@ -65733,13 +65034,9 @@ function generateToolState2(imageIds, arrayBuffer, metadataProvider, skipOverlap
       }
       break;
     case "Perpendicular":
-      throw new Error(
-        "Segmentations orthogonal to the acquisition plane of the source data are not yet supported."
-      );
+      throw new Error("Segmentations orthogonal to the acquisition plane of the source data are not yet supported.");
     case "Oblique":
-      throw new Error(
-        "Segmentations oblique to the acquisition plane of the source data are not yet supported."
-      );
+      throw new Error("Segmentations oblique to the acquisition plane of the source data are not yet supported.");
   }
   const segmentsOnFrameArray = [];
   segmentsOnFrameArray[0] = [];
@@ -65747,17 +65044,7 @@ function generateToolState2(imageIds, arrayBuffer, metadataProvider, skipOverlap
   const arrayBufferLength = sliceLength * imageIds.length * 2;
   const labelmapBufferArray = [];
   labelmapBufferArray[0] = new ArrayBuffer(arrayBufferLength);
-  insertFunction(
-    segmentsOnFrame,
-    segmentsOnFrameArray,
-    labelmapBufferArray,
-    pixelData,
-    multiframe,
-    imageIds,
-    validOrientations,
-    metadataProvider,
-    tolerance
-  );
+  insertFunction(segmentsOnFrame, segmentsOnFrameArray, labelmapBufferArray, pixelData, multiframe, imageIds, validOrientations, metadataProvider, tolerance);
   return {
     labelmapBufferArray,
     segMetadata,
@@ -65807,23 +65094,12 @@ function findReferenceSourceImageId(multiframe, frameSegment, imageIds, metadata
     frameSourceImageSequence = SourceImageSequence[frameSegment];
   }
   if (frameSourceImageSequence) {
-    imageId = getImageIdOfSourceImagebySourceImageSequence(
-      frameSourceImageSequence,
-      imageIds,
-      metadataProvider
-    );
+    imageId = getImageIdOfSourceImagebySourceImageSequence(frameSourceImageSequence, imageIds, metadataProvider);
   }
   if (imageId === void 0 && ReferencedSeriesSequence) {
     const referencedSeriesSequence = Array.isArray(ReferencedSeriesSequence) ? ReferencedSeriesSequence[0] : ReferencedSeriesSequence;
     const ReferencedSeriesInstanceUID = referencedSeriesSequence.SeriesInstanceUID;
-    imageId = getImageIdOfSourceImagebyGeometry(
-      ReferencedSeriesInstanceUID,
-      FrameOfReferenceUID,
-      PerFrameFunctionalGroup,
-      imageIds,
-      metadataProvider,
-      tolerance
-    );
+    imageId = getImageIdOfSourceImagebyGeometry(ReferencedSeriesInstanceUID, FrameOfReferenceUID, PerFrameFunctionalGroup, imageIds, metadataProvider, tolerance);
   }
   return imageId;
 }
@@ -65842,26 +65118,16 @@ function checkSEGsOverlapping(pixelData, multiframe, imageIds, validOrientations
   const sharedImageOrientationPatient = SharedFunctionalGroupsSequence.PlaneOrientationSequence ? SharedFunctionalGroupsSequence.PlaneOrientationSequence.ImageOrientationPatient : void 0;
   const sliceLength = Columns * Rows;
   const groupsLen = PerFrameFunctionalGroupsSequence.length;
-  let frameSegmentsMapping = /* @__PURE__ */ new Map();
+  let frameSegmentsMapping = new Map();
   for (let frameSegment = 0; frameSegment < groupsLen; ++frameSegment) {
     const segmentIndex = getSegmentIndex(multiframe, frameSegment);
     if (segmentIndex === void 0) {
-      console.warn(
-        "Could not retrieve the segment index for frame segment " + frameSegment + ", skipping this frame."
-      );
+      console.warn("Could not retrieve the segment index for frame segment " + frameSegment + ", skipping this frame.");
       continue;
     }
-    const imageId = findReferenceSourceImageId(
-      multiframe,
-      frameSegment,
-      imageIds,
-      metadataProvider,
-      tolerance
-    );
+    const imageId = findReferenceSourceImageId(multiframe, frameSegment, imageIds, metadataProvider, tolerance);
     if (!imageId) {
-      console.warn(
-        "Image not present in stack, can't import frame : " + frameSegment + "."
-      );
+      console.warn("Image not present in stack, can't import frame : " + frameSegment + ".");
       continue;
     }
     const imageIdIndex = imageIds.findIndex((element) => element === imageId);
@@ -65880,31 +65146,17 @@ function checkSEGsOverlapping(pixelData, multiframe, imageIds, validOrientations
     for (let i = 0; i < role.length; ++i) {
       const frameSegment = role[i];
       const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[frameSegment];
-      const pixelDataI2D = (0, import_ndarray4.default)(
-        new Uint8Array(
-          pixelData.buffer,
-          frameSegment * sliceLength,
-          sliceLength
-        ),
-        [Rows, Columns]
-      );
+      const pixelDataI2D = (0, import_ndarray4.default)(new Uint8Array(pixelData.buffer, frameSegment * sliceLength, sliceLength), [Rows, Columns]);
       let alignedPixelDataI;
       const hasCoordinateSystem = "FrameOfReferenceUID" in multiframe;
       if (hasCoordinateSystem) {
         const ImageOrientationPatientI = sharedImageOrientationPatient || PerFrameFunctionalGroups.PlaneOrientationSequence.ImageOrientationPatient;
-        alignedPixelDataI = alignPixelDataWithSourceData2(
-          pixelDataI2D,
-          ImageOrientationPatientI,
-          validOrientations,
-          tolerance
-        );
+        alignedPixelDataI = alignPixelDataWithSourceData2(pixelDataI2D, ImageOrientationPatientI, validOrientations, tolerance);
       } else {
         alignedPixelDataI = pixelDataI2D;
       }
       if (!alignedPixelDataI) {
-        console.warn(
-          "Individual SEG frames are out of plane with respect to the first SEG frame, this is not yet supported, skipping this frame."
-        );
+        console.warn("Individual SEG frames are out of plane with respect to the first SEG frame, this is not yet supported, skipping this frame.");
         continue;
       }
       const data2 = alignedPixelDataI.data;
@@ -65940,66 +65192,35 @@ function insertOverlappingPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray,
       const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[i];
       const segmentIndex = getSegmentIndex(multiframe, i);
       if (segmentIndex === void 0) {
-        throw new Error(
-          "Could not retrieve the segment index. Aborting segmentation loading."
-        );
+        throw new Error("Could not retrieve the segment index. Aborting segmentation loading.");
       }
       if (segmentIndex !== segmentIndexToProcess) {
         continue;
       }
-      const pixelDataI2D = (0, import_ndarray4.default)(
-        new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength),
-        [Rows, Columns]
-      );
+      const pixelDataI2D = (0, import_ndarray4.default)(new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength), [Rows, Columns]);
       let alignedPixelDataI;
       const hasCoordinateSystem = "FrameOfReferenceUID" in multiframe;
       if (hasCoordinateSystem) {
         const ImageOrientationPatientI = sharedImageOrientationPatient || PerFrameFunctionalGroups.PlaneOrientationSequence.ImageOrientationPatient;
-        alignedPixelDataI = alignPixelDataWithSourceData2(
-          pixelDataI2D,
-          ImageOrientationPatientI,
-          validOrientations,
-          tolerance
-        );
+        alignedPixelDataI = alignPixelDataWithSourceData2(pixelDataI2D, ImageOrientationPatientI, validOrientations, tolerance);
       } else {
         alignedPixelDataI = pixelDataI2D;
       }
       if (!alignedPixelDataI) {
-        throw new Error(
-          "Individual SEG frames are out of plane with respect to the first SEG frame. This is not yet supported. Aborting segmentation loading."
-        );
+        throw new Error("Individual SEG frames are out of plane with respect to the first SEG frame. This is not yet supported. Aborting segmentation loading.");
       }
-      const imageId = findReferenceSourceImageId(
-        multiframe,
-        i,
-        imageIds,
-        metadataProvider,
-        tolerance
-      );
+      const imageId = findReferenceSourceImageId(multiframe, i, imageIds, metadataProvider, tolerance);
       if (!imageId) {
-        console.warn(
-          "Image not present in stack, can't import frame : " + i + "."
-        );
+        console.warn("Image not present in stack, can't import frame : " + i + ".");
         continue;
       }
-      const sourceImageMetadata = metadataProvider.get(
-        "imagePixelModule",
-        imageId
-      );
+      const sourceImageMetadata = metadataProvider.get("imagePixelModule", imageId);
       if (Rows !== sourceImageMetadata.rows || Columns !== sourceImageMetadata.columns) {
-        throw new Error(
-          "Individual SEG frames have different geometry dimensions (Rows and Columns) respect to the source image reference frame. This is not yet supported. Aborting segmentation loading. "
-        );
+        throw new Error("Individual SEG frames have different geometry dimensions (Rows and Columns) respect to the source image reference frame. This is not yet supported. Aborting segmentation loading. ");
       }
-      const imageIdIndex = imageIds.findIndex(
-        (element) => element === imageId
-      );
+      const imageIdIndex = imageIds.findIndex((element) => element === imageId);
       const byteOffset = sliceLength * 2 * imageIdIndex;
-      const labelmap2DView = new Uint16Array(
-        tempBuffer,
-        byteOffset,
-        sliceLength
-      );
+      const labelmap2DView = new Uint16Array(tempBuffer, byteOffset, sliceLength);
       const data2 = alignedPixelDataI.data;
       let segmentOnFrame = false;
       for (let j = 0, len2 = alignedPixelDataI.data.length; j < len2; ++j) {
@@ -66007,16 +65228,12 @@ function insertOverlappingPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray,
           if (labelmap2DView[j] !== 0) {
             m++;
             if (m >= M) {
-              labelmapBufferArray[m] = new ArrayBuffer(
-                arrayBufferLength
-              );
+              labelmapBufferArray[m] = new ArrayBuffer(arrayBufferLength);
               segmentsOnFrameArray[m] = [];
               M++;
             }
             tempBuffer = labelmapBufferArray[m].slice(0);
-            tempSegmentsOnFrame = (0, import_lodash.default)(
-              segmentsOnFrameArray[m]
-            );
+            tempSegmentsOnFrame = (0, import_lodash.default)(segmentsOnFrameArray[m]);
             i = 0;
             break;
           } else {
@@ -66044,7 +65261,7 @@ function insertOverlappingPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray,
   }
 }
 var getSegmentIndex = (multiframe, frame) => {
-  const { PerFrameFunctionalGroupsSequence, SharedFunctionalGroupsSequence } = multiframe;
+  const {PerFrameFunctionalGroupsSequence, SharedFunctionalGroupsSequence} = multiframe;
   const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[frame];
   return PerFrameFunctionalGroups && PerFrameFunctionalGroups.SegmentIdentificationSequence ? PerFrameFunctionalGroups.SegmentIdentificationSequence.ReferencedSegmentNumber : SharedFunctionalGroupsSequence.SegmentIdentificationSequence ? SharedFunctionalGroupsSequence.SegmentIdentificationSequence.ReferencedSegmentNumber : void 0;
 };
@@ -66059,63 +65276,34 @@ function insertPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray, labelmapBu
   const sliceLength = Columns * Rows;
   for (let i = 0, groupsLen = PerFrameFunctionalGroupsSequence.length; i < groupsLen; ++i) {
     const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[i];
-    const pixelDataI2D = (0, import_ndarray4.default)(
-      new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength),
-      [Rows, Columns]
-    );
+    const pixelDataI2D = (0, import_ndarray4.default)(new Uint8Array(pixelData.buffer, i * sliceLength, sliceLength), [Rows, Columns]);
     let alignedPixelDataI;
     const hasCoordinateSystem = "FrameOfReferenceUID" in multiframe;
     if (hasCoordinateSystem) {
       const ImageOrientationPatientI = sharedImageOrientationPatient || PerFrameFunctionalGroups.PlaneOrientationSequence.ImageOrientationPatient;
-      alignedPixelDataI = alignPixelDataWithSourceData2(
-        pixelDataI2D,
-        ImageOrientationPatientI,
-        validOrientations,
-        tolerance
-      );
+      alignedPixelDataI = alignPixelDataWithSourceData2(pixelDataI2D, ImageOrientationPatientI, validOrientations, tolerance);
     } else {
       alignedPixelDataI = pixelDataI2D;
     }
     if (!alignedPixelDataI) {
-      throw new Error(
-        "Individual SEG frames are out of plane with respect to the first SEG frame. This is not yet supported. Aborting segmentation loading."
-      );
+      throw new Error("Individual SEG frames are out of plane with respect to the first SEG frame. This is not yet supported. Aborting segmentation loading.");
     }
     const segmentIndex = getSegmentIndex(multiframe, i);
     if (segmentIndex === void 0) {
-      throw new Error(
-        "Could not retrieve the segment index. Aborting segmentation loading."
-      );
+      throw new Error("Could not retrieve the segment index. Aborting segmentation loading.");
     }
-    const imageId = findReferenceSourceImageId(
-      multiframe,
-      i,
-      imageIds,
-      metadataProvider,
-      tolerance
-    );
+    const imageId = findReferenceSourceImageId(multiframe, i, imageIds, metadataProvider, tolerance);
     if (!imageId) {
-      console.warn(
-        "Image not present in stack, can't import frame : " + i + "."
-      );
+      console.warn("Image not present in stack, can't import frame : " + i + ".");
       continue;
     }
-    const sourceImageMetadata = metadataProvider.get(
-      "imagePixelModule",
-      imageId
-    );
+    const sourceImageMetadata = metadataProvider.get("imagePixelModule", imageId);
     if (Rows !== sourceImageMetadata.rows || Columns !== sourceImageMetadata.columns) {
-      throw new Error(
-        "Individual SEG frames have different geometry dimensions (Rows and Columns) respect to the source image reference frame. This is not yet supported. Aborting segmentation loading. "
-      );
+      throw new Error("Individual SEG frames have different geometry dimensions (Rows and Columns) respect to the source image reference frame. This is not yet supported. Aborting segmentation loading. ");
     }
     const imageIdIndex = imageIds.findIndex((element) => element === imageId);
     const byteOffset = sliceLength * 2 * imageIdIndex;
-    const labelmap2DView = new Uint16Array(
-      labelmapBufferArray[0],
-      byteOffset,
-      sliceLength
-    );
+    const labelmap2DView = new Uint16Array(labelmapBufferArray[0], byteOffset, sliceLength);
     const data2 = alignedPixelDataI.data;
     for (let j = 0, len2 = alignedPixelDataI.data.length; j < len2; ++j) {
       if (data2[j]) {
@@ -66134,13 +65322,11 @@ function insertPixelDataPlanar(segmentsOnFrame, segmentsOnFrameArray, labelmapBu
   }
 }
 function checkOrientation(multiframe, validOrientations, sourceDataDimensions, tolerance) {
-  const { SharedFunctionalGroupsSequence, PerFrameFunctionalGroupsSequence } = multiframe;
+  const {SharedFunctionalGroupsSequence, PerFrameFunctionalGroupsSequence} = multiframe;
   const sharedImageOrientationPatient = SharedFunctionalGroupsSequence.PlaneOrientationSequence ? SharedFunctionalGroupsSequence.PlaneOrientationSequence.ImageOrientationPatient : void 0;
   const PerFrameFunctionalGroups = PerFrameFunctionalGroupsSequence[0];
   const iop = sharedImageOrientationPatient || PerFrameFunctionalGroups.PlaneOrientationSequence.ImageOrientationPatient;
-  const inPlane = validOrientations.some(
-    (operation) => compareArrays(iop, operation, tolerance)
-  );
+  const inPlane = validOrientations.some((operation) => compareArrays(iop, operation, tolerance));
   if (inPlane) {
     return "Planar";
   }
@@ -66150,12 +65336,8 @@ function checkOrientation(multiframe, validOrientations, sourceDataDimensions, t
   return "Oblique";
 }
 function checkIfPerpendicular(iop1, iop2, tolerance) {
-  const absDotColumnCosines = Math.abs(
-    iop1[0] * iop2[0] + iop1[1] * iop2[1] + iop1[2] * iop2[2]
-  );
-  const absDotRowCosines = Math.abs(
-    iop1[3] * iop2[3] + iop1[4] * iop2[4] + iop1[5] * iop2[5]
-  );
+  const absDotColumnCosines = Math.abs(iop1[0] * iop2[0] + iop1[1] * iop2[1] + iop1[2] * iop2[2]);
+  const absDotRowCosines = Math.abs(iop1[3] * iop2[3] + iop1[4] * iop2[4] + iop1[5] * iop2[5]);
   return (absDotColumnCosines < tolerance || Math.abs(absDotColumnCosines - 1) < tolerance) && (absDotRowCosines < tolerance || Math.abs(absDotRowCosines - 1) < tolerance);
 }
 function unpackPixelData2(multiframe) {
@@ -66178,51 +65360,30 @@ function unpackPixelData2(multiframe) {
   if (!onlyMaxAndZero) {
     return;
   }
-  log_default.warn(
-    "This segmentation object is actually binary... processing as such."
-  );
+  log_default.warn("This segmentation object is actually binary... processing as such.");
   return pixelData;
 }
 function getImageIdOfSourceImagebySourceImageSequence(SourceImageSequence, imageIds, metadataProvider) {
-  const { ReferencedSOPInstanceUID, ReferencedFrameNumber } = SourceImageSequence;
-  return ReferencedFrameNumber ? getImageIdOfReferencedFrame2(
-    ReferencedSOPInstanceUID,
-    ReferencedFrameNumber,
-    imageIds,
-    metadataProvider
-  ) : getImageIdOfReferencedSingleFramedSOPInstance2(
-    ReferencedSOPInstanceUID,
-    imageIds,
-    metadataProvider
-  );
+  const {ReferencedSOPInstanceUID, ReferencedFrameNumber} = SourceImageSequence;
+  return ReferencedFrameNumber ? getImageIdOfReferencedFrame2(ReferencedSOPInstanceUID, ReferencedFrameNumber, imageIds, metadataProvider) : getImageIdOfReferencedSingleFramedSOPInstance2(ReferencedSOPInstanceUID, imageIds, metadataProvider);
 }
 function getImageIdOfSourceImagebyGeometry(ReferencedSeriesInstanceUID, FrameOfReferenceUID, PerFrameFunctionalGroup, imageIds, metadataProvider, tolerance) {
   if (ReferencedSeriesInstanceUID === void 0 || PerFrameFunctionalGroup.PlanePositionSequence === void 0 || PerFrameFunctionalGroup.PlanePositionSequence[0] === void 0 || PerFrameFunctionalGroup.PlanePositionSequence[0].ImagePositionPatient === void 0) {
     return void 0;
   }
   for (let imageIdsIndexc = 0; imageIdsIndexc < imageIds.length; ++imageIdsIndexc) {
-    const sourceImageMetadata = metadataProvider.get(
-      "instance",
-      imageIds[imageIdsIndexc]
-    );
+    const sourceImageMetadata = metadataProvider.get("instance", imageIds[imageIdsIndexc]);
     if (sourceImageMetadata === void 0 || sourceImageMetadata.ImagePositionPatient === void 0 || sourceImageMetadata.FrameOfReferenceUID !== FrameOfReferenceUID || sourceImageMetadata.SeriesInstanceUID !== ReferencedSeriesInstanceUID) {
       continue;
     }
-    if (compareArrays(
-      PerFrameFunctionalGroup.PlanePositionSequence[0].ImagePositionPatient,
-      sourceImageMetadata.ImagePositionPatient,
-      tolerance
-    )) {
+    if (compareArrays(PerFrameFunctionalGroup.PlanePositionSequence[0].ImagePositionPatient, sourceImageMetadata.ImagePositionPatient, tolerance)) {
       return imageIds[imageIdsIndexc];
     }
   }
 }
 function getImageIdOfReferencedSingleFramedSOPInstance2(sopInstanceUid, imageIds, metadataProvider) {
   return imageIds.find((imageId) => {
-    const sopCommonModule = metadataProvider.get(
-      "sopCommonModule",
-      imageId
-    );
+    const sopCommonModule = metadataProvider.get("sopCommonModule", imageId);
     if (!sopCommonModule) {
       return;
     }
@@ -66231,18 +65392,12 @@ function getImageIdOfReferencedSingleFramedSOPInstance2(sopInstanceUid, imageIds
 }
 function getImageIdOfReferencedFrame2(sopInstanceUid, frameNumber, imageIds, metadataProvider) {
   const imageId = imageIds.find((imageId2) => {
-    const sopCommonModule = metadataProvider.get(
-      "sopCommonModule",
-      imageId2
-    );
+    const sopCommonModule = metadataProvider.get("sopCommonModule", imageId2);
     if (!sopCommonModule) {
       return;
     }
     const imageIdFrameNumber = Number(imageId2.split("frame=")[1]);
-    return (
-      //frameNumber is zero indexed for cornerstoneWADOImageLoader image Ids.
-      sopCommonModule.sopInstanceUID === sopInstanceUid && imageIdFrameNumber === frameNumber - 1
-    );
+    return sopCommonModule.sopInstanceUID === sopInstanceUid && imageIdFrameNumber === frameNumber - 1;
   });
   return imageId;
 }
@@ -66275,9 +65430,7 @@ function alignPixelDataWithSourceData2(pixelData2D, iop, orientations, tolerance
   } else if (compareArrays(iop, orientations[6], tolerance)) {
     return rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D));
   } else if (compareArrays(iop, orientations[7], tolerance)) {
-    return rotateMatrix902D_default(
-      rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D))
-    );
+    return rotateMatrix902D_default(rotateMatrix902D_default(rotateMatrix902D_default(pixelData2D)));
   }
 }
 function compareArrays(array1, array2, tolerance) {
@@ -66311,62 +65464,34 @@ var Segmentation4 = {
   generateToolState: generateToolState3,
   fillSegmentation: fillSegmentation2
 };
-var Segmentation_default = Segmentation4;
-function generateSegmentation3(images, labelmaps3DorBrushData, options = { includeSliceSpacing: true }, cornerstoneToolsVersion = 4) {
+var Segmentation_default2 = Segmentation4;
+function generateSegmentation3(images, labelmaps3DorBrushData, options = {includeSliceSpacing: true}, cornerstoneToolsVersion = 4) {
   if (cornerstoneToolsVersion === 4) {
-    return Segmentation_4X_default.generateSegmentation(
-      images,
-      labelmaps3DorBrushData,
-      options
-    );
+    return Segmentation_4X_default.generateSegmentation(images, labelmaps3DorBrushData, options);
   }
   if (cornerstoneToolsVersion === 3) {
-    return Segmentation_3X_default.generateSegmentation(
-      images,
-      labelmaps3DorBrushData,
-      options
-    );
+    return Segmentation_3X_default.generateSegmentation(images, labelmaps3DorBrushData, options);
   }
-  console.warn(
-    `No generateSegmentation adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`
-  );
+  console.warn(`No generateSegmentation adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`);
 }
 function generateToolState3(imageIds, arrayBuffer, metadataProvider, skipOverlapping = false, tolerance = 1e-3, cornerstoneToolsVersion = 4) {
   if (cornerstoneToolsVersion === 4) {
-    return Segmentation_4X_default.generateToolState(
-      imageIds,
-      arrayBuffer,
-      metadataProvider,
-      skipOverlapping,
-      tolerance
-    );
+    return Segmentation_4X_default.generateToolState(imageIds, arrayBuffer, metadataProvider, skipOverlapping, tolerance);
   }
   if (cornerstoneToolsVersion === 3) {
-    return Segmentation_3X_default.generateToolState(
-      imageIds,
-      arrayBuffer,
-      metadataProvider
-    );
+    return Segmentation_3X_default.generateToolState(imageIds, arrayBuffer, metadataProvider);
   }
-  console.warn(
-    `No generateToolState adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`
-  );
+  console.warn(`No generateToolState adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`);
 }
-function fillSegmentation2(segmentation, inputLabelmaps3D, options = { includeSliceSpacing: true }, cornerstoneToolsVersion = 4) {
+function fillSegmentation2(segmentation, inputLabelmaps3D, options = {includeSliceSpacing: true}, cornerstoneToolsVersion = 4) {
   if (cornerstoneToolsVersion === 4) {
-    return Segmentation_4X_default.fillSegmentation(
-      segmentation,
-      inputLabelmaps3D,
-      options
-    );
+    return Segmentation_4X_default.fillSegmentation(segmentation, inputLabelmaps3D, options);
   }
-  console.warn(
-    `No generateSegmentation adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`
-  );
+  console.warn(`No generateSegmentation adapater for cornerstone version ${cornerstoneToolsVersion}, exiting.`);
 }
 
 // src/utilities/TID300/CobbAngle.js
-var CobbAngle = class extends TID300Measurement {
+var CobbAngle = class extends TID300Measurement_default {
   contentItem() {
     const {
       point1,
@@ -66418,19 +65543,19 @@ var CobbAngle = class extends TID300Measurement {
     ]);
   }
 };
+var CobbAngle_default = CobbAngle;
 
 // src/adapters/Cornerstone/CobbAngle.js
 var COBB_ANGLE = "CobbAngle";
-var CobbAngle2 = class _CobbAngle {
+var CobbAngle2 = class {
   constructor() {
   }
-  // TODO: this function is required for all Cornerstone Tool Adapters, since it is called by MeasurementReport.
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, NUMGroup, SCOORDGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, NUMGroup, SCOORDGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const state = {
       ...defaultState,
       rAngle: NUMGroup.MeasuredValueSequence.NumericValue,
-      toolType: _CobbAngle.toolType,
+      toolType: CobbAngle2.toolType,
       handles: {
         start: {},
         end: {},
@@ -66464,7 +65589,7 @@ var CobbAngle2 = class _CobbAngle {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { handles, finding, findingSites } = tool;
+    const {handles, finding, findingSites} = tool;
     const point1 = handles.start;
     const point2 = handles.end;
     const point3 = handles.start2;
@@ -66485,7 +65610,7 @@ var CobbAngle2 = class _CobbAngle {
 };
 CobbAngle2.toolType = COBB_ANGLE;
 CobbAngle2.utilityToolType = COBB_ANGLE;
-CobbAngle2.TID300Representation = CobbAngle;
+CobbAngle2.TID300Representation = CobbAngle_default;
 CobbAngle2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -66496,25 +65621,20 @@ CobbAngle2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === COBB_ANGLE;
 };
-MeasurementReport.registerTool(CobbAngle2);
-var CobbAngle_default = CobbAngle2;
+MeasurementReport_default.registerTool(CobbAngle2);
+var CobbAngle_default2 = CobbAngle2;
 
 // src/adapters/Cornerstone/Angle.js
 var ANGLE = "Angle";
-var Angle = class _Angle {
+var Angle = class {
   constructor() {
   }
-  /**
-   * Generate TID300 measurement data for a plane angle measurement - use a CobbAngle, but label it as Angle
-   * @param  MeasurementGroup
-   * @returns
-   */
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, NUMGroup, SCOORDGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, NUMGroup, SCOORDGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const state = {
       ...defaultState,
       rAngle: NUMGroup.MeasuredValueSequence.NumericValue,
-      toolType: _Angle.toolType,
+      toolType: Angle.toolType,
       handles: {
         start: {},
         middle: {},
@@ -66541,7 +65661,7 @@ var Angle = class _Angle {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { handles, finding, findingSites } = tool;
+    const {handles, finding, findingSites} = tool;
     const point1 = handles.start;
     const point2 = handles.middle;
     const point3 = handles.middle;
@@ -66562,7 +65682,7 @@ var Angle = class _Angle {
 };
 Angle.toolType = ANGLE;
 Angle.utilityToolType = ANGLE;
-Angle.TID300Representation = CobbAngle;
+Angle.TID300Representation = CobbAngle_default;
 Angle.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -66573,18 +65693,18 @@ Angle.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === ANGLE;
 };
-MeasurementReport.registerTool(Angle);
+MeasurementReport_default.registerTool(Angle);
 var Angle_default = Angle;
 
 // src/adapters/Cornerstone/RectangleRoi.js
-var RectangleRoi = class _RectangleRoi {
+var RectangleRoi = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup) {
-    const { defaultState, SCOORDGroup, NUMGroup } = MeasurementReport.getSetupMeasurementData(MeasurementGroup);
+    const {defaultState, SCOORDGroup, NUMGroup} = MeasurementReport_default.getSetupMeasurementData(MeasurementGroup);
     const state = {
       ...defaultState,
-      toolType: _RectangleRoi.toolType,
+      toolType: RectangleRoi.toolType,
       handles: {
         start: {},
         end: {},
@@ -66616,16 +65736,16 @@ var RectangleRoi = class _RectangleRoi {
     return state;
   }
   static getTID300RepresentationArguments(tool) {
-    const { finding, findingSites, cachedStats = {}, handles } = tool;
+    const {finding, findingSites, cachedStats = {}, handles} = tool;
     console.log("getTID300 Rectangle", tool, cachedStats, handles);
-    const { start, end } = handles;
+    const {start, end} = handles;
     const points = [
       start,
-      { x: start.x, y: end.y },
+      {x: start.x, y: end.y},
       end,
-      { x: end.x, y: start.y }
+      {x: end.x, y: start.y}
     ];
-    const { area, perimeter } = cachedStats;
+    const {area, perimeter} = cachedStats;
     console.log("Point=", points, "cachedStats=", cachedStats);
     const trackingIdentifierTextValue7 = "cornerstoneTools@^4.0.0:RectangleRoi";
     return {
@@ -66640,7 +65760,7 @@ var RectangleRoi = class _RectangleRoi {
 };
 RectangleRoi.toolType = "RectangleRoi";
 RectangleRoi.utilityToolType = "RectangleRoi";
-RectangleRoi.TID300Representation = Polyline;
+RectangleRoi.TID300Representation = Polyline_default;
 RectangleRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -66651,20 +65771,20 @@ RectangleRoi.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === RectangleRoi.toolType;
 };
-MeasurementReport.registerTool(RectangleRoi);
+MeasurementReport_default.registerTool(RectangleRoi);
 var RectangleRoi_default = RectangleRoi;
 
 // src/adapters/Cornerstone/index.js
 var Cornerstone = {
-  Length: Length_default,
+  Length: Length_default2,
   FreehandRoi: FreehandRoi_default,
-  Bidirectional: Bidirectional_default,
+  Bidirectional: Bidirectional_default2,
   EllipticalRoi: EllipticalRoi_default,
   CircleRoi: CircleRoi_default,
   ArrowAnnotate: ArrowAnnotate_default,
-  MeasurementReport,
-  Segmentation: Segmentation_default,
-  CobbAngle: CobbAngle_default,
+  MeasurementReport: MeasurementReport_default,
+  Segmentation: Segmentation_default2,
+  CobbAngle: CobbAngle_default2,
   Angle: Angle_default,
   RectangleRoi: RectangleRoi_default
 };
@@ -66682,20 +65802,18 @@ var CodingScheme = {
 var CodingScheme_default = CodingScheme;
 
 // src/adapters/Cornerstone3D/MeasurementReport.js
-var FINDING3 = { CodingSchemeDesignator: "DCM", CodeValue: "121071" };
-var FINDING_SITE3 = { CodingSchemeDesignator: "SCT", CodeValue: "363698007" };
-var FINDING_SITE_OLD2 = { CodingSchemeDesignator: "SRT", CodeValue: "G-C0E3" };
+var FINDING3 = {CodingSchemeDesignator: "DCM", CodeValue: "121071"};
+var FINDING_SITE3 = {CodingSchemeDesignator: "SCT", CodeValue: "363698007"};
+var FINDING_SITE_OLD2 = {CodingSchemeDesignator: "SRT", CodeValue: "G-C0E3"};
 var codeValueMatch2 = (group, code, oldCode) => {
-  const { ConceptNameCodeSequence } = group;
-  if (!ConceptNameCodeSequence) return;
-  const { CodingSchemeDesignator: CodingSchemeDesignator3, CodeValue } = ConceptNameCodeSequence;
+  const {ConceptNameCodeSequence} = group;
+  if (!ConceptNameCodeSequence)
+    return;
+  const {CodingSchemeDesignator: CodingSchemeDesignator3, CodeValue} = ConceptNameCodeSequence;
   return CodingSchemeDesignator3 == code.CodingSchemeDesignator && CodeValue == code.CodeValue || oldCode && CodingSchemeDesignator3 == oldCode.CodingSchemeDesignator && CodeValue == oldCode.CodeValue;
 };
 function getTID300ContentItem2(tool, toolType, ReferencedSOPSequence, toolClass, worldToImageCoords) {
-  const args = toolClass.getTID300RepresentationArguments(
-    tool,
-    worldToImageCoords
-  );
+  const args = toolClass.getTID300RepresentationArguments(tool, worldToImageCoords);
   args.ReferencedSOPSequence = ReferencedSOPSequence;
   const TID300Measurement2 = new toolClass.TID300Representation(args);
   return TID300Measurement2;
@@ -66707,25 +65825,17 @@ function getMeasurementGroup2(toolType, toolData, ReferencedSOPSequence, worldTo
     return;
   }
   const Measurements = toolTypeData.data.map((tool) => {
-    return getTID300ContentItem2(
-      tool,
-      toolType,
-      ReferencedSOPSequence,
-      toolClass,
-      worldToImageCoords
-    );
+    return getTID300ContentItem2(tool, toolType, ReferencedSOPSequence, toolClass, worldToImageCoords);
   });
-  return new TID1501MeasurementGroup(Measurements);
+  return new TID1501MeasurementGroup_default(Measurements);
 }
-var MeasurementReport2 = class _MeasurementReport {
+var MeasurementReport2 = class {
   constructor() {
   }
   static getCornerstoneLabelFromDefaultState(defaultState) {
-    const { findingSites = [], finding } = defaultState;
+    const {findingSites = [], finding} = defaultState;
     const cornersoneFreeTextCodingValue = CodingScheme_default.codeValues.CORNERSTONEFREETEXT;
-    let freeTextLabel = findingSites.find(
-      (fs) => fs.CodeValue === cornersoneFreeTextCodingValue
-    );
+    let freeTextLabel = findingSites.find((fs) => fs.CodeValue === cornersoneFreeTextCodingValue);
     if (freeTextLabel) {
       return freeTextLabel.CodeMeaning;
     }
@@ -66741,15 +65851,12 @@ var MeasurementReport2 = class _MeasurementReport {
         Value: [fileMetaInformationVersionArray.buffer],
         vr: "OB"
       },
-      //MediaStorageSOPClassUID
-      //MediaStorageSOPInstanceUID: sopCommonModule.sopInstanceUID,
       TransferSyntaxUID: {
         Value: ["1.2.840.10008.1.2.1"],
         vr: "UI"
       },
       ImplementationClassUID: {
         Value: [DicomMetaDictionary.uid()],
-        // TODO: could be git hash or other valid id
         vr: "UI"
       },
       ImplementationVersionName: {
@@ -66763,7 +65870,7 @@ var MeasurementReport2 = class _MeasurementReport {
     const _vrMap = {
       PixelData: "OW"
     };
-    const _meta = _MeasurementReport.generateDatasetMeta();
+    const _meta = MeasurementReport2.generateDatasetMeta();
     const derivationSourceDataset = {
       StudyInstanceUID,
       SeriesInstanceUID,
@@ -66773,27 +65880,16 @@ var MeasurementReport2 = class _MeasurementReport {
     return derivationSourceDataset;
   }
   static getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, toolType) {
-    const { ContentSequence: ContentSequence3 } = MeasurementGroup;
+    const {ContentSequence: ContentSequence3} = MeasurementGroup;
     const contentSequenceArr = toArray(ContentSequence3);
-    const findingGroup = contentSequenceArr.find(
-      (group) => codeValueMatch2(group, FINDING3)
-    );
-    const findingSiteGroups = contentSequenceArr.filter(
-      (group) => codeValueMatch2(group, FINDING_SITE3, FINDING_SITE_OLD2)
-    ) || [];
-    const NUMGroup = contentSequenceArr.find(
-      (group) => group.ValueType === "NUM"
-    );
-    const SCOORDGroup = toArray(NUMGroup.ContentSequence).find(
-      (group) => group.ValueType === "SCOORD"
-    );
-    const { ReferencedSOPSequence } = SCOORDGroup.ContentSequence;
-    const { ReferencedSOPInstanceUID, ReferencedFrameNumber } = ReferencedSOPSequence;
+    const findingGroup = contentSequenceArr.find((group) => codeValueMatch2(group, FINDING3));
+    const findingSiteGroups = contentSequenceArr.filter((group) => codeValueMatch2(group, FINDING_SITE3, FINDING_SITE_OLD2)) || [];
+    const NUMGroup = contentSequenceArr.find((group) => group.ValueType === "NUM");
+    const SCOORDGroup = toArray(NUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
+    const {ReferencedSOPSequence} = SCOORDGroup.ContentSequence;
+    const {ReferencedSOPInstanceUID, ReferencedFrameNumber} = ReferencedSOPSequence;
     const referencedImageId = sopInstanceUIDToImageIdMap[ReferencedSOPInstanceUID];
-    const imagePlaneModule = metadata.get(
-      "imagePlaneModule",
-      referencedImageId
-    );
+    const imagePlaneModule = metadata.get("imagePlaneModule", referencedImageId);
     const finding = findingGroup ? addAccessors_default(findingGroup.ConceptCodeSequence) : void 0;
     const findingSites = findingSiteGroups.map((fsg) => {
       return addAccessors_default(fsg.ConceptCodeSequence);
@@ -66815,7 +65911,7 @@ var MeasurementReport2 = class _MeasurementReport {
     if (defaultState.finding) {
       defaultState.description = defaultState.finding.CodeMeaning;
     }
-    defaultState.annotation.metadata.label = _MeasurementReport.getCornerstoneLabelFromDefaultState(defaultState);
+    defaultState.annotation.metadata.label = MeasurementReport2.getCornerstoneLabelFromDefaultState(defaultState);
     return {
       defaultState,
       NUMGroup,
@@ -66829,26 +65925,15 @@ var MeasurementReport2 = class _MeasurementReport {
     let allMeasurementGroups = [];
     const sopInstanceUIDsToSeriesInstanceUIDMap = {};
     const derivationSourceDatasets = [];
-    const _meta = _MeasurementReport.generateDatasetMeta();
+    const _meta = MeasurementReport2.generateDatasetMeta();
     Object.keys(toolState).forEach((imageId) => {
-      const sopCommonModule = metadataProvider.get(
-        "sopCommonModule",
-        imageId
-      );
-      const generalSeriesModule = metadataProvider.get(
-        "generalSeriesModule",
-        imageId
-      );
-      const { sopInstanceUID, sopClassUID } = sopCommonModule;
-      const { studyInstanceUID, seriesInstanceUID } = generalSeriesModule;
+      const sopCommonModule = metadataProvider.get("sopCommonModule", imageId);
+      const generalSeriesModule = metadataProvider.get("generalSeriesModule", imageId);
+      const {sopInstanceUID, sopClassUID} = sopCommonModule;
+      const {studyInstanceUID, seriesInstanceUID} = generalSeriesModule;
       sopInstanceUIDsToSeriesInstanceUIDMap[sopInstanceUID] = seriesInstanceUID;
-      if (!derivationSourceDatasets.find(
-        (dsd) => dsd.SeriesInstanceUID === seriesInstanceUID
-      )) {
-        const derivationSourceDataset = _MeasurementReport.generateDerivationSourceDataset(
-          studyInstanceUID,
-          seriesInstanceUID
-        );
+      if (!derivationSourceDatasets.find((dsd) => dsd.SeriesInstanceUID === seriesInstanceUID)) {
+        const derivationSourceDataset = MeasurementReport2.generateDerivationSourceDataset(studyInstanceUID, seriesInstanceUID);
         derivationSourceDatasets.push(derivationSourceDataset);
       }
       const frameNumber = metadataProvider.get("frameNumber", imageId);
@@ -66864,84 +65949,43 @@ var MeasurementReport2 = class _MeasurementReport {
       }
       const measurementGroups = [];
       toolTypes.forEach((toolType) => {
-        const group = getMeasurementGroup2(
-          toolType,
-          toolData,
-          ReferencedSOPSequence,
-          worldToImageCoords
-        );
+        const group = getMeasurementGroup2(toolType, toolData, ReferencedSOPSequence, worldToImageCoords);
         if (group) {
           measurementGroups.push(group);
         }
       });
       allMeasurementGroups = allMeasurementGroups.concat(measurementGroups);
     });
-    const tid1500MeasurementReport = new TID1500MeasurementReport(
-      { TID1501MeasurementGroups: allMeasurementGroups },
-      options
-    );
-    const report = new StructuredReport(derivationSourceDatasets);
-    const contentItem = tid1500MeasurementReport.contentItem(
-      derivationSourceDatasets,
-      { sopInstanceUIDsToSeriesInstanceUIDMap }
-    );
+    const tid1500MeasurementReport = new TID1500MeasurementReport_default({TID1501MeasurementGroups: allMeasurementGroups}, options);
+    const report = new StructuredReport_default(derivationSourceDatasets);
+    const contentItem = tid1500MeasurementReport.contentItem(derivationSourceDatasets, {sopInstanceUIDsToSeriesInstanceUIDMap});
     report.dataset = Object.assign(report.dataset, contentItem);
     report.dataset._meta = _meta;
     return report;
   }
-  /**
-   * Generate Cornerstone tool state from dataset
-   * @param {object} dataset dataset
-   * @param {object} hooks
-   * @param {function} hooks.getToolClass Function to map dataset to a tool class
-   * @returns
-   */
   static generateToolState(dataset, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata, hooks = {}) {
     if (dataset.ContentTemplateSequence.TemplateIdentifier !== "1500") {
-      throw new Error(
-        "This package can currently only interpret DICOM SR TID 1500"
-      );
+      throw new Error("This package can currently only interpret DICOM SR TID 1500");
     }
     const REPORT = "Imaging Measurements";
     const GROUP = "Measurement Group";
     const TRACKING_IDENTIFIER = "Tracking Identifier";
-    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(
-      codeMeaningEquals(REPORT)
-    );
-    const measurementGroups = toArray(
-      imagingMeasurementContent.ContentSequence
-    ).filter(codeMeaningEquals(GROUP));
+    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(codeMeaningEquals(REPORT));
+    const measurementGroups = toArray(imagingMeasurementContent.ContentSequence).filter(codeMeaningEquals(GROUP));
     const measurementData = {};
-    const cornerstoneToolClasses = _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE;
+    const cornerstoneToolClasses = MeasurementReport2.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE;
     const registeredToolClasses = [];
     Object.keys(cornerstoneToolClasses).forEach((key) => {
       registeredToolClasses.push(cornerstoneToolClasses[key]);
       measurementData[key] = [];
     });
     measurementGroups.forEach((measurementGroup, index) => {
-      const measurementGroupContentSequence = toArray(
-        measurementGroup.ContentSequence
-      );
-      const TrackingIdentifierGroup = measurementGroupContentSequence.find(
-        (contentItem) => contentItem.ConceptNameCodeSequence.CodeMeaning === TRACKING_IDENTIFIER
-      );
+      const measurementGroupContentSequence = toArray(measurementGroup.ContentSequence);
+      const TrackingIdentifierGroup = measurementGroupContentSequence.find((contentItem) => contentItem.ConceptNameCodeSequence.CodeMeaning === TRACKING_IDENTIFIER);
       const TrackingIdentifierValue = TrackingIdentifierGroup.TextValue;
-      const toolClass = hooks.getToolClass ? hooks.getToolClass(
-        measurementGroup,
-        dataset,
-        registeredToolClasses
-      ) : registeredToolClasses.find(
-        (tc) => tc.isValidCornerstoneTrackingIdentifier(
-          TrackingIdentifierValue
-        )
-      );
+      const toolClass = hooks.getToolClass ? hooks.getToolClass(measurementGroup, dataset, registeredToolClasses) : registeredToolClasses.find((tc) => tc.isValidCornerstoneTrackingIdentifier(TrackingIdentifierValue));
       if (toolClass) {
-        const measurement = toolClass.getMeasurementData(
-          measurementGroup,
-          sopInstanceUIDToImageIdMap,
-          imageToWorldCoords,
-          metadata
-        );
+        const measurement = toolClass.getMeasurementData(measurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata);
         console.log(`=== ${toolClass.toolType} ===`);
         console.log(measurement);
         measurementData[toolClass.toolType].push(measurement);
@@ -66950,11 +65994,12 @@ var MeasurementReport2 = class _MeasurementReport {
     return measurementData;
   }
   static registerTool(toolClass) {
-    _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
-    _MeasurementReport.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.toolType] = toolClass;
-    _MeasurementReport.MEASUREMENT_BY_TOOLTYPE[toolClass.toolType] = toolClass.utilityToolType;
+    MeasurementReport2.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
+    MeasurementReport2.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.toolType] = toolClass;
+    MeasurementReport2.MEASUREMENT_BY_TOOLTYPE[toolClass.toolType] = toolClass.utilityToolType;
   }
 };
+var MeasurementReport_default2 = MeasurementReport2;
 MeasurementReport2.MEASUREMENT_BY_TOOLTYPE = {};
 MeasurementReport2.CORNERSTONE_TOOL_CLASSES_BY_UTILITY_TYPE = {};
 MeasurementReport2.CORNERSTONE_TOOL_CLASSES_BY_TOOL_TYPE = {};
@@ -66965,19 +66010,13 @@ var cornerstone3DTag_default = "Cornerstone3DTools@^0.1.0";
 // src/adapters/Cornerstone3D/Length.js
 var LENGTH3 = "Length";
 var trackingIdentifierTextValue = `${cornerstone3DTag_default}:${LENGTH3}`;
-var Length3 = class _Length {
+var Length3 = class {
   constructor() {
   }
-  // TODO: this function is required for all Cornerstone Tool Adapters, since it is called by MeasurementReport.
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, NUMGroup, SCOORDGroup, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _Length.toolType
-    );
+    const {defaultState, NUMGroup, SCOORDGroup, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, Length3.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const worldCoords = [];
     for (let i = 0; i < GraphicData.length; i += 2) {
       const point = imageToWorldCoords(referencedImageId, [
@@ -67005,19 +66044,17 @@ var Length3 = class _Length {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, finding, findingSites, metadata } = tool;
-    const { cachedStats = {}, handles } = data2;
-    const { referencedImageId } = metadata;
+    const {data: data2, finding, findingSites, metadata} = tool;
+    const {cachedStats = {}, handles} = data2;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "Length.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("Length.getTID300RepresentationArguments: referencedImageId is not defined");
     }
     const start = worldToImageCoords(referencedImageId, handles.points[0]);
     const end = worldToImageCoords(referencedImageId, handles.points[1]);
-    const point1 = { x: start[0], y: start[1] };
-    const point2 = { x: end[0], y: end[1] };
-    const { length: distance2 } = cachedStats[`imageId:${referencedImageId}`] || {};
+    const point1 = {x: start[0], y: start[1]};
+    const point2 = {x: end[0], y: end[1]};
+    const {length: distance2} = cachedStats[`imageId:${referencedImageId}`] || {};
     return {
       point1,
       point2,
@@ -67030,7 +66067,7 @@ var Length3 = class _Length {
 };
 Length3.toolType = LENGTH3;
 Length3.utilityToolType = LENGTH3;
-Length3.TID300Representation = Length;
+Length3.TID300Representation = Length_default;
 Length3.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67041,41 +66078,28 @@ Length3.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === LENGTH3;
 };
-MeasurementReport2.registerTool(Length3);
-var Length_default2 = Length3;
+MeasurementReport_default2.registerTool(Length3);
+var Length_default3 = Length3;
 
 // src/adapters/Cornerstone3D/Bidirectional.js
 var BIDIRECTIONAL2 = "Bidirectional";
 var LONG_AXIS2 = "Long Axis";
 var SHORT_AXIS2 = "Short Axis";
 var trackingIdentifierTextValue2 = `${cornerstone3DTag_default}:${BIDIRECTIONAL2}`;
-var Bidirectional3 = class _Bidirectional {
+var Bidirectional3 = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _Bidirectional.toolType
-    );
+    const {defaultState, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, Bidirectional3.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
-    const { ContentSequence: ContentSequence3 } = MeasurementGroup;
-    const longAxisNUMGroup = toArray(ContentSequence3).find(
-      (group) => group.ConceptNameCodeSequence.CodeMeaning === LONG_AXIS2
-    );
-    const longAxisSCOORDGroup = toArray(
-      longAxisNUMGroup.ContentSequence
-    ).find((group) => group.ValueType === "SCOORD");
-    const shortAxisNUMGroup = toArray(ContentSequence3).find(
-      (group) => group.ConceptNameCodeSequence.CodeMeaning === SHORT_AXIS2
-    );
-    const shortAxisSCOORDGroup = toArray(
-      shortAxisNUMGroup.ContentSequence
-    ).find((group) => group.ValueType === "SCOORD");
+    const {ContentSequence: ContentSequence3} = MeasurementGroup;
+    const longAxisNUMGroup = toArray(ContentSequence3).find((group) => group.ConceptNameCodeSequence.CodeMeaning === LONG_AXIS2);
+    const longAxisSCOORDGroup = toArray(longAxisNUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
+    const shortAxisNUMGroup = toArray(ContentSequence3).find((group) => group.ConceptNameCodeSequence.CodeMeaning === SHORT_AXIS2);
+    const shortAxisSCOORDGroup = toArray(shortAxisNUMGroup.ContentSequence).find((group) => group.ValueType === "SCOORD");
     const worldCoords = [];
     [longAxisSCOORDGroup, shortAxisSCOORDGroup].forEach((group) => {
-      const { GraphicData } = group;
+      const {GraphicData} = group;
       for (let i = 0; i < GraphicData.length; i += 2) {
         const point = imageToWorldCoords(referencedImageId, [
           GraphicData[i],
@@ -67109,24 +66133,18 @@ var Bidirectional3 = class _Bidirectional {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, finding, findingSites, metadata } = tool;
-    const { cachedStats = {}, handles } = data2;
-    const { referencedImageId } = metadata;
+    const {data: data2, finding, findingSites, metadata} = tool;
+    const {cachedStats = {}, handles} = data2;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "Bidirectional.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("Bidirectional.getTID300RepresentationArguments: referencedImageId is not defined");
     }
-    const { length: length2, width } = cachedStats[`imageId:${referencedImageId}`] || {};
-    const { points } = handles;
+    const {length: length2, width} = cachedStats[`imageId:${referencedImageId}`] || {};
+    const {points} = handles;
     let firstPointPairs = [points[0], points[1]];
     let secondPointPairs = [points[2], points[3]];
-    let firstPointPairsDistance = Math.sqrt(
-      Math.pow(firstPointPairs[0][0] - firstPointPairs[1][0], 2) + Math.pow(firstPointPairs[0][1] - firstPointPairs[1][1], 2) + Math.pow(firstPointPairs[0][2] - firstPointPairs[1][2], 2)
-    );
-    let secondPointPairsDistance = Math.sqrt(
-      Math.pow(secondPointPairs[0][0] - secondPointPairs[1][0], 2) + Math.pow(secondPointPairs[0][1] - secondPointPairs[1][1], 2) + Math.pow(secondPointPairs[0][2] - secondPointPairs[1][2], 2)
-    );
+    let firstPointPairsDistance = Math.sqrt(Math.pow(firstPointPairs[0][0] - firstPointPairs[1][0], 2) + Math.pow(firstPointPairs[0][1] - firstPointPairs[1][1], 2) + Math.pow(firstPointPairs[0][2] - firstPointPairs[1][2], 2));
+    let secondPointPairsDistance = Math.sqrt(Math.pow(secondPointPairs[0][0] - secondPointPairs[1][0], 2) + Math.pow(secondPointPairs[0][1] - secondPointPairs[1][1], 2) + Math.pow(secondPointPairs[0][2] - secondPointPairs[1][2], 2));
     let shortAxisPoints;
     let longAxisPoints;
     if (firstPointPairsDistance > secondPointPairsDistance) {
@@ -67136,22 +66154,10 @@ var Bidirectional3 = class _Bidirectional {
       shortAxisPoints = secondPointPairs;
       longAxisPoints = firstPointPairs;
     }
-    const longAxisStartImage = worldToImageCoords(
-      referencedImageId,
-      shortAxisPoints[0]
-    );
-    const longAxisEndImage = worldToImageCoords(
-      referencedImageId,
-      shortAxisPoints[1]
-    );
-    const shortAxisStartImage = worldToImageCoords(
-      referencedImageId,
-      longAxisPoints[0]
-    );
-    const shortAxisEndImage = worldToImageCoords(
-      referencedImageId,
-      longAxisPoints[1]
-    );
+    const longAxisStartImage = worldToImageCoords(referencedImageId, shortAxisPoints[0]);
+    const longAxisEndImage = worldToImageCoords(referencedImageId, shortAxisPoints[1]);
+    const shortAxisStartImage = worldToImageCoords(referencedImageId, longAxisPoints[0]);
+    const shortAxisEndImage = worldToImageCoords(referencedImageId, longAxisPoints[1]);
     return {
       longAxis: {
         point1: {
@@ -67183,7 +66189,7 @@ var Bidirectional3 = class _Bidirectional {
 };
 Bidirectional3.toolType = BIDIRECTIONAL2;
 Bidirectional3.utilityToolType = BIDIRECTIONAL2;
-Bidirectional3.TID300Representation = Bidirectional;
+Bidirectional3.TID300Representation = Bidirectional_default;
 Bidirectional3.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67194,25 +66200,20 @@ Bidirectional3.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === BIDIRECTIONAL2;
 };
-MeasurementReport2.registerTool(Bidirectional3);
-var Bidirectional_default2 = Bidirectional3;
+MeasurementReport_default2.registerTool(Bidirectional3);
+var Bidirectional_default3 = Bidirectional3;
 
 // src/adapters/Cornerstone3D/EllipticalROI.js
 var ELLIPTICALROI2 = "EllipticalROI";
 var EPSILON2 = 1e-4;
 var trackingIdentifierTextValue3 = `${cornerstone3DTag_default}:${ELLIPTICALROI2}`;
-var EllipticalROI = class _EllipticalROI {
+var EllipticalROI = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, NUMGroup, SCOORDGroup, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _EllipticalROI.toolType
-    );
+    const {defaultState, NUMGroup, SCOORDGroup, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, EllipticalROI.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const pointsWorld = [];
     for (let i = 0; i < GraphicData.length; i += 2) {
       const worldPos = imageToWorldCoords(referencedImageId, [
@@ -67231,23 +66232,14 @@ var EllipticalROI = class _EllipticalROI {
     const minorAxisVec = vec3_exports.create();
     vec3_exports.sub(minorAxisVec, minorAxisEnd, minorAxisStart);
     vec3_exports.normalize(minorAxisVec, minorAxisVec);
-    const imagePlaneModule = metadata.get(
-      "imagePlaneModule",
-      referencedImageId
-    );
+    const imagePlaneModule = metadata.get("imagePlaneModule", referencedImageId);
     if (!imagePlaneModule) {
       throw new Error("imageId does not have imagePlaneModule metadata");
     }
-    const { columnCosines } = imagePlaneModule;
+    const {columnCosines} = imagePlaneModule;
     const columnCosinesVec = vec3_exports.fromValues(...columnCosines);
-    const projectedMajorAxisOnColVec = vec3_exports.dot(
-      columnCosinesVec,
-      majorAxisVec
-    );
-    const projectedMinorAxisOnColVec = vec3_exports.dot(
-      columnCosinesVec,
-      minorAxisVec
-    );
+    const projectedMajorAxisOnColVec = vec3_exports.dot(columnCosinesVec, majorAxisVec);
+    const projectedMinorAxisOnColVec = vec3_exports.dot(columnCosinesVec, minorAxisVec);
     const absoluteOfMajorDotProduct = Math.abs(projectedMajorAxisOnColVec);
     const absoluteOfMinorDotProduct = Math.abs(projectedMinorAxisOnColVec);
     let ellipsePoints = [];
@@ -67287,13 +66279,11 @@ var EllipticalROI = class _EllipticalROI {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, finding, findingSites, metadata } = tool;
-    const { cachedStats = {}, handles } = data2;
-    const { referencedImageId } = metadata;
+    const {data: data2, finding, findingSites, metadata} = tool;
+    const {cachedStats = {}, handles} = data2;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "EllipticalROI.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("EllipticalROI.getTID300RepresentationArguments: referencedImageId is not defined");
     }
     const top = worldToImageCoords(referencedImageId, handles.points[0]);
     const bottom = worldToImageCoords(referencedImageId, handles.points[1]);
@@ -67303,17 +66293,17 @@ var EllipticalROI = class _EllipticalROI {
     const leftRightLength = Math.abs(left[0] - right[0]);
     let points = [];
     if (topBottomLength > leftRightLength) {
-      points.push({ x: top[0], y: top[1] });
-      points.push({ x: bottom[0], y: bottom[1] });
-      points.push({ x: left[0], y: left[1] });
-      points.push({ x: right[0], y: right[1] });
+      points.push({x: top[0], y: top[1]});
+      points.push({x: bottom[0], y: bottom[1]});
+      points.push({x: left[0], y: left[1]});
+      points.push({x: right[0], y: right[1]});
     } else {
-      points.push({ x: left[0], y: left[1] });
-      points.push({ x: right[0], y: right[1] });
-      points.push({ x: top[0], y: top[1] });
-      points.push({ x: bottom[0], y: bottom[1] });
+      points.push({x: left[0], y: left[1]});
+      points.push({x: right[0], y: right[1]});
+      points.push({x: top[0], y: top[1]});
+      points.push({x: bottom[0], y: bottom[1]});
     }
-    const { area } = cachedStats[`imageId:${referencedImageId}`] || {};
+    const {area} = cachedStats[`imageId:${referencedImageId}`] || {};
     return {
       area,
       points,
@@ -67325,7 +66315,7 @@ var EllipticalROI = class _EllipticalROI {
 };
 EllipticalROI.toolType = ELLIPTICALROI2;
 EllipticalROI.utilityToolType = ELLIPTICALROI2;
-EllipticalROI.TID300Representation = Ellipse;
+EllipticalROI.TID300Representation = Ellipse_default;
 EllipticalROI.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67336,26 +66326,21 @@ EllipticalROI.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType.toLowerCase() === ELLIPTICALROI2.toLowerCase();
 };
-MeasurementReport2.registerTool(EllipticalROI);
+MeasurementReport_default2.registerTool(EllipticalROI);
 var EllipticalROI_default = EllipticalROI;
 
 // src/adapters/Cornerstone3D/ArrowAnnotate.js
 var ARROW_ANNOTATE2 = "ArrowAnnotate";
 var trackingIdentifierTextValue4 = `${cornerstone3DTag_default}:${ARROW_ANNOTATE2}`;
-var { codeValues, CodingSchemeDesignator: CodingSchemeDesignator2 } = CodingScheme_default;
-var ArrowAnnotate2 = class _ArrowAnnotate {
+var {codeValues, CodingSchemeDesignator: CodingSchemeDesignator2} = CodingScheme_default;
+var ArrowAnnotate2 = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, SCOORDGroup, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _ArrowAnnotate.toolType
-    );
+    const {defaultState, SCOORDGroup, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, ArrowAnnotate2.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
     const text = defaultState.annotation.metadata.label;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const worldCoords = [];
     for (let i = 0; i < GraphicData.length; i += 2) {
       const point = imageToWorldCoords(referencedImageId, [
@@ -67365,14 +66350,11 @@ var ArrowAnnotate2 = class _ArrowAnnotate {
       worldCoords.push(point);
     }
     if (worldCoords.length === 1) {
-      const imagePixelModule = metadata.get(
-        "imagePixelModule",
-        referencedImageId
-      );
+      const imagePixelModule = metadata.get("imagePixelModule", referencedImageId);
       let xOffset = 10;
       let yOffset = 10;
       if (imagePixelModule) {
-        const { columns, rows } = imagePixelModule;
+        const {columns, rows} = imagePixelModule;
         xOffset = columns / 10;
         yOffset = rows / 10;
       }
@@ -67398,15 +66380,13 @@ var ArrowAnnotate2 = class _ArrowAnnotate {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, metadata } = tool;
-    let { finding, findingSites } = tool;
-    const { referencedImageId } = metadata;
+    const {data: data2, metadata} = tool;
+    let {finding, findingSites} = tool;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "ArrowAnnotate.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("ArrowAnnotate.getTID300RepresentationArguments: referencedImageId is not defined");
     }
-    const { points, arrowFirst } = data2.handles;
+    const {points, arrowFirst} = data2.handles;
     let point;
     if (arrowFirst) {
       point = points[0];
@@ -67437,7 +66417,7 @@ var ArrowAnnotate2 = class _ArrowAnnotate {
 };
 ArrowAnnotate2.toolType = ARROW_ANNOTATE2;
 ArrowAnnotate2.utilityToolType = ARROW_ANNOTATE2;
-ArrowAnnotate2.TID300Representation = Point;
+ArrowAnnotate2.TID300Representation = Point_default;
 ArrowAnnotate2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67448,24 +66428,19 @@ ArrowAnnotate2.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === ARROW_ANNOTATE2;
 };
-MeasurementReport2.registerTool(ArrowAnnotate2);
+MeasurementReport_default2.registerTool(ArrowAnnotate2);
 var ArrowAnnotate_default2 = ArrowAnnotate2;
 
 // src/adapters/Cornerstone3D/Probe.js
 var PROBE = "Probe";
 var trackingIdentifierTextValue5 = `${cornerstone3DTag_default}:${PROBE}`;
-var Probe = class _Probe {
+var Probe = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, SCOORDGroup, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _Probe.toolType
-    );
+    const {defaultState, SCOORDGroup, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, Probe.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const worldCoords = [];
     for (let i = 0; i < GraphicData.length; i += 2) {
       const point = imageToWorldCoords(referencedImageId, [
@@ -67488,15 +66463,13 @@ var Probe = class _Probe {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, metadata } = tool;
-    let { finding, findingSites } = tool;
-    const { referencedImageId } = metadata;
+    const {data: data2, metadata} = tool;
+    let {finding, findingSites} = tool;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "Probe.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("Probe.getTID300RepresentationArguments: referencedImageId is not defined");
     }
-    const { points } = data2.handles;
+    const {points} = data2.handles;
     const pointsImage = points.map((point) => {
       const pointImage = worldToImageCoords(referencedImageId, point);
       return {
@@ -67515,7 +66488,7 @@ var Probe = class _Probe {
 };
 Probe.toolType = PROBE;
 Probe.utilityToolType = PROBE;
-Probe.TID300Representation = Point;
+Probe.TID300Representation = Point_default;
 Probe.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67526,25 +66499,20 @@ Probe.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   }
   return toolType === PROBE;
 };
-MeasurementReport2.registerTool(Probe);
+MeasurementReport_default2.registerTool(Probe);
 var Probe_default = Probe;
 
 // src/adapters/Cornerstone3D/PlanarFreehandROI.js
 var PLANARFREEHANDROI = "PlanarFreehandROI";
 var trackingIdentifierTextValue6 = `${cornerstone3DTag_default}:${PLANARFREEHANDROI}`;
 var closedContourThreshold = 1e-5;
-var PlanarFreehandROI = class _PlanarFreehandROI {
+var PlanarFreehandROI = class {
   constructor() {
   }
   static getMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, imageToWorldCoords, metadata) {
-    const { defaultState, SCOORDGroup, ReferencedFrameNumber } = MeasurementReport2.getSetupMeasurementData(
-      MeasurementGroup,
-      sopInstanceUIDToImageIdMap,
-      metadata,
-      _PlanarFreehandROI.toolType
-    );
+    const {defaultState, SCOORDGroup, ReferencedFrameNumber} = MeasurementReport_default2.getSetupMeasurementData(MeasurementGroup, sopInstanceUIDToImageIdMap, metadata, PlanarFreehandROI.toolType);
     const referencedImageId = defaultState.annotation.metadata.referencedImageId;
-    const { GraphicData } = SCOORDGroup;
+    const {GraphicData} = SCOORDGroup;
     const worldCoords = [];
     for (let i = 0; i < GraphicData.length; i += 2) {
       const point = imageToWorldCoords(referencedImageId, [
@@ -67553,10 +66521,7 @@ var PlanarFreehandROI = class _PlanarFreehandROI {
       ]);
       worldCoords.push(point);
     }
-    const distanceBetweenFirstAndLastPoint = vec3_exports.distance(
-      worldCoords[worldCoords.length - 1],
-      worldCoords[0]
-    );
+    const distanceBetweenFirstAndLastPoint = vec3_exports.distance(worldCoords[worldCoords.length - 1], worldCoords[0]);
     let isOpenContour = true;
     if (distanceBetweenFirstAndLastPoint < closedContourThreshold) {
       worldCoords.pop();
@@ -67582,17 +66547,13 @@ var PlanarFreehandROI = class _PlanarFreehandROI {
     return state;
   }
   static getTID300RepresentationArguments(tool, worldToImageCoords) {
-    const { data: data2, finding, findingSites, metadata } = tool;
-    const { isOpenContour, polyline } = data2;
-    const { referencedImageId } = metadata;
+    const {data: data2, finding, findingSites, metadata} = tool;
+    const {isOpenContour, polyline} = data2;
+    const {referencedImageId} = metadata;
     if (!referencedImageId) {
-      throw new Error(
-        "PlanarFreehandROI.getTID300RepresentationArguments: referencedImageId is not defined"
-      );
+      throw new Error("PlanarFreehandROI.getTID300RepresentationArguments: referencedImageId is not defined");
     }
-    const points = polyline.map(
-      (worldPos) => worldToImageCoords(referencedImageId, worldPos)
-    );
+    const points = polyline.map((worldPos) => worldToImageCoords(referencedImageId, worldPos));
     if (!isOpenContour) {
       const firstPoint = points[0];
       points.push([firstPoint[0], firstPoint[1]]);
@@ -67611,7 +66572,7 @@ var PlanarFreehandROI = class _PlanarFreehandROI {
 };
 PlanarFreehandROI.toolType = PLANARFREEHANDROI;
 PlanarFreehandROI.utilityToolType = PLANARFREEHANDROI;
-PlanarFreehandROI.TID300Representation = Polyline;
+PlanarFreehandROI.TID300Representation = Polyline_default;
 PlanarFreehandROI.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) => {
   if (!TrackingIdentifier2.includes(":")) {
     return false;
@@ -67622,18 +66583,18 @@ PlanarFreehandROI.isValidCornerstoneTrackingIdentifier = (TrackingIdentifier2) =
   }
   return toolType === PLANARFREEHANDROI;
 };
-MeasurementReport2.registerTool(PlanarFreehandROI);
+MeasurementReport_default2.registerTool(PlanarFreehandROI);
 var PlanarFreehandROI_default = PlanarFreehandROI;
 
 // src/adapters/Cornerstone3D/index.js
 var Cornerstone3D = {
-  Length: Length_default2,
-  Bidirectional: Bidirectional_default2,
+  Length: Length_default3,
+  Bidirectional: Bidirectional_default3,
   EllipticalROI: EllipticalROI_default,
   ArrowAnnotate: ArrowAnnotate_default2,
   Probe: Probe_default,
   PlanarFreehandROI: PlanarFreehandROI_default,
-  MeasurementReport: MeasurementReport2,
+  MeasurementReport: MeasurementReport_default2,
   CodeScheme: CodingScheme_default,
   CORNERSTONE_3D_TAG: cornerstone3DTag_default
 };
@@ -67690,12 +66651,8 @@ function geometryFromFunctionalGroups(dataset, PerFrameFunctionalGroups) {
   const planeOrientation = dataset.SharedFunctionalGroupsSequence.PlaneOrientationSequence;
   const firstFunctionalGroup = PerFrameFunctionalGroups[0];
   const lastFunctionalGroup = PerFrameFunctionalGroups[PerFrameFunctionalGroups.length - 1];
-  const firstPosition = firstFunctionalGroup.PlanePositionSequence.ImagePositionPatient.map(
-    Number
-  );
-  const lastPosition = lastFunctionalGroup.PlanePositionSequence.ImagePositionPatient.map(
-    Number
-  );
+  const firstPosition = firstFunctionalGroup.PlanePositionSequence.ImagePositionPatient.map(Number);
+  const lastPosition = lastFunctionalGroup.PlanePositionSequence.ImagePositionPatient.map(Number);
   geometry.origin = firstPosition;
   geometry.spacing = [
     pixelMeasures.PixelSpacing[1],
@@ -67721,44 +66678,6 @@ function geometryFromFunctionalGroups(dataset, PerFrameFunctionalGroups) {
 var Segmentation5 = class {
   constructor() {
   }
-  /**
-   * Produces an array of Segments from an input DICOM Segmentation dataset
-   *
-   * Segments are returned with Geometry values that can be used to create
-   * VTK Image Data objects.
-   *
-   * @example Example usage to create VTK Volume actors from each segment:
-   *
-   * const actors = [];
-   * const segments = generateToolState(dataset);
-   * segments.forEach(segment => {
-   *   // now make actors using the segment information
-   *   const scalarArray = vtk.Common.Core.vtkDataArray.newInstance({
-   *        name: "Scalars",
-   *        numberOfComponents: 1,
-   *        values: segment.pixelData,
-   *    });
-   *
-   *    const imageData = vtk.Common.DataModel.vtkImageData.newInstance();
-   *    imageData.getPointData().setScalars(scalarArray);
-   *    imageData.setDimensions(geometry.dimensions);
-   *    imageData.setSpacing(geometry.spacing);
-   *    imageData.setOrigin(geometry.origin);
-   *    imageData.setDirection(geometry.direction);
-   *
-   *    const mapper = vtk.Rendering.Core.vtkVolumeMapper.newInstance();
-   *    mapper.setInputData(imageData);
-   *    mapper.setSampleDistance(2.);
-   *
-   *    const actor = vtk.Rendering.Core.vtkVolume.newInstance();
-   *    actor.setMapper(mapper);
-   *
-   *    actors.push(actor);
-   * });
-   *
-   * @param dataset
-   * @return {{}}
-   */
   static generateSegments(dataset) {
     if (dataset.SegmentSequence.constructor.name !== "Array") {
       dataset.SegmentSequence = [dataset.SegmentSequence];
@@ -67785,24 +66704,19 @@ var Segmentation5 = class {
       segment.size = segment.numberOfFrames * frameSize;
       segment.offset = nextOffset;
       nextOffset = segment.offset + segment.size;
-      const packedSegment = dataset.PixelData.slice(
-        segment.offset,
-        nextOffset
-      );
+      const packedSegment = dataset.PixelData.slice(segment.offset, nextOffset);
       segment.pixelData = bitArray_default.unpack(packedSegment);
-      const geometry = geometryFromFunctionalGroups(
-        dataset,
-        segment.functionalGroups
-      );
+      const geometry = geometryFromFunctionalGroups(dataset, segment.functionalGroups);
       segment.geometry = geometry;
     });
     return segments;
   }
 };
+var Segmentation_default3 = Segmentation5;
 
 // src/adapters/VTKjs/index.js
 var VTKjs = {
-  Segmentation: Segmentation5
+  Segmentation: Segmentation_default3
 };
 var VTKjs_default = VTKjs;
 
@@ -67817,9 +66731,9 @@ function getMeasurementGroup3(graphicType, measurements) {
   const Measurements = measurements.map((tool) => {
     return getTID300ContentItem3(tool, toolClass);
   });
-  return new TID1501MeasurementGroup(Measurements);
+  return new TID1501MeasurementGroup_default(Measurements);
 }
-var MeasurementReport3 = class _MeasurementReport {
+var MeasurementReport3 = class {
   constructor() {
   }
   static generateReport(rois, metadataProvider, options) {
@@ -67844,10 +66758,7 @@ var MeasurementReport3 = class _MeasurementReport {
       }
       allMeasurementGroups = allMeasurementGroups.concat(measurementGroups);
     });
-    const MeasurementReport5 = new TID1500MeasurementReport(
-      { TID1501MeasurementGroups: allMeasurementGroups },
-      options
-    );
+    const MeasurementReport5 = new TID1500MeasurementReport_default({TID1501MeasurementGroups: allMeasurementGroups}, options);
     const fileMetaInformationVersionArray = new Uint8Array(2);
     fileMetaInformationVersionArray[1] = 1;
     const studyInstanceUID = "12.4";
@@ -67855,23 +66766,18 @@ var MeasurementReport3 = class _MeasurementReport {
     const derivationSourceDataset = {
       StudyInstanceUID: studyInstanceUID,
       SeriesInstanceUID: seriesInstanceUID
-      //SOPInstanceUID: sopInstanceUID, // TODO: Necessary?
-      //SOPClassUID: sopClassUID,
     };
     const _meta = {
       FileMetaInformationVersion: {
         Value: [fileMetaInformationVersionArray.buffer],
         vr: "OB"
       },
-      //MediaStorageSOPClassUID
-      //MediaStorageSOPInstanceUID: sopCommonModule.sopInstanceUID,
       TransferSyntaxUID: {
         Value: ["1.2.840.10008.1.2.1"],
         vr: "UI"
       },
       ImplementationClassUID: {
         Value: [DicomMetaDictionary.uid()],
-        // TODO: could be git hash or other valid id
         vr: "UI"
       },
       ImplementationVersionName: {
@@ -67884,49 +66790,32 @@ var MeasurementReport3 = class _MeasurementReport {
     };
     derivationSourceDataset._meta = _meta;
     derivationSourceDataset._vrMap = _vrMap;
-    const report = new StructuredReport([derivationSourceDataset]);
-    const contentItem = MeasurementReport5.contentItem(
-      derivationSourceDataset
-    );
+    const report = new StructuredReport_default([derivationSourceDataset]);
+    const contentItem = MeasurementReport5.contentItem(derivationSourceDataset);
     report.dataset = Object.assign(report.dataset, contentItem);
     report.dataset._meta = _meta;
     return report;
   }
-  //@ToDo
   static generateToolState(dataset) {
     if (dataset.ContentTemplateSequence.TemplateIdentifier !== "1500") {
-      throw new Error(
-        "This package can currently only interpret DICOM SR TID 1500"
-      );
+      throw new Error("This package can currently only interpret DICOM SR TID 1500");
     }
     const REPORT = "Imaging Measurements";
     const GROUP = "Measurement Group";
-    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(
-      codeMeaningEquals(REPORT)
-    );
-    const measurementGroups = toArray(
-      imagingMeasurementContent.ContentSequence
-    ).filter(codeMeaningEquals(GROUP));
+    const imagingMeasurementContent = toArray(dataset.ContentSequence).find(codeMeaningEquals(REPORT));
+    const measurementGroups = toArray(imagingMeasurementContent.ContentSequence).filter(codeMeaningEquals(GROUP));
     const measurementData = {};
     measurementGroups.forEach((mg) => {
-      Object.keys(
-        _MeasurementReport.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE
-      ).forEach((measurementType) => {
-        const measurementGroupContentSequence = toArray(
-          mg.ContentSequence
-        );
-        let measurementContent = measurementGroupContentSequence.filter(
-          graphicTypeEquals(measurementType.toUpperCase())
-        );
+      Object.keys(MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE).forEach((measurementType) => {
+        const measurementGroupContentSequence = toArray(mg.ContentSequence);
+        let measurementContent = measurementGroupContentSequence.filter(graphicTypeEquals(measurementType.toUpperCase()));
         if (!measurementContent || measurementContent.length === 0) {
           return;
         }
-        const toolClass = _MeasurementReport.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE[measurementType];
+        const toolClass = MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE[measurementType];
         const toolType = toolClass.toolType;
         if (!toolClass.getMeasurementData) {
-          throw new Error(
-            "MICROSCOPY Tool Adapters must define a getMeasurementData static method."
-          );
+          throw new Error("MICROSCOPY Tool Adapters must define a getMeasurementData static method.");
         }
         if (!measurementData[toolType]) {
           measurementData[toolType] = [];
@@ -67940,11 +66829,12 @@ var MeasurementReport3 = class _MeasurementReport {
     return measurementData;
   }
   static registerTool(toolClass) {
-    _MeasurementReport.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
-    _MeasurementReport.MICROSCOPY_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.graphicType] = toolClass;
-    _MeasurementReport.MEASUREMENT_BY_TOOLTYPE[toolClass.graphicType] = toolClass.utilityToolType;
+    MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE[toolClass.utilityToolType] = toolClass;
+    MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_TOOL_TYPE[toolClass.graphicType] = toolClass;
+    MeasurementReport3.MEASUREMENT_BY_TOOLTYPE[toolClass.graphicType] = toolClass.utilityToolType;
   }
 };
+var MeasurementReport_default3 = MeasurementReport3;
 MeasurementReport3.MEASUREMENT_BY_TOOLTYPE = {};
 MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_UTILITY_TYPE = {};
 MeasurementReport3.MICROSCOPY_TOOL_CLASSES_BY_TOOL_TYPE = {};
@@ -67954,9 +66844,7 @@ var Polyline2 = class {
   constructor() {
   }
   static getMeasurementData(measurementContent) {
-    const measurement = measurementContent.map((item) => item.GraphicData).filter(
-      /* @__PURE__ */ ((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(/* @__PURE__ */ new Set())
-    );
+    const measurement = measurementContent.map((item) => item.GraphicData).filter(((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(new Set()));
     return measurement.map((measurement2) => {
       return measurement2.reduce((all, one, i) => {
         const ch = Math.floor(i / 3);
@@ -67971,15 +66859,15 @@ var Polyline2 = class {
     }
     const points = scoord3d.graphicData;
     const lengths = 1;
-    return { points, lengths };
+    return {points, lengths};
   }
 };
 Polyline2.graphicType = "POLYLINE";
 Polyline2.toolType = "Polyline";
 Polyline2.utilityToolType = "Polyline";
-Polyline2.TID300Representation = Polyline;
-MeasurementReport3.registerTool(Polyline2);
-var Polyline_default = Polyline2;
+Polyline2.TID300Representation = Polyline_default;
+MeasurementReport_default3.registerTool(Polyline2);
+var Polyline_default2 = Polyline2;
 
 // src/utilities/TID300/Polygon.js
 function expandPoints4(points) {
@@ -67993,7 +66881,7 @@ function expandPoints4(points) {
   });
   return allPoints;
 }
-var Polygon = class extends TID300Measurement {
+var Polygon = class extends TID300Measurement_default {
   contentItem() {
     const {
       points,
@@ -68057,15 +66945,14 @@ var Polygon = class extends TID300Measurement {
     ]);
   }
 };
+var Polygon_default = Polygon;
 
 // src/adapters/DICOMMicroscopyViewer/Polygon.js
 var Polygon2 = class {
   constructor() {
   }
   static getMeasurementData(measurementContent) {
-    const measurement = measurementContent.map((item) => item.GraphicData).filter(
-      /* @__PURE__ */ ((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(/* @__PURE__ */ new Set())
-    );
+    const measurement = measurementContent.map((item) => item.GraphicData).filter(((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(new Set()));
     return measurement.map((measurement2) => {
       return measurement2.reduce((all, one, i) => {
         const ch = Math.floor(i / 3);
@@ -68080,15 +66967,15 @@ var Polygon2 = class {
     }
     const points = scoord3d.graphicData;
     const lengths = 1;
-    return { points, lengths };
+    return {points, lengths};
   }
 };
 Polygon2.graphicType = "POLYGON";
 Polygon2.toolType = "Polygon";
 Polygon2.utilityToolType = "Polygon";
-Polygon2.TID300Representation = Polygon;
-MeasurementReport3.registerTool(Polygon2);
-var Polygon_default = Polygon2;
+Polygon2.TID300Representation = Polygon_default;
+MeasurementReport_default3.registerTool(Polygon2);
+var Polygon_default2 = Polygon2;
 
 // src/adapters/DICOMMicroscopyViewer/Point.js
 var Point2 = class {
@@ -68096,9 +66983,7 @@ var Point2 = class {
   }
   static getMeasurementData(measurementContent) {
     const measurement = measurementContent.map((item) => item.GraphicData);
-    return measurement.filter(
-      /* @__PURE__ */ ((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(/* @__PURE__ */ new Set())
-    );
+    return measurement.filter(((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(new Set()));
   }
   static getTID300RepresentationArguments(scoord3d) {
     if (scoord3d.graphicType !== "POINT") {
@@ -68106,24 +66991,22 @@ var Point2 = class {
     }
     const points = [scoord3d.graphicData];
     const lengths = 1;
-    return { points, lengths };
+    return {points, lengths};
   }
 };
 Point2.graphicType = "POINT";
 Point2.toolType = "Point";
 Point2.utilityToolType = "Point";
-Point2.TID300Representation = Point;
-MeasurementReport3.registerTool(Point2);
-var Point_default = Point2;
+Point2.TID300Representation = Point_default;
+MeasurementReport_default3.registerTool(Point2);
+var Point_default2 = Point2;
 
 // src/adapters/DICOMMicroscopyViewer/Circle.js
 var Circle2 = class {
   constructor() {
   }
   static getMeasurementData(measurementContent) {
-    const measurement = measurementContent.map((item) => item.GraphicData).filter(
-      /* @__PURE__ */ ((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(/* @__PURE__ */ new Set())
-    );
+    const measurement = measurementContent.map((item) => item.GraphicData).filter(((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(new Set()));
     return measurement.map((measurement2) => {
       return measurement2.reduce((all, one, i) => {
         const ch = Math.floor(i / 3);
@@ -68138,24 +67021,22 @@ var Circle2 = class {
     }
     const points = scoord3d.graphicData;
     const lengths = 1;
-    return { points, lengths };
+    return {points, lengths};
   }
 };
 Circle2.graphicType = "CIRCLE";
 Circle2.toolType = "Circle";
 Circle2.utilityToolType = "Circle";
-Circle2.TID300Representation = Circle;
-MeasurementReport3.registerTool(Circle2);
-var Circle_default = Circle2;
+Circle2.TID300Representation = Circle_default;
+MeasurementReport_default3.registerTool(Circle2);
+var Circle_default2 = Circle2;
 
 // src/adapters/DICOMMicroscopyViewer/Ellipse.js
 var Ellipse2 = class {
   constructor() {
   }
   static getMeasurementData(measurementContent) {
-    const measurement = measurementContent.map((item) => item.GraphicData).filter(
-      /* @__PURE__ */ ((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(/* @__PURE__ */ new Set())
-    );
+    const measurement = measurementContent.map((item) => item.GraphicData).filter(((s) => (a) => ((j) => !s.has(j) && s.add(j))(JSON.stringify(a)))(new Set()));
     return measurement.map((measurement2) => {
       return measurement2.reduce((all, one, i) => {
         const ch = Math.floor(i / 3);
@@ -68170,24 +67051,24 @@ var Ellipse2 = class {
     }
     const points = scoord3d.graphicData;
     const lengths = 1;
-    return { points, lengths };
+    return {points, lengths};
   }
 };
 Ellipse2.graphicType = "ELLIPSE";
 Ellipse2.toolType = "Ellipse";
 Ellipse2.utilityToolType = "Ellipse";
-Ellipse2.TID300Representation = Ellipse;
-MeasurementReport3.registerTool(Ellipse2);
-var Ellipse_default = Ellipse2;
+Ellipse2.TID300Representation = Ellipse_default;
+MeasurementReport_default3.registerTool(Ellipse2);
+var Ellipse_default2 = Ellipse2;
 
 // src/adapters/DICOMMicroscopyViewer/index.js
 var DICOMMicroscopyViewer = {
-  Polyline: Polyline_default,
-  Polygon: Polygon_default,
-  Point: Point_default,
-  Circle: Circle_default,
-  Ellipse: Ellipse_default,
-  MeasurementReport: MeasurementReport3
+  Polyline: Polyline_default2,
+  Polygon: Polygon_default2,
+  Point: Point_default2,
+  Circle: Circle_default2,
+  Ellipse: Ellipse_default2,
+  MeasurementReport: MeasurementReport_default3
 };
 var DICOMMicroscopyViewer_default = DICOMMicroscopyViewer;
 
@@ -68202,13 +67083,13 @@ var adapters_default = adapters;
 
 // src/utilities/TID1500/index.js
 var TID1500 = {
-  TID1500MeasurementReport,
-  TID1501MeasurementGroup
+  TID1500MeasurementReport: TID1500MeasurementReport_default,
+  TID1501MeasurementGroup: TID1501MeasurementGroup_default
 };
 var TID1500_default = TID1500;
 
 // src/utilities/TID300/Calibration.js
-var Calibration = class extends TID300Measurement {
+var Calibration = class extends TID300Measurement_default {
   contentItem() {
     const {
       point1,
@@ -68245,19 +67126,20 @@ var Calibration = class extends TID300Measurement {
     ]);
   }
 };
+var Calibration_default = Calibration;
 
 // src/utilities/TID300/index.js
 var TID300 = {
-  TID300Measurement,
-  Point,
-  Length,
-  CobbAngle,
-  Bidirectional,
-  Polyline,
-  Polygon,
-  Ellipse,
-  Circle,
-  Calibration,
+  TID300Measurement: TID300Measurement_default,
+  Point: Point_default,
+  Length: Length_default,
+  CobbAngle: CobbAngle_default,
+  Bidirectional: Bidirectional_default,
+  Polyline: Polyline_default,
+  Polygon: Polygon_default,
+  Ellipse: Ellipse_default,
+  Circle: Circle_default,
+  Calibration: Calibration_default,
   unit2CodingValue: unit2CodingValue_default
 };
 var TID300_default = TID300;
@@ -68375,13 +67257,9 @@ function multipartDecode(response) {
     const length2 = boundaryIndex - offset - spacingLength;
     const data2 = response.slice(offset, offset + length2);
     components.push(data2);
-    var boundaryEnd = findToken(
-      message2,
-      separator,
-      boundaryIndex + 1,
-      maxSearchLength
-    );
-    if (boundaryEnd === -1) break;
+    var boundaryEnd = findToken(message2, separator, boundaryIndex + 1, maxSearchLength);
+    if (boundaryEnd === -1)
+      break;
     offset = boundaryEnd + separator.length;
   }
   return components;
@@ -68451,9 +67329,7 @@ var CodedConcept = class {
       throw new Error("Option 'meaning' is required for CodedConcept.");
     }
     if (options.schemeDesignator === void 0) {
-      throw new Error(
-        "Option 'schemeDesignator' is required for CodedConcept."
-      );
+      throw new Error("Option 'schemeDesignator' is required for CodedConcept.");
     }
     this.CodeValue = options.value;
     this.CodeMeaning = options.meaning;
@@ -68612,8 +67488,6 @@ var ContentSequence2 = class extends Array {
   constructor(...args) {
     super(...args);
   }
-  // filterBy(options) {
-  // }
 };
 var ContentItem = class {
   constructor(options) {
@@ -68632,20 +67506,12 @@ var ContentItem = class {
     }
     this.ValueType = options.valueType;
     if (options.relationshipType !== void 0) {
-      if (!(Object.values(RelationshipTypes).indexOf(
-        options.relationshipType
-      ) !== -1)) {
-        throw new Error(
-          `Invalid relationship type ${options.relationshipTypes}`
-        );
+      if (!(Object.values(RelationshipTypes).indexOf(options.relationshipType) !== -1)) {
+        throw new Error(`Invalid relationship type ${options.relationshipTypes}`);
       }
       this.RelationshipType = options.relationshipType;
     }
   }
-  // getContentItems(options) {
-  //   // TODO: filter by name, value type and relationship type
-  //   return this.ContentSequence;
-  // }
 };
 var CodeContentItem = class extends ContentItem {
   constructor(options) {
@@ -68735,9 +67601,7 @@ var DateTimeContentItem = class extends ContentItem {
       valueType: ValueTypes.DATETIME
     });
     if (options.value === void 0) {
-      throw new Error(
-        "Option 'value' is required for DateTimeContentItem."
-      );
+      throw new Error("Option 'value' is required for DateTimeContentItem.");
     }
     if (!(typeof options.value === "object" || options.value instanceof Date)) {
       throw new Error("Option 'value' must have type Date.");
@@ -68753,9 +67617,7 @@ var UIDRefContentItem = class extends ContentItem {
       valueType: ValueTypes.UIDREF
     });
     if (options.value === void 0) {
-      throw new Error(
-        "Option 'value' is required for UIDRefContentItem."
-      );
+      throw new Error("Option 'value' is required for UIDRefContentItem.");
     }
     if (!(typeof options.value === "string" || options.value instanceof String)) {
       throw new Error("Option 'value' must have type String.");
@@ -68775,9 +67637,7 @@ var NumContentItem = class extends ContentItem {
         throw new Error("Option 'value' must have type Number.");
       }
       if (options.unit === void 0) {
-        throw new Error(
-          "Option 'unit' is required for NumContentItem with 'value'."
-        );
+        throw new Error("Option 'unit' is required for NumContentItem with 'value'.");
       }
       if (options.unit.constructor !== CodedConcept) {
         throw new Error("Option 'unit' must have type CodedConcept.");
@@ -68791,15 +67651,11 @@ var NumContentItem = class extends ContentItem {
       this.MeasuredValueSequence = [item];
     } else if (options.qualifier !== void 0) {
       if (!(options.qualifier || options.qualifier.constructor === CodedConcept)) {
-        throw new Error(
-          "Option 'qualifier' must have type CodedConcept."
-        );
+        throw new Error("Option 'qualifier' must have type CodedConcept.");
       }
       this.NumericValueQualifierCodeSequence = [options.qualifier];
     } else {
-      throw new Error(
-        "Either option 'value' or 'qualifier' is required for NumContentItem."
-      );
+      throw new Error("Either option 'value' or 'qualifier' is required for NumContentItem.");
     }
   }
 };
@@ -68834,24 +67690,16 @@ var CompositeContentItem = class extends ContentItem {
       valueType: ValueTypes.COMPOSITE
     });
     if (options.referencedSOPClassUID === void 0) {
-      throw new Error(
-        "Option 'referencedSOPClassUID' is required for CompositeContentItem."
-      );
+      throw new Error("Option 'referencedSOPClassUID' is required for CompositeContentItem.");
     }
     if (options.referencedSOPInstanceUID === void 0) {
-      throw new Error(
-        "Option 'referencedSOPInstanceUID' is required for CompositeContentItem."
-      );
+      throw new Error("Option 'referencedSOPInstanceUID' is required for CompositeContentItem.");
     }
     if (!(typeof options.referencedSOPClassUID === "string" || options.referencedSOPClassUID instanceof String)) {
-      throw new Error(
-        "Option 'referencedSOPClassUID' must have type String."
-      );
+      throw new Error("Option 'referencedSOPClassUID' must have type String.");
     }
     if (!(typeof options.referencedSOPInstanceUID === "string" || options.referencedSOPInstanceUID instanceof String)) {
-      throw new Error(
-        "Option 'referencedSOPInstanceUID' must have type String."
-      );
+      throw new Error("Option 'referencedSOPInstanceUID' must have type String.");
     }
     const item = {};
     item.ReferencedSOPClassUID = options.referencedSOPClassUID;
@@ -68867,41 +67715,29 @@ var ImageContentItem = class extends ContentItem {
       valueType: ValueTypes.IMAGE
     });
     if (options.referencedSOPClassUID === void 0) {
-      throw new Error(
-        "Option 'referencedSOPClassUID' is required for ImageContentItem."
-      );
+      throw new Error("Option 'referencedSOPClassUID' is required for ImageContentItem.");
     }
     if (options.referencedSOPInstanceUID === void 0) {
-      throw new Error(
-        "Option 'referencedSOPInstanceUID' is required for ImageContentItem."
-      );
+      throw new Error("Option 'referencedSOPInstanceUID' is required for ImageContentItem.");
     }
     if (!(typeof options.referencedSOPClassUID === "string" || options.referencedSOPClassUID instanceof String)) {
-      throw new Error(
-        "Option 'referencedSOPClassUID' must have type String."
-      );
+      throw new Error("Option 'referencedSOPClassUID' must have type String.");
     }
     if (!(typeof options.referencedSOPInstanceUID === "string" || options.referencedSOPInstanceUID instanceof String)) {
-      throw new Error(
-        "Option 'referencedSOPInstanceUID' must have type String."
-      );
+      throw new Error("Option 'referencedSOPInstanceUID' must have type String.");
     }
     const item = {};
     item.ReferencedSOPClassUID = options.referencedSOPClassUID;
     item.ReferencedSOPInstanceUID = options.referencedSOPInstanceUID;
     if (options.referencedFrameNumbers !== void 0) {
       if (!(typeof options.referencedFrameNumbers === "object" || options.referencedFrameNumbers instanceof Array)) {
-        throw new Error(
-          "Option 'referencedFrameNumbers' must have type Array."
-        );
+        throw new Error("Option 'referencedFrameNumbers' must have type Array.");
       }
       item.ReferencedFrameNumber = options.referencedFrameNumbers;
     }
     if (options.referencedFrameSegmentNumber !== void 0) {
       if (!(typeof options.referencedSegmentNumbers === "object" || options.referencedSegmentNumbers instanceof Array)) {
-        throw new Error(
-          "Option 'referencedSegmentNumbers' must have type Array."
-        );
+        throw new Error("Option 'referencedSegmentNumbers' must have type Array.");
       }
       item.ReferencedSegmentNumber = options.referencedSegmentNumbers;
     }
@@ -68916,24 +67752,16 @@ var ScoordContentItem = class extends ContentItem {
       valueType: ValueTypes.SCOORD
     });
     if (options.graphicType === void 0) {
-      throw new Error(
-        "Option 'graphicType' is required for ScoordContentItem."
-      );
+      throw new Error("Option 'graphicType' is required for ScoordContentItem.");
     }
     if (!(typeof options.graphicType === "string" || options.graphicType instanceof String)) {
-      throw new Error(
-        "Option 'graphicType' of ScoordContentItem must have type String."
-      );
+      throw new Error("Option 'graphicType' of ScoordContentItem must have type String.");
     }
     if (options.graphicData === void 0) {
-      throw new Error(
-        "Option 'graphicData' is required for ScoordContentItem."
-      );
+      throw new Error("Option 'graphicData' is required for ScoordContentItem.");
     }
     if (!(typeof options.graphicData === "object" || options.graphicData instanceof Array)) {
-      throw new Error(
-        "Option 'graphicData' of ScoordContentItem must have type Array."
-      );
+      throw new Error("Option 'graphicData' of ScoordContentItem must have type Array.");
     }
     if (Object.values(GraphicTypes).indexOf(options.graphicType) === -1) {
       throw new Error(`Invalid graphic type '${options.graphicType}'.`);
@@ -68944,16 +67772,10 @@ var ScoordContentItem = class extends ContentItem {
     this.GraphicData = options.graphicData;
     options.pixelOriginInterpretation = options.pixelOriginInterpretation || PixelOriginInterpretations.VOLUME;
     if (!(typeof options.pixelOriginInterpretation === "string" || options.pixelOriginInterpretation instanceof String)) {
-      throw new Error(
-        "Option 'pixelOriginInterpretation' must have type String."
-      );
+      throw new Error("Option 'pixelOriginInterpretation' must have type String.");
     }
-    if (Object.values(PixelOriginInterpretations).indexOf(
-      options.pixelOriginInterpretation
-    ) === -1) {
-      throw new Error(
-        `Invalid pixel origin interpretation '${options.pixelOriginInterpretation}'.`
-      );
+    if (Object.values(PixelOriginInterpretations).indexOf(options.pixelOriginInterpretation) === -1) {
+      throw new Error(`Invalid pixel origin interpretation '${options.pixelOriginInterpretation}'.`);
     }
     if (options.fiducialUID !== void 0) {
       if (!(typeof options.fiducialUID === "string" || options.fiducialUID instanceof String)) {
@@ -68971,17 +67793,13 @@ var Scoord3DContentItem = class extends ContentItem {
       valueType: ValueTypes.SCOORD3D
     });
     if (options.graphicType === void 0) {
-      throw new Error(
-        "Option 'graphicType' is required for Scoord3DContentItem."
-      );
+      throw new Error("Option 'graphicType' is required for Scoord3DContentItem.");
     }
     if (!(typeof options.graphicType === "string" || options.graphicType instanceof String)) {
       throw new Error("Option 'graphicType' must have type String.");
     }
     if (options.graphicData === void 0) {
-      throw new Error(
-        "Option 'graphicData' is required for Scoord3DContentItem."
-      );
+      throw new Error("Option 'graphicData' is required for Scoord3DContentItem.");
     }
     if (!(typeof options.graphicData === "object" || options.graphicData instanceof Array)) {
       throw new Error("Option 'graphicData' must have type Array.");
@@ -68995,14 +67813,10 @@ var Scoord3DContentItem = class extends ContentItem {
     this.GraphicType = options.graphicType;
     this.GraphicData = options.graphicData;
     if (options.frameOfReferenceUID === void 0) {
-      throw new Error(
-        "Option 'frameOfReferenceUID' is required for Scoord3DContentItem."
-      );
+      throw new Error("Option 'frameOfReferenceUID' is required for Scoord3DContentItem.");
     }
     if (!(typeof options.frameOfReferenceUID === "string" || options.frameOfReferenceUID instanceof String)) {
-      throw new Error(
-        "Option 'frameOfReferenceUID' must have type String."
-      );
+      throw new Error("Option 'frameOfReferenceUID' must have type String.");
     }
     this.ReferencedFrameOfReferenceUID = options.frameOfReferenceUID;
     if ("fiducialUID" in options) {
@@ -69021,42 +67835,28 @@ var TcoordContentItem = class extends ContentItem {
       valueType: ValueTypes.TCOORD
     });
     if (options.temporalRangeType === void 0) {
-      throw new Error(
-        "Option 'temporalRangeType' is required for TcoordContentItem."
-      );
+      throw new Error("Option 'temporalRangeType' is required for TcoordContentItem.");
     }
-    if (Object.values(TemporalRangeTypes).indexOf(
-      options.temporalRangeType
-    ) === -1) {
-      throw new Error(
-        `Invalid temporal range type '${options.temporalRangeType}'.`
-      );
+    if (Object.values(TemporalRangeTypes).indexOf(options.temporalRangeType) === -1) {
+      throw new Error(`Invalid temporal range type '${options.temporalRangeType}'.`);
     }
     if (options.referencedSamplePositions === void 0) {
       if (!(typeof options.referencedSamplePositions === "object" || options.referencedSamplePositions instanceof Array)) {
-        throw new Error(
-          "Option 'referencedSamplePositions' must have type Array."
-        );
+        throw new Error("Option 'referencedSamplePositions' must have type Array.");
       }
       this.ReferencedSamplePositions = options.referencedSamplePositions;
     } else if (options.referencedTimeOffsets === void 0) {
       if (!(typeof options.referencedTimeOffsets === "object" || options.referencedTimeOffsets instanceof Array)) {
-        throw new Error(
-          "Option 'referencedTimeOffsets' must have type Array."
-        );
+        throw new Error("Option 'referencedTimeOffsets' must have type Array.");
       }
       this.ReferencedTimeOffsets = options.referencedTimeOffsets;
     } else if (options.referencedDateTime === void 0) {
       if (!(typeof options.referencedDateTime === "object" || options.referencedDateTime instanceof Array)) {
-        throw new Error(
-          "Option 'referencedDateTime' must have type Array."
-        );
+        throw new Error("Option 'referencedDateTime' must have type Array.");
       }
       this.ReferencedDateTime = options.referencedDateTime;
     } else {
-      throw new Error(
-        "One of the following options is required for TcoordContentItem: 'referencedSamplePositions', 'referencedTimeOffsets', or 'referencedDateTime'."
-      );
+      throw new Error("One of the following options is required for TcoordContentItem: 'referencedSamplePositions', 'referencedTimeOffsets', or 'referencedDateTime'.");
     }
   }
 };
@@ -69144,17 +67944,13 @@ var ImageRegion = class extends ScoordContentItem {
       relationshipType: RelationshipTypes.CONTAINS
     });
     if (options.graphicType === GraphicTypes.MULTIPOINT) {
-      throw new Error(
-        "Graphic type 'MULTIPOINT' is not valid for region."
-      );
+      throw new Error("Graphic type 'MULTIPOINT' is not valid for region.");
     }
     if (options.sourceImage === void 0) {
       throw Error("Option 'sourceImage' is required for ImageRegion.");
     }
     if (!(options.sourceImage || options.sourceImage.constructor === SourceImageForRegion)) {
-      throw new Error(
-        "Option 'sourceImage' of ImageRegion must have type SourceImageForRegion."
-      );
+      throw new Error("Option 'sourceImage' of ImageRegion must have type SourceImageForRegion.");
     }
     this.ContentSequence = new ContentSequence2();
     this.ContentSequence.push(options.sourceImage);
@@ -69174,14 +67970,10 @@ var ImageRegion3D = class extends Scoord3DContentItem {
       relationshipType: RelationshipTypes.CONTAINS
     });
     if (options.graphicType === GraphicTypes3D.MULTIPOINT) {
-      throw new Error(
-        "Graphic type 'MULTIPOINT' is not valid for region."
-      );
+      throw new Error("Graphic type 'MULTIPOINT' is not valid for region.");
     }
     if (options.graphicType === GraphicTypes3D.ELLIPSOID) {
-      throw new Error(
-        "Graphic type 'ELLIPSOID' is not valid for region."
-      );
+      throw new Error("Graphic type 'ELLIPSOID' is not valid for region.");
     }
   }
 };
@@ -69199,31 +67991,23 @@ var VolumeSurface = class extends Scoord3DContentItem {
       relationshipType: RelationshipTypes.CONTAINS
     });
     if (options.graphicType !== GraphicTypes3D.ELLIPSOID) {
-      throw new Error(
-        "Graphic type for volume surface must be 'ELLIPSOID'."
-      );
+      throw new Error("Graphic type for volume surface must be 'ELLIPSOID'.");
     }
     this.ContentSequence = new ContentSequence2();
     if (options.sourceImages) {
       options.sourceImages.forEach((image) => {
         if (!(image || image.constructor === SourceImageForRegion)) {
-          throw new Error(
-            "Items of option 'sourceImages' of VolumeSurface must have type SourceImageForRegion."
-          );
+          throw new Error("Items of option 'sourceImages' of VolumeSurface must have type SourceImageForRegion.");
         }
         this.ContentSequence.push(image);
       });
     } else if (options.sourceSeries) {
       if (!(options.sourceSeries || options.sourceSeries.constructor === SourceSeriesForRegion)) {
-        throw new Error(
-          "Option 'sourceSeries' of VolumeSurface must have type SourceSeriesForRegion."
-        );
+        throw new Error("Option 'sourceSeries' of VolumeSurface must have type SourceSeriesForRegion.");
       }
       this.ContentSequence.push(options.sourceSeries);
     } else {
-      throw new Error(
-        "One of the following two options must be provided: 'sourceImage' or 'sourceSeries'."
-      );
+      throw new Error("One of the following two options must be provided: 'sourceImage' or 'sourceSeries'.");
     }
   }
 };
@@ -69282,29 +68066,19 @@ var FindingSite = class extends CodeContentItem {
 var ReferencedSegmentationFrame = class extends ContentSequence2 {
   constructor(options) {
     if (options.sopClassUID === void 0) {
-      throw new Error(
-        "Option 'sopClassUID' is required for ReferencedSegmentationFrame."
-      );
+      throw new Error("Option 'sopClassUID' is required for ReferencedSegmentationFrame.");
     }
     if (options.sopInstanceUID === void 0) {
-      throw new Error(
-        "Option 'sopInstanceUID' is required for ReferencedSegmentationFrame."
-      );
+      throw new Error("Option 'sopInstanceUID' is required for ReferencedSegmentationFrame.");
     }
     if (options.frameNumber === void 0) {
-      throw new Error(
-        "Option 'frameNumber' is required for ReferencedSegmentationFrame."
-      );
+      throw new Error("Option 'frameNumber' is required for ReferencedSegmentationFrame.");
     }
     if (options.segmentNumber === void 0) {
-      throw new Error(
-        "Option 'segmentNumber' is required for ReferencedSegmentationFrame."
-      );
+      throw new Error("Option 'segmentNumber' is required for ReferencedSegmentationFrame.");
     }
     if (options.sourceImage === void 0) {
-      throw new Error(
-        "Option 'sourceImage' is required for ReferencedSegmentationFrame."
-      );
+      throw new Error("Option 'sourceImage' is required for ReferencedSegmentationFrame.");
     }
     super();
     const segmentationItem = ImageContentItem({
@@ -69320,9 +68094,7 @@ var ReferencedSegmentationFrame = class extends ContentSequence2 {
     });
     this.push(segmentationItem);
     if (options.sourceImage.constructor !== SourceImageForSegmentation) {
-      throw new Error(
-        "Option 'sourceImage' must have type SourceImageForSegmentation."
-      );
+      throw new Error("Option 'sourceImage' must have type SourceImageForSegmentation.");
     }
     this.push(sourceImage);
   }
@@ -69330,24 +68102,16 @@ var ReferencedSegmentationFrame = class extends ContentSequence2 {
 var ReferencedSegmentation = class extends ContentSequence2 {
   constructor(options) {
     if (options.sopClassUID === void 0) {
-      throw new Error(
-        "Option 'sopClassUID' is required for ReferencedSegmentation."
-      );
+      throw new Error("Option 'sopClassUID' is required for ReferencedSegmentation.");
     }
     if (options.sopInstanceUID === void 0) {
-      throw new Error(
-        "Option 'sopInstanceUID' is required for ReferencedSegmentation."
-      );
+      throw new Error("Option 'sopInstanceUID' is required for ReferencedSegmentation.");
     }
     if (options.frameNumbers === void 0) {
-      throw new Error(
-        "Option 'frameNumbers' is required for ReferencedSegmentation."
-      );
+      throw new Error("Option 'frameNumbers' is required for ReferencedSegmentation.");
     }
     if (options.segmentNumber === void 0) {
-      throw new Error(
-        "Option 'segmentNumber' is required for ReferencedSegmentation."
-      );
+      throw new Error("Option 'segmentNumber' is required for ReferencedSegmentation.");
     }
     super();
     const segmentationItem = new ImageContentItem({
@@ -69365,23 +68129,17 @@ var ReferencedSegmentation = class extends ContentSequence2 {
     if (options.sourceImages !== void 0) {
       options.sourceImages.forEach((image) => {
         if (!image || image.constructor !== SourceImageForSegmentation) {
-          throw new Error(
-            "Items of option 'sourceImages' must have type SourceImageForSegmentation."
-          );
+          throw new Error("Items of option 'sourceImages' must have type SourceImageForSegmentation.");
         }
         this.push(image);
       });
     } else if (options.sourceSeries !== void 0) {
       if (options.sourceSeries.constructor !== SourceSeriesForSegmentation) {
-        throw new Error(
-          "Option 'sourceSeries' must have type SourceSeriesForSegmentation."
-        );
+        throw new Error("Option 'sourceSeries' must have type SourceSeriesForSegmentation.");
       }
       this.push(sourceSeries);
     } else {
-      throw new Error(
-        "One of the following two options must be provided: 'sourceImages' or 'sourceSeries'."
-      );
+      throw new Error("One of the following two options must be provided: 'sourceImages' or 'sourceSeries'.");
     }
   }
 };
@@ -69427,14 +68185,10 @@ var Measurement = class extends Template {
     });
     valueItem.ContentSequence = new ContentSequence2();
     if (options.trackingIdentifier === void 0) {
-      throw new Error(
-        "Option 'trackingIdentifier' is required for Measurement."
-      );
+      throw new Error("Option 'trackingIdentifier' is required for Measurement.");
     }
     if (options.trackingIdentifier.constructor === TrackingIdentifier) {
-      throw new Error(
-        "Option 'trackingIdentifier' must have type TrackingIdentifier."
-      );
+      throw new Error("Option 'trackingIdentifier' must have type TrackingIdentifier.");
     }
     valueItem.ContentSequence.push(...options.trackingIdentifier);
     if (options.method !== void 0) {
@@ -69467,63 +68221,47 @@ var Measurement = class extends Template {
       }
       options.findingSites.forEach((site) => {
         if (!site || site.constructor !== FindingSite) {
-          throw new Error(
-            "Items of option 'findingSites' must have type FindingSite."
-          );
+          throw new Error("Items of option 'findingSites' must have type FindingSite.");
         }
         valueItem.ContentSequence.push(site);
       });
     }
     if (options.properties !== void 0) {
       if (options.properties.constructor !== MeasurementProperties) {
-        throw new Error(
-          "Option 'properties' must have type MeasurementProperties."
-        );
+        throw new Error("Option 'properties' must have type MeasurementProperties.");
       }
       valueItem.ContentSequence.push(...options.properties);
     }
     if (options.referencedRegions !== void 0) {
       if (!(typeof options.referencedRegions === "object" || options.referencedRegions instanceof Array)) {
-        throw new Error(
-          "Option 'referencedRegions' must have type Array."
-        );
+        throw new Error("Option 'referencedRegions' must have type Array.");
       }
       options.referencedRegions.forEach((region) => {
         if (!region || region.constructor !== ImageRegion && region.constructor !== ImageRegion3D) {
-          throw new Error(
-            "Items of option 'referencedRegion' must have type ImageRegion or ImageRegion3D."
-          );
+          throw new Error("Items of option 'referencedRegion' must have type ImageRegion or ImageRegion3D.");
         }
         valueItem.ContentSequence.push(region);
       });
     } else if (options.referencedVolume !== void 0) {
       if (options.referencedVolume.constructor !== VolumeSurface) {
-        throw new Error(
-          "Option 'referencedVolume' must have type VolumeSurface."
-        );
+        throw new Error("Option 'referencedVolume' must have type VolumeSurface.");
       }
       valueItem.ContentSequence.push(options.referencedVolume);
     } else if (options.referencedSegmentation !== void 0) {
       if (options.referencedSegmentation.constructor !== ReferencedSegmentation && options.referencedSegmentation.constructor !== ReferencedSegmentationFrame) {
-        throw new Error(
-          "Option 'referencedSegmentation' must have type ReferencedSegmentation or ReferencedSegmentationFrame."
-        );
+        throw new Error("Option 'referencedSegmentation' must have type ReferencedSegmentation or ReferencedSegmentationFrame.");
       }
       valueItem.ContentSequence.push(options.referencedSegmentation);
     }
     if (options.referencedRealWorldValueMap !== void 0) {
       if (options.referencedRealWorldValueMap.constructor !== ReferencedRealWorldValueMap) {
-        throw new Error(
-          "Option 'referencedRealWorldValueMap' must have type ReferencedRealWorldValueMap."
-        );
+        throw new Error("Option 'referencedRealWorldValueMap' must have type ReferencedRealWorldValueMap.");
       }
       valueItem.ContentSequence.push(options.referencedRealWorldValueMap);
     }
     if (options.algorithmId !== void 0) {
       if (options.algorithmId.constructor !== AlgorithmIdentification) {
-        throw new Error(
-          "Option 'algorithmId' must have type AlgorithmIdentification."
-        );
+        throw new Error("Option 'algorithmId' must have type AlgorithmIdentification.");
       }
       valueItem.ContentSequence.push(...options.algorithmId);
     }
@@ -69547,17 +68285,13 @@ var MeasurementProperties = class extends Template {
     }
     if (options.measurementStatisticalProperties !== void 0) {
       if (options.measurementStatisticalProperties.constructor !== MeasurementStatisticalProperties) {
-        throw new Error(
-          "Option 'measurmentStatisticalProperties' must have type MeasurementStatisticalProperties."
-        );
+        throw new Error("Option 'measurmentStatisticalProperties' must have type MeasurementStatisticalProperties.");
       }
       this.push(...measurementStatisticalProperties);
     }
     if (options.normalRangeProperties !== void 0) {
       if (options.normalRangeProperties.constructor !== NormalRangeProperties) {
-        throw new Error(
-          "Option 'normalRangeProperties' must have type NormalRangeProperties."
-        );
+        throw new Error("Option 'normalRangeProperties' must have type NormalRangeProperties.");
       }
       this.push(...normalRangeProperties);
     }
@@ -69615,18 +68349,14 @@ var MeasurementStatisticalProperties = class extends Template {
   constructor(options) {
     super();
     if (options.values === void 0) {
-      throw new Error(
-        "Option 'values' is required for MeasurementStatisticalProperties."
-      );
+      throw new Error("Option 'values' is required for MeasurementStatisticalProperties.");
     }
     if (!(typeof options.values === "object" || options.values instanceof Array)) {
       throw new Error("Option 'values' must have type Array.");
     }
     options.values.forEach((value) => {
       if (!options.concept || options.concept.constructor !== NumContentItem) {
-        throw new Error(
-          "Items of option 'values' must have type NumContentItem."
-        );
+        throw new Error("Items of option 'values' must have type NumContentItem.");
       }
       this.push(value);
     });
@@ -69660,18 +68390,14 @@ var NormalRangeProperties = class extends Template {
   constructor(options) {
     super();
     if (options.values === void 0) {
-      throw new Error(
-        "Option 'values' is required for NormalRangeProperties."
-      );
+      throw new Error("Option 'values' is required for NormalRangeProperties.");
     }
     if (!(typeof options.values === "object" || options.values instanceof Array)) {
       throw new Error("Option 'values' must have type Array.");
     }
     options.values.forEach((value) => {
       if (!options.concept || options.concept.constructor !== NumContentItem) {
-        throw new Error(
-          "Items of option 'values' must have type NumContentItem."
-        );
+        throw new Error("Items of option 'values' must have type NumContentItem.");
       }
       this.push(value);
     });
@@ -69705,29 +68431,21 @@ var ObservationContext = class extends Template {
   constructor(options) {
     super();
     if (options.observerPersonContext === void 0) {
-      throw new Error(
-        "Option 'observerPersonContext' is required for ObservationContext."
-      );
+      throw new Error("Option 'observerPersonContext' is required for ObservationContext.");
     }
     if (options.observerPersonContext.constructor !== ObserverContext) {
-      throw new Error(
-        "Option 'observerPersonContext' must have type ObserverContext"
-      );
+      throw new Error("Option 'observerPersonContext' must have type ObserverContext");
     }
     this.push(...options.observerPersonContext);
     if (options.observerDeviceContext !== void 0) {
       if (options.observerDeviceContext.constructor !== ObserverContext) {
-        throw new Error(
-          "Option 'observerDeviceContext' must have type ObserverContext"
-        );
+        throw new Error("Option 'observerDeviceContext' must have type ObserverContext");
       }
       this.push(...options.observerDeviceContext);
     }
     if (options.subjectContext !== void 0) {
       if (options.subjectContext.constructor !== SubjectContext) {
-        throw new Error(
-          "Option 'subjectContext' must have type SubjectContext"
-        );
+        throw new Error("Option 'subjectContext' must have type SubjectContext");
       }
       this.push(...options.subjectContext);
     }
@@ -69737,14 +68455,10 @@ var ObserverContext = class extends Template {
   constructor(options) {
     super();
     if (options.observerType === void 0) {
-      throw new Error(
-        "Option 'observerType' is required for ObserverContext."
-      );
+      throw new Error("Option 'observerType' is required for ObserverContext.");
     } else {
       if (options.observerType.constructor !== Code && options.observerType.constructor !== CodedConcept) {
-        throw new Error(
-          "Option 'observerType' must have type Code or CodedConcept."
-        );
+        throw new Error("Option 'observerType' must have type Code or CodedConcept.");
       }
     }
     const observerTypeItem = new CodeContentItem({
@@ -69758,9 +68472,7 @@ var ObserverContext = class extends Template {
     });
     this.push(observerTypeItem);
     if (options.observerIdentifyingAttributes === void 0) {
-      throw new Error(
-        "Option 'observerIdentifyingAttributes' is required for ObserverContext."
-      );
+      throw new Error("Option 'observerIdentifyingAttributes' is required for ObserverContext.");
     }
     const person = new CodedConcept({
       value: "121006",
@@ -69774,20 +68486,14 @@ var ObserverContext = class extends Template {
     });
     if (person.equals(options.observerType)) {
       if (options.observerIdentifyingAttributes.constructor !== PersonObserverIdentifyingAttributes) {
-        throw new Error(
-          "Option 'observerIdentifyingAttributes' must have type PersonObserverIdentifyingAttributes for 'Person' observer type."
-        );
+        throw new Error("Option 'observerIdentifyingAttributes' must have type PersonObserverIdentifyingAttributes for 'Person' observer type.");
       }
     } else if (device.equals(options.observerType)) {
       if (options.observerIdentifyingAttributes.constructor !== DeviceObserverIdentifyingAttributes) {
-        throw new Error(
-          "Option 'observerIdentifyingAttributes' must have type DeviceObserverIdentifyingAttributes for 'Device' observer type."
-        );
+        throw new Error("Option 'observerIdentifyingAttributes' must have type DeviceObserverIdentifyingAttributes for 'Device' observer type.");
       }
     } else {
-      throw new Error(
-        "Option 'oberverType' must be either 'Person' or 'Device'."
-      );
+      throw new Error("Option 'oberverType' must be either 'Person' or 'Device'.");
     }
     this.push(...options.observerIdentifyingAttributes);
   }
@@ -69796,9 +68502,7 @@ var PersonObserverIdentifyingAttributes = class extends Template {
   constructor(options) {
     super();
     if (options.name === void 0) {
-      throw new Error(
-        "Option 'name' is required for PersonObserverIdentifyingAttributes."
-      );
+      throw new Error("Option 'name' is required for PersonObserverIdentifyingAttributes.");
     }
     const nameItem = new PNameContentItem({
       name: new CodedConcept({
@@ -69864,9 +68568,7 @@ var DeviceObserverIdentifyingAttributes = class extends Template {
   constructor(options) {
     super();
     if (options.uid === void 0) {
-      throw new Error(
-        "Option 'uid' is required for DeviceObserverIdentifyingAttributes."
-      );
+      throw new Error("Option 'uid' is required for DeviceObserverIdentifyingAttributes.");
     }
     const deviceObserverItem = new UIDRefContentItem({
       name: new CodedConcept({
@@ -69944,14 +68646,10 @@ var SubjectContext = class extends Template {
   constructor(options) {
     super();
     if (options.subjectClass === void 0) {
-      throw new Error(
-        "Option 'subjectClass' is required for SubjectContext."
-      );
+      throw new Error("Option 'subjectClass' is required for SubjectContext.");
     }
     if (options.subjectClassSpecificContext === void 0) {
-      throw new Error(
-        "Option 'subjectClassSpecificContext' is required for SubjectContext."
-      );
+      throw new Error("Option 'subjectClassSpecificContext' is required for SubjectContext.");
     }
     const subjectClassItem = new CodeContentItem({
       name: new CodedConcept({
@@ -69980,26 +68678,18 @@ var SubjectContext = class extends Template {
     });
     if (fetus.equals(options.subjectClass)) {
       if (options.subjectClassSpecificContext.constructor !== SubjectContextFetus) {
-        throw new Error(
-          "Option 'subjectClass' must have type SubjectContextFetus for 'Fetus' subject class."
-        );
+        throw new Error("Option 'subjectClass' must have type SubjectContextFetus for 'Fetus' subject class.");
       }
     } else if (specimen.equals(options.subjectClass)) {
       if (options.subjectClassSpecificContext.constructor !== SubjectContextSpecimen) {
-        throw new Error(
-          "Option 'subjectClass' must have type SubjectContextSpecimen for 'Specimen' subject class."
-        );
+        throw new Error("Option 'subjectClass' must have type SubjectContextSpecimen for 'Specimen' subject class.");
       }
     } else if (device.equals(options.subjectClass)) {
       if (options.subjectClassSpecificContext.constructor !== SubjectContextDevice) {
-        throw new Error(
-          "Option 'subjectClass' must have type SubjectContextDevice for 'Device' subject class."
-        );
+        throw new Error("Option 'subjectClass' must have type SubjectContextDevice for 'Device' subject class.");
       }
     } else {
-      throw new Error(
-        "Option 'subjectClass' must be either 'Fetus', 'Specimen', or 'Device'."
-      );
+      throw new Error("Option 'subjectClass' must be either 'Fetus', 'Specimen', or 'Device'.");
     }
     this.push(...options.subjectClassSpecificContext);
   }
@@ -70008,9 +68698,7 @@ var SubjectContextFetus = class extends Template {
   constructor(options) {
     super();
     if (options.subjectID === void 0) {
-      throw new Error(
-        "Option 'subjectID' is required for SubjectContextFetus."
-      );
+      throw new Error("Option 'subjectID' is required for SubjectContextFetus.");
     }
     const subjectIdItem = new TextContentItem({
       name: new CodedConcept({
@@ -70028,9 +68716,7 @@ var SubjectContextSpecimen = class extends Template {
   constructor(options) {
     super();
     if (options.uid === void 0) {
-      throw new Error(
-        "Option 'uid' is required for SubjectContextSpecimen."
-      );
+      throw new Error("Option 'uid' is required for SubjectContextSpecimen.");
     }
     const specimenUidItem = new UIDRefContentItem({
       name: new CodedConcept({
@@ -70083,9 +68769,7 @@ var SubjectContextSpecimen = class extends Template {
 var SubjectContextDevice = class extends Template {
   constructor(options) {
     if (options.name === void 0) {
-      throw new Error(
-        "Option 'name' is required for SubjectContextDevice."
-      );
+      throw new Error("Option 'name' is required for SubjectContextDevice.");
     }
     const deviceNameItem = new TextContentItem({
       name: new CodedConcept({
@@ -70194,19 +68878,13 @@ var _MeasurementsAndQualitatitiveEvaluations = class extends Template {
     });
     groupItem.ContentSequence = new ContentSequence2();
     if (options.trackingIdentifier === void 0) {
-      throw new Error(
-        "Option 'trackingIdentifier' is required for measurements group."
-      );
+      throw new Error("Option 'trackingIdentifier' is required for measurements group.");
     }
     if (options.trackingIdentifier.constructor !== TrackingIdentifier) {
-      throw new Error(
-        "Option 'trackingIdentifier' must have type TrackingIdentifier."
-      );
+      throw new Error("Option 'trackingIdentifier' must have type TrackingIdentifier.");
     }
     if (options.trackingIdentifier.length !== 2) {
-      throw new Error(
-        "Option 'trackingIdentifier' must include a human readable tracking identifier and a tracking unique identifier."
-      );
+      throw new Error("Option 'trackingIdentifier' must include a human readable tracking identifier and a tracking unique identifier.");
     }
     groupItem.ContentSequence.push(...options.trackingIdentifier);
     if (options.session !== void 0) {
@@ -70235,17 +68913,13 @@ var _MeasurementsAndQualitatitiveEvaluations = class extends Template {
     }
     if (options.timePointContext !== void 0) {
       if (options.timePointContext.constructor !== TimePointContext) {
-        throw new Error(
-          "Option 'timePointContext' must have type TimePointContext."
-        );
+        throw new Error("Option 'timePointContext' must have type TimePointContext.");
       }
       groupItem.ContentSequence.push(...timePointContext);
     }
     if (options.referencedRealWorldValueMap !== void 0) {
       if (options.referencedRealWorldValueMap.constructor !== ReferencedRealWorldValueMap) {
-        throw new Error(
-          "Option 'referencedRealWorldValleMap' must have type ReferencedRealWorldValueMap."
-        );
+        throw new Error("Option 'referencedRealWorldValleMap' must have type ReferencedRealWorldValueMap.");
       }
       groupItem.ContentSequence.push(options.referencedRealWorldValueMap);
     }
@@ -70256,24 +68930,18 @@ var _MeasurementsAndQualitatitiveEvaluations = class extends Template {
       options.measurements.forEach((measurement) => {
         console.log(measurement);
         if (!measurement || measurement.constructor !== NumContentItem) {
-          throw new Error(
-            "Items of option 'measurement' must have type NumContentItem."
-          );
+          throw new Error("Items of option 'measurement' must have type NumContentItem.");
         }
         groupItem.ContentSequence.push(measurement);
       });
     }
     if (options.qualitativeEvaluations !== void 0) {
       if (!(typeof options.qualitativeEvaluations === "object" || options.qualitativeEvaluations instanceof Array)) {
-        throw new Error(
-          "Option 'qualitativeEvaluations' must have type Array."
-        );
+        throw new Error("Option 'qualitativeEvaluations' must have type Array.");
       }
       options.qualitativeEvaluations.forEach((evaluation) => {
         if (!evaluation || evaluation.constructor !== CodeContentItem && evaluation.constructor !== TextContentItem) {
-          throw new Error(
-            "Items of option 'qualitativeEvaluations' must have type CodeContentItem or TextContentItem."
-          );
+          throw new Error("Items of option 'qualitativeEvaluations' must have type CodeContentItem or TextContentItem.");
         }
         groupItem.ContentSequence.push(evaluation);
       });
@@ -70299,45 +68967,31 @@ var _ROIMeasurementsAndQualitativeEvaluations = class extends _MeasurementsAndQu
     ];
     const numReferences = wereReferencesProvided.reduce((a, b) => a + b);
     if (numReferences === 0) {
-      throw new Error(
-        "One of the following options must be provided: 'referencedRegions', 'referencedVolume', or 'referencedSegmentation'."
-      );
+      throw new Error("One of the following options must be provided: 'referencedRegions', 'referencedVolume', or 'referencedSegmentation'.");
     } else if (numReferences > 1) {
-      throw new Error(
-        "Only one of the following options should be provided: 'referencedRegions', 'referencedVolume', or 'referencedSegmentation'."
-      );
+      throw new Error("Only one of the following options should be provided: 'referencedRegions', 'referencedVolume', or 'referencedSegmentation'.");
     }
     if (options.referencedRegions !== void 0) {
       if (!(typeof options.referencedRegions === "object" || options.referencedRegions instanceof Array)) {
-        throw new Error(
-          "Option 'referencedRegions' must have type Array."
-        );
+        throw new Error("Option 'referencedRegions' must have type Array.");
       }
       if (options.referencedRegions.length === 0) {
-        throw new Error(
-          "Option 'referencedRegion' must have non-zero length."
-        );
+        throw new Error("Option 'referencedRegion' must have non-zero length.");
       }
       options.referencedRegions.forEach((region) => {
         if (region === void 0 || region.constructor !== ImageRegion && region.constructor !== ImageRegion3D) {
-          throw new Error(
-            "Items of option 'referencedRegion' must have type ImageRegion or ImageRegion3D."
-          );
+          throw new Error("Items of option 'referencedRegion' must have type ImageRegion or ImageRegion3D.");
         }
         groupItem.ContentSequence.push(region);
       });
     } else if (options.referencedVolume !== void 0) {
       if (options.referencedVolume.constructor !== VolumeSurface) {
-        throw new Error(
-          "Items of option 'referencedVolume' must have type VolumeSurface."
-        );
+        throw new Error("Items of option 'referencedVolume' must have type VolumeSurface.");
       }
       groupItem.ContentSequence.push(referencedVolume);
     } else if (options.referencedSegmentation !== void 0) {
       if (options.referencedSegmentation.constructor !== ReferencedSegmentation && options.referencedSegmentation.constructor !== ReferencedSegmentationFrame) {
-        throw new Error(
-          "Option 'referencedSegmentation' must have type ReferencedSegmentation or ReferencedSegmentationFrame."
-        );
+        throw new Error("Option 'referencedSegmentation' must have type ReferencedSegmentation or ReferencedSegmentationFrame.");
       }
       groupItem.ContentSequence.push(referencedSegmentation);
     }
@@ -70352,13 +69006,9 @@ var PlanarROIMeasurementsAndQualitativeEvaluations = class extends _ROIMeasureme
     ];
     const numReferences = wereReferencesProvided.reduce((a, b) => a + b);
     if (numReferences === 0) {
-      throw new Error(
-        "One of the following options must be provided: 'referencedRegion', 'referencedSegmentation'."
-      );
+      throw new Error("One of the following options must be provided: 'referencedRegion', 'referencedSegmentation'.");
     } else if (numReferences > 1) {
-      throw new Error(
-        "Only one of the following options should be provided: 'referencedRegion', 'referencedSegmentation'."
-      );
+      throw new Error("Only one of the following options should be provided: 'referencedRegion', 'referencedSegmentation'.");
     }
     super({
       trackingIdentifier: options.trackingIdentifier,
@@ -70391,36 +69041,28 @@ var VolumetricROIMeasurementsAndQualitativeEvaluations = class extends _ROIMeasu
 var MeasurementsDerivedFromMultipleROIMeasurements = class extends Template {
   constructor(options) {
     if (options.derivation === void 0) {
-      throw new Error(
-        "Option 'derivation' is required for MeasurementsDerivedFromMultipleROIMeasurements."
-      );
+      throw new Error("Option 'derivation' is required for MeasurementsDerivedFromMultipleROIMeasurements.");
     }
     const valueItem = new NumContentItem({
       name: options.derivation
     });
     valueItem.ContentSequence = new ContentSequence2();
     if (options.measurementGroups === void 0) {
-      throw new Error(
-        "Option 'measurementGroups' is required for MeasurementsDerivedFromMultipleROIMeasurements."
-      );
+      throw new Error("Option 'measurementGroups' is required for MeasurementsDerivedFromMultipleROIMeasurements.");
     }
     if (!(typeof options.measurementGroups === "object" || options.measurementGroups instanceof Array)) {
       throw new Error("Option 'measurementGroups' must have type Array.");
     }
     options.measurementGroups.forEach((group) => {
       if (!group || group.constructor !== PlanarROIMeasurementsAndQualitativeEvaluations && group.constructor !== VolumetricROIMeasurementsAndQualitativeEvaluations) {
-        throw new Error(
-          "Items of option 'measurementGroups' must have type PlanarROIMeasurementsAndQualitativeEvaluations or VolumetricROIMeasurementsAndQualitativeEvaluations."
-        );
+        throw new Error("Items of option 'measurementGroups' must have type PlanarROIMeasurementsAndQualitativeEvaluations or VolumetricROIMeasurementsAndQualitativeEvaluations.");
       }
       group[0].RelationshipType = "R-INFERRED FROM";
       valueItem.ContentSequence.push(...group);
     });
     if (options.measurementProperties !== void 0) {
       if (options.measurementProperties.constructor !== MeasurementProperties) {
-        throw new Error(
-          "Option 'measurementProperties' must have type MeasurementProperties."
-        );
+        throw new Error("Option 'measurementProperties' must have type MeasurementProperties.");
       }
       valueItem.ContentSequence.push(...options.measurementProperties);
     }
@@ -70461,17 +69103,13 @@ var ROIMeasurements = class extends Template {
       }
       options.findingSites.forEach((site) => {
         if (!site || site.constructor !== FindingSite) {
-          throw new Error(
-            "Items of option 'findingSites' must have type FindingSite."
-          );
+          throw new Error("Items of option 'findingSites' must have type FindingSite.");
         }
         this.push(site);
       });
     }
     if (options.measurements === void 0) {
-      throw new Error(
-        "Options 'measurements' is required ROIMeasurements."
-      );
+      throw new Error("Options 'measurements' is required ROIMeasurements.");
     }
     if (!(typeof options.measurements === "object" || options.measurements instanceof Array)) {
       throw new Error("Option 'measurements' must have type Array.");
@@ -70481,9 +69119,7 @@ var ROIMeasurements = class extends Template {
     }
     options.measurements.forEach((measurement) => {
       if (!measurement || measurement.constructor !== Measurement) {
-        throw new Error(
-          "Items of option 'measurements' must have type Measurement."
-        );
+        throw new Error("Items of option 'measurements' must have type Measurement.");
       }
       this.push(measurement);
     });
@@ -70493,14 +69129,10 @@ var MeasurementReport4 = class extends Template {
   constructor(options) {
     super();
     if (options.observationContext === void 0) {
-      throw new Error(
-        "Option 'observationContext' is required for MeasurementReport."
-      );
+      throw new Error("Option 'observationContext' is required for MeasurementReport.");
     }
     if (options.procedureReported === void 0) {
-      throw new Error(
-        "Option 'procedureReported' is required for MeasurementReport."
-      );
+      throw new Error("Option 'procedureReported' is required for MeasurementReport.");
     }
     const item = new ContainerContentItem({
       name: new CodedConcept({
@@ -70512,18 +69144,12 @@ var MeasurementReport4 = class extends Template {
     });
     item.ContentSequence = new ContentSequence2();
     if (options.languageOfContentItemAndDescendants === void 0) {
-      throw new Error(
-        "Option 'languageOfContentItemAndDescendants' is required for MeasurementReport."
-      );
+      throw new Error("Option 'languageOfContentItemAndDescendants' is required for MeasurementReport.");
     }
     if (options.languageOfContentItemAndDescendants.constructor !== LanguageOfContentItemAndDescendants) {
-      throw new Error(
-        "Option 'languageOfContentItemAndDescendants' must have type LanguageOfContentItemAndDescendants."
-      );
+      throw new Error("Option 'languageOfContentItemAndDescendants' must have type LanguageOfContentItemAndDescendants.");
     }
-    item.ContentSequence.push(
-      ...options.languageOfContentItemAndDescendants
-    );
+    item.ContentSequence.push(...options.languageOfContentItemAndDescendants);
     item.ContentSequence.push(...options.observationContext);
     if (options.procedureReported.constructor === CodedConcept || options.procedureReported.constructor === Code) {
       options.procedureReported = [options.procedureReported];
@@ -70552,9 +69178,7 @@ var MeasurementReport4 = class extends Template {
     ];
     const numOptionsProvided = wereOptionsProvided.reduce((a, b) => a + b);
     if (numOptionsProvided > 1) {
-      throw new Error(
-        "Only one of the following options should be provided: 'imagingMeasurements', 'derivedImagingMeasurement', 'qualitativeEvaluations'."
-      );
+      throw new Error("Only one of the following options should be provided: 'imagingMeasurements', 'derivedImagingMeasurement', 'qualitativeEvaluations'.");
     }
     if (options.imagingMeasurements !== void 0) {
       const containerItem = new ContainerContentItem({
@@ -70565,9 +69189,7 @@ var MeasurementReport4 = class extends Template {
         }),
         relationshipType: RelationshipTypes.CONTAINS
       });
-      containerItem.ContentSequence = new ContentSequence2(
-        ...options.imagingMeasurements
-      );
+      containerItem.ContentSequence = new ContentSequence2(...options.imagingMeasurements);
       item.ContentSequence.push(containerItem);
     } else if (options.derivedImagingMeasurements !== void 0) {
       const containerItem = new ContainerContentItem({
@@ -70578,9 +69200,7 @@ var MeasurementReport4 = class extends Template {
         }),
         relationshipType: RelationshipTypes.CONTAINS
       });
-      containerItem.ContentSequence = new ContentSequence2(
-        ...options.derivedImagingMeasurements
-      );
+      containerItem.ContentSequence = new ContentSequence2(...options.derivedImagingMeasurements);
       item.ContentSequence.push(containerItem);
     } else if (options.qualitativeEvaluations !== void 0) {
       const containerItem = new ContainerContentItem({
@@ -70591,9 +69211,7 @@ var MeasurementReport4 = class extends Template {
         }),
         relationshipType: RelationshipTypes.CONTAINS
       });
-      containerItem.ContentSequence = new ContentSequence2(
-        ...options.qualitativeEvaluations
-      );
+      containerItem.ContentSequence = new ContentSequence2(...options.qualitativeEvaluations);
       item.ContentSequence.push(containerItem);
     }
     this.push(item);
@@ -70602,9 +69220,7 @@ var MeasurementReport4 = class extends Template {
 var TimePointContext = class extends Template {
   constructor(options) {
     if (options.timePoint === void 0) {
-      throw new Error(
-        "Option 'timePoint' is required for TimePointContext."
-      );
+      throw new Error("Option 'timePoint' is required for TimePointContext.");
     }
     const timePointItem = new TextContentItem({
       name: new CodedConcept({
@@ -70666,9 +69282,7 @@ var TimePointContext = class extends Template {
     }
     if (options.temporalOffsetFromEvent !== void 0) {
       if (options.temporalOffsetFromEvent.constructor !== LongitudinalTemporalOffsetFromEventContentItem) {
-        throw new Error(
-          "Option 'temporalOffsetFromEvent' must have type LongitudinalTemporalOffsetFromEventContentItem."
-        );
+        throw new Error("Option 'temporalOffsetFromEvent' must have type LongitudinalTemporalOffsetFromEventContentItem.");
       }
       this.push(temporalOffsetFromEvent);
     }
@@ -70692,14 +69306,10 @@ var AlgorithmIdentification = class extends Template {
   constructor(options) {
     super();
     if (options.name === void 0) {
-      throw new Error(
-        "Option 'name' is required for AlgorithmIdentification."
-      );
+      throw new Error("Option 'name' is required for AlgorithmIdentification.");
     }
     if (options.version === void 0) {
-      throw new Error(
-        "Option 'version' is required for AlgorithmIdentification."
-      );
+      throw new Error("Option 'version' is required for AlgorithmIdentification.");
     }
     const nameItem = new TextContentItem({
       name: new CodedConcept({
@@ -70777,7 +69387,6 @@ __export(documents_exports, {
   Comprehensive3DSR: () => Comprehensive3DSR
 });
 var _attributesToInclude = [
-  // Patient
   "00080054",
   "00080100",
   "00080102",
@@ -70867,7 +69476,6 @@ var _attributesToInclude = [
   "0062000B",
   "00880130",
   "00880140",
-  // Patient Study
   "00080100",
   "00080102",
   "00080103",
@@ -70910,7 +69518,6 @@ var _attributesToInclude = [
   "00400031",
   "00400032",
   "00400033",
-  // General Study
   "00080020",
   "00080030",
   "00080050",
@@ -70958,7 +69565,6 @@ var _attributesToInclude = [
   "00401102",
   "00401103",
   "00401104",
-  // Clinical Trial Subject
   "00120010",
   "00120020",
   "00120021",
@@ -70968,7 +69574,6 @@ var _attributesToInclude = [
   "00120042",
   "00120081",
   "00120082",
-  // Clinical Trial Study
   "00120020",
   "00120050",
   "00120051",
@@ -70981,9 +69586,7 @@ var _attributesToInclude = [
 var Comprehensive3DSR = class {
   constructor(options) {
     if (options.evidence === void 0) {
-      throw new Error(
-        "Option 'evidence' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'evidence' is required for Comprehensive3DSR.");
     }
     if (!(typeof options.evidence === "object" || options.evidence instanceof Array)) {
       throw new Error("Option 'evidence' must have type Array.");
@@ -70992,39 +69595,25 @@ var Comprehensive3DSR = class {
       throw new Error("Option 'evidence' must have non-zero length.");
     }
     if (options.content === void 0) {
-      throw new Error(
-        "Option 'content' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'content' is required for Comprehensive3DSR.");
     }
     if (options.seriesInstanceUID === void 0) {
-      throw new Error(
-        "Option 'seriesInstanceUID' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'seriesInstanceUID' is required for Comprehensive3DSR.");
     }
     if (options.seriesNumber === void 0) {
-      throw new Error(
-        "Option 'seriesNumber' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'seriesNumber' is required for Comprehensive3DSR.");
     }
     if (options.seriesDescription === void 0) {
-      throw new Error(
-        "Option 'seriesDescription' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'seriesDescription' is required for Comprehensive3DSR.");
     }
     if (options.sopInstanceUID === void 0) {
-      throw new Error(
-        "Option 'sopInstanceUID' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'sopInstanceUID' is required for Comprehensive3DSR.");
     }
     if (options.instanceNumber === void 0) {
-      throw new Error(
-        "Option 'instanceNumber' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'instanceNumber' is required for Comprehensive3DSR.");
     }
     if (options.manufacturer === void 0) {
-      throw new Error(
-        "Option 'manufacturer' is required for Comprehensive3DSR."
-      );
+      throw new Error("Option 'manufacturer' is required for Comprehensive3DSR.");
     }
     this.SOPClassUID = "1.2.840.10008.5.1.4.1.1.88.34";
     this.SOPInstanceUID = options.sopInstanceUID;
@@ -71047,14 +69636,10 @@ var Comprehensive3DSR = class {
     }
     if (options.isVerified) {
       if (options.verifyingObserverName === void 0) {
-        throw new Error(
-          "Verifying Observer Name must be specified if SR document has been verified."
-        );
+        throw new Error("Verifying Observer Name must be specified if SR document has been verified.");
       }
       if (options.verifyingOrganization === void 0) {
-        throw new Error(
-          "Verifying Organization must be specified if SR document has been verified."
-        );
+        throw new Error("Verifying Organization must be specified if SR document has been verified.");
       }
       this.VerificationFlag = "VERIFIED";
       const ovserver_item = {};
@@ -71078,9 +69663,7 @@ var Comprehensive3DSR = class {
     const evidenceCollection = {};
     options.evidence.forEach((evidence) => {
       if (evidence.StudyInstanceUID !== options.evidence[0].StudyInstanceUID) {
-        throw new Error(
-          "Referenced data sets must all belong to the same study."
-        );
+        throw new Error("Referenced data sets must all belong to the same study.");
       }
       if (!(evidence.SeriesInstanceUID in evidenceCollection)) {
         evidenceCollection[evidence.SeriesInstanceUID] = [];
@@ -71101,13 +69684,9 @@ var Comprehensive3DSR = class {
     });
     if (options.requestedProcedures !== void 0) {
       if (!(typeof options.requestedProcedures === "object" || options.requestedProcedures instanceof Array)) {
-        throw new Error(
-          "Option 'requestedProcedures' must have type Array."
-        );
+        throw new Error("Option 'requestedProcedures' must have type Array.");
       }
-      this.ReferencedRequestSequence = new ContentSequence(
-        ...options.requestedProcedures
-      );
+      this.ReferencedRequestSequence = new ContentSequence(...options.requestedProcedures);
       this.CurrentRequestedProcedureEvidenceSequence = [
         evidenceStudyItem
       ];
@@ -71118,9 +69697,7 @@ var Comprehensive3DSR = class {
       const preCollection = {};
       options.previousVersions.forEach((version) => {
         if (version.StudyInstanceUID != options.evidence[0].StudyInstanceUID) {
-          throw new Error(
-            "Previous version data sets must belong to the same study."
-          );
+          throw new Error("Previous version data sets must belong to the same study.");
         }
         const instanceItem = {};
         instanceItem.ReferencedSOPClassUID = version.SOPClassUID;
@@ -71140,13 +69717,9 @@ var Comprehensive3DSR = class {
     }
     if (options.performedProcedureCodes !== void 0) {
       if (!(typeof options.performedProcedureCodes === "object" || options.performedProcedureCodes instanceof Array)) {
-        throw new Error(
-          "Option 'performedProcedureCodes' must have type Array."
-        );
+        throw new Error("Option 'performedProcedureCodes' must have type Array.");
       }
-      this.PerformedProcedureCodeSequence = new ContentSequence(
-        ...options.performedProcedureCodes
-      );
+      this.PerformedProcedureCodeSequence = new ContentSequence(...options.performedProcedureCodes);
     } else {
       this.PerformedProcedureCodeSequence = [];
     }
@@ -71177,15 +69750,11 @@ var sr_default = sr;
 
 // src/anonymizer.js
 var tagNamesToEmpty = [
-  // please override these in specificReplaceDefaults to have useful values
   "PatientID",
   "PatientName",
-  // 0/3: those that appear missing in CTP
   "SeriesDate",
   "AccessionNumber",
-  // (valuable, but sometimes manually filled)
   "SeriesDescription",
-  // cat 1/3: CTP: set to empty explicitely using @empty
   "StudyTime",
   "ContentTime",
   "ReferringPhysicianName",
@@ -71199,7 +69768,6 @@ var tagNamesToEmpty = [
   "ClinicalTrialTimePointDescription",
   "ContrastBolusAgent",
   "StudyID",
-  // cat 2/3: CTP: set to increment dates
   "InstanceCreationDate",
   "StudyDate",
   "ContentDate",
@@ -71227,7 +69795,6 @@ var tagNamesToEmpty = [
   "DateTime",
   "Date",
   "RefDatetime",
-  // cat 3/3: CTP: set to remove using @remove
   "AcquisitionDate",
   "OverlayDate",
   "CurveDate",
@@ -71301,8 +69868,6 @@ var tagNamesToEmpty = [
   "GeneratorID",
   "CassetteID",
   "GantryID",
-  // we keep - should be SoftwareVersions anyway
-  // "SoftwareVersion",
   "ProtocolName",
   "AcquisitionDeviceProcessingDescription",
   "AcquisitionComments",
@@ -71429,9 +69994,7 @@ function cleanTags(dict, tagNamesToReplace = void 0, customTagNamesToEmpty = voi
         } else {
           newValue = [];
         }
-        dict[tagString] = ValueRepresentation.addTagAccessors(
-          dict[tagString]
-        );
+        dict[tagString] = ValueRepresentation.addTagAccessors(dict[tagString]);
         dict[tagString].Value = newValue;
       }
     }
@@ -71455,12 +70018,12 @@ var data = {
   datasetToBlob
 };
 var derivations = {
-  DerivedDataset,
-  DerivedPixels,
-  DerivedImage,
-  Segmentation,
-  StructuredReport,
-  ParametricMap
+  DerivedDataset: DerivedDataset_default,
+  DerivedPixels: DerivedPixels_default,
+  DerivedImage: DerivedImage_default,
+  Segmentation: Segmentation_default,
+  StructuredReport: StructuredReport_default,
+  ParametricMap: ParametricMap_default
 };
 var normalizers = {
   Normalizer,
@@ -71504,16 +70067,3 @@ export {
   sr_default as sr,
   utilities_default as utilities
 };
-/*! Bundled license information:
-
-is-buffer/index.js:
-  (*!
-   * Determine if an object is a Buffer
-   *
-   * @author   Feross Aboukhadijeh <https://feross.org>
-   * @license  MIT
-   *)
-
-pako/dist/pako.esm.mjs:
-  (*! pako 2.0.4 https://github.com/nodeca/pako @license (MIT AND Zlib) *)
-*/
