@@ -20,6 +20,8 @@ esbuild
         entryPoints: ["src/index.js"],
         bundle: true,
         outfile: "build/dcmjs.es.js",
-        format: "esm"
+        format: "esm",
+        sourcemap: false,
+        minify: false
     })
     .catch(() => process.exit(1));

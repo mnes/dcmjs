@@ -1181,7 +1181,7 @@ function unpack(bitPixelArray) {
 }
 
 // node_modules/pako/dist/pako.esm.mjs
-/*! pako 2.0.4 https://github.com/nodeca/pako @license (MIT AND Zlib) */
+/*! pako 2.1.0 https://github.com/nodeca/pako @license (MIT AND Zlib) */
 var Z_FIXED$1 = 4;
 var Z_BINARY = 0;
 var Z_TEXT = 1;
@@ -1358,7 +1358,8 @@ var gen_codes = (tree, max_code, bl_count) => {
   let bits;
   let n;
   for (bits = 1; bits <= MAX_BITS$1; bits++) {
-    next_code[bits] = code = code + bl_count[bits - 1] << 1;
+    code = code + bl_count[bits - 1] << 1;
+    next_code[bits] = code;
   }
   for (n = 0; n <= max_code; n++) {
     let len2 = tree[n * 2 + 1];
@@ -1443,7 +1444,7 @@ var init_block = (s) => {
   }
   s.dyn_ltree[END_BLOCK * 2] = 1;
   s.opt_len = s.static_len = 0;
-  s.last_lit = s.matches = 0;
+  s.sym_next = s.matches = 0;
 };
 var bi_windup = (s) => {
   if (s.bi_valid > 8) {
@@ -1453,15 +1454,6 @@ var bi_windup = (s) => {
   }
   s.bi_buf = 0;
   s.bi_valid = 0;
-};
-var copy_block = (s, buf, len2, header) => {
-  bi_windup(s);
-  if (header) {
-    put_short(s, len2);
-    put_short(s, ~len2);
-  }
-  s.pending_buf.set(s.window.subarray(buf, buf + len2), s.pending);
-  s.pending += len2;
 };
 var smaller = (tree, n, m, depth) => {
   const _n2 = n * 2;
@@ -1487,14 +1479,14 @@ var pqdownheap = (s, tree, k) => {
 var compress_block = (s, ltree, dtree) => {
   let dist2;
   let lc;
-  let lx = 0;
+  let sx = 0;
   let code;
   let extra;
-  if (s.last_lit !== 0) {
+  if (s.sym_next !== 0) {
     do {
-      dist2 = s.pending_buf[s.d_buf + lx * 2] << 8 | s.pending_buf[s.d_buf + lx * 2 + 1];
-      lc = s.pending_buf[s.l_buf + lx];
-      lx++;
+      dist2 = s.pending_buf[s.sym_buf + sx++] & 255;
+      dist2 += (s.pending_buf[s.sym_buf + sx++] & 255) << 8;
+      lc = s.pending_buf[s.sym_buf + sx++];
       if (dist2 === 0) {
         send_code(s, lc, ltree);
       } else {
@@ -1514,7 +1506,7 @@ var compress_block = (s, ltree, dtree) => {
           send_bits(s, dist2, extra);
         }
       }
-    } while (lx < s.last_lit);
+    } while (sx < s.sym_next);
   }
   send_code(s, END_BLOCK, ltree);
 };
@@ -1685,10 +1677,10 @@ var send_all_trees = (s, lcodes, dcodes, blcodes) => {
   send_tree(s, s.dyn_dtree, dcodes - 1);
 };
 var detect_data_type = (s) => {
-  let black_mask = 4093624447;
+  let block_mask = 4093624447;
   let n;
-  for (n = 0; n <= 31; n++, black_mask >>>= 1) {
-    if (black_mask & 1 && s.dyn_ltree[n * 2] !== 0) {
+  for (n = 0; n <= 31; n++, block_mask >>>= 1) {
+    if (block_mask & 1 && s.dyn_ltree[n * 2] !== 0) {
       return Z_BINARY;
     }
   }
@@ -1717,7 +1709,13 @@ var _tr_init$1 = (s) => {
 };
 var _tr_stored_block$1 = (s, buf, stored_len, last) => {
   send_bits(s, (STORED_BLOCK << 1) + (last ? 1 : 0), 3);
-  copy_block(s, buf, stored_len, true);
+  bi_windup(s);
+  put_short(s, stored_len);
+  put_short(s, ~stored_len);
+  if (stored_len) {
+    s.pending_buf.set(s.window.subarray(buf, buf + stored_len), s.pending);
+  }
+  s.pending += stored_len;
 };
 var _tr_align$1 = (s) => {
   send_bits(s, STATIC_TREES << 1, 3);
@@ -1758,10 +1756,9 @@ var _tr_flush_block$1 = (s, buf, stored_len, last) => {
   }
 };
 var _tr_tally$1 = (s, dist2, lc) => {
-  s.pending_buf[s.d_buf + s.last_lit * 2] = dist2 >>> 8 & 255;
-  s.pending_buf[s.d_buf + s.last_lit * 2 + 1] = dist2 & 255;
-  s.pending_buf[s.l_buf + s.last_lit] = lc & 255;
-  s.last_lit++;
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist2;
+  s.pending_buf[s.sym_buf + s.sym_next++] = dist2 >> 8;
+  s.pending_buf[s.sym_buf + s.sym_next++] = lc;
   if (dist2 === 0) {
     s.dyn_ltree[lc * 2]++;
   } else {
@@ -1770,7 +1767,7 @@ var _tr_tally$1 = (s, dist2, lc) => {
     s.dyn_ltree[(_length_code[lc] + LITERALS$1 + 1) * 2]++;
     s.dyn_dtree[d_code(dist2) * 2]++;
   }
-  return s.last_lit === s.lit_bufsize - 1;
+  return s.sym_next === s.sym_end;
 };
 var _tr_init_1 = _tr_init$1;
 var _tr_stored_block_1 = _tr_stored_block$1;
@@ -1898,6 +1895,7 @@ var MAX_MATCH = 258;
 var MIN_LOOKAHEAD = MAX_MATCH + MIN_MATCH + 1;
 var PRESET_DICT = 32;
 var INIT_STATE = 42;
+var GZIP_STATE = 57;
 var EXTRA_STATE = 69;
 var NAME_STATE = 73;
 var COMMENT_STATE = 91;
@@ -1914,13 +1912,30 @@ var err = (strm, errorCode) => {
   return errorCode;
 };
 var rank = (f) => {
-  return (f << 1) - (f > 4 ? 9 : 0);
+  return f * 2 - (f > 4 ? 9 : 0);
 };
 var zero = (buf) => {
   let len2 = buf.length;
   while (--len2 >= 0) {
     buf[len2] = 0;
   }
+};
+var slide_hash = (s) => {
+  let n, m;
+  let p;
+  let wsize = s.w_size;
+  n = s.hash_size;
+  p = n;
+  do {
+    m = s.head[--p];
+    s.head[p] = m >= wsize ? m - wsize : 0;
+  } while (--n);
+  n = wsize;
+  p = n;
+  do {
+    m = s.prev[--p];
+    s.prev[p] = m >= wsize ? m - wsize : 0;
+  } while (--n);
 };
 var HASH_ZLIB = (s, prev, data2) => (prev << s.hash_shift ^ data2) & s.hash_mask;
 var HASH = HASH_ZLIB;
@@ -2022,26 +2037,18 @@ var longest_match = (s, cur_match) => {
 };
 var fill_window = (s) => {
   const _w_size = s.w_size;
-  let p, n, m, more, str2;
+  let n, more, str2;
   do {
     more = s.window_size - s.lookahead - s.strstart;
     if (s.strstart >= _w_size + (_w_size - MIN_LOOKAHEAD)) {
-      s.window.set(s.window.subarray(_w_size, _w_size + _w_size), 0);
+      s.window.set(s.window.subarray(_w_size, _w_size + _w_size - more), 0);
       s.match_start -= _w_size;
       s.strstart -= _w_size;
       s.block_start -= _w_size;
-      n = s.hash_size;
-      p = n;
-      do {
-        m = s.head[--p];
-        s.head[p] = m >= _w_size ? m - _w_size : 0;
-      } while (--n);
-      n = _w_size;
-      p = n;
-      do {
-        m = s.prev[--p];
-        s.prev[p] = m >= _w_size ? m - _w_size : 0;
-      } while (--n);
+      if (s.insert > s.strstart) {
+        s.insert = s.strstart;
+      }
+      slide_hash(s);
       more += _w_size;
     }
     if (s.strm.avail_in === 0) {
@@ -2067,53 +2074,120 @@ var fill_window = (s) => {
   } while (s.lookahead < MIN_LOOKAHEAD && s.strm.avail_in !== 0);
 };
 var deflate_stored = (s, flush) => {
-  let max_block_size = 65535;
-  if (max_block_size > s.pending_buf_size - 5) {
-    max_block_size = s.pending_buf_size - 5;
+  let min_block = s.pending_buf_size - 5 > s.w_size ? s.w_size : s.pending_buf_size - 5;
+  let len2, left, have, last = 0;
+  let used = s.strm.avail_in;
+  do {
+    len2 = 65535;
+    have = s.bi_valid + 42 >> 3;
+    if (s.strm.avail_out < have) {
+      break;
+    }
+    have = s.strm.avail_out - have;
+    left = s.strstart - s.block_start;
+    if (len2 > left + s.strm.avail_in) {
+      len2 = left + s.strm.avail_in;
+    }
+    if (len2 > have) {
+      len2 = have;
+    }
+    if (len2 < min_block && (len2 === 0 && flush !== Z_FINISH$3 || flush === Z_NO_FLUSH$2 || len2 !== left + s.strm.avail_in)) {
+      break;
+    }
+    last = flush === Z_FINISH$3 && len2 === left + s.strm.avail_in ? 1 : 0;
+    _tr_stored_block(s, 0, 0, last);
+    s.pending_buf[s.pending - 4] = len2;
+    s.pending_buf[s.pending - 3] = len2 >> 8;
+    s.pending_buf[s.pending - 2] = ~len2;
+    s.pending_buf[s.pending - 1] = ~len2 >> 8;
+    flush_pending(s.strm);
+    if (left) {
+      if (left > len2) {
+        left = len2;
+      }
+      s.strm.output.set(s.window.subarray(s.block_start, s.block_start + left), s.strm.next_out);
+      s.strm.next_out += left;
+      s.strm.avail_out -= left;
+      s.strm.total_out += left;
+      s.block_start += left;
+      len2 -= left;
+    }
+    if (len2) {
+      read_buf(s.strm, s.strm.output, s.strm.next_out, len2);
+      s.strm.next_out += len2;
+      s.strm.avail_out -= len2;
+      s.strm.total_out += len2;
+    }
+  } while (last === 0);
+  used -= s.strm.avail_in;
+  if (used) {
+    if (used >= s.w_size) {
+      s.matches = 2;
+      s.window.set(s.strm.input.subarray(s.strm.next_in - s.w_size, s.strm.next_in), 0);
+      s.strstart = s.w_size;
+      s.insert = s.strstart;
+    } else {
+      if (s.window_size - s.strstart <= used) {
+        s.strstart -= s.w_size;
+        s.window.set(s.window.subarray(s.w_size, s.w_size + s.strstart), 0);
+        if (s.matches < 2) {
+          s.matches++;
+        }
+        if (s.insert > s.strstart) {
+          s.insert = s.strstart;
+        }
+      }
+      s.window.set(s.strm.input.subarray(s.strm.next_in - used, s.strm.next_in), s.strstart);
+      s.strstart += used;
+      s.insert += used > s.w_size - s.insert ? s.w_size - s.insert : used;
+    }
+    s.block_start = s.strstart;
   }
-  for (; ; ) {
-    if (s.lookahead <= 1) {
-      fill_window(s);
-      if (s.lookahead === 0 && flush === Z_NO_FLUSH$2) {
-        return BS_NEED_MORE;
-      }
-      if (s.lookahead === 0) {
-        break;
-      }
-    }
-    s.strstart += s.lookahead;
-    s.lookahead = 0;
-    const max_start = s.block_start + max_block_size;
-    if (s.strstart === 0 || s.strstart >= max_start) {
-      s.lookahead = s.strstart - max_start;
-      s.strstart = max_start;
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-    }
-    if (s.strstart - s.block_start >= s.w_size - MIN_LOOKAHEAD) {
-      flush_block_only(s, false);
-      if (s.strm.avail_out === 0) {
-        return BS_NEED_MORE;
-      }
-    }
+  if (s.high_water < s.strstart) {
+    s.high_water = s.strstart;
   }
-  s.insert = 0;
-  if (flush === Z_FINISH$3) {
-    flush_block_only(s, true);
-    if (s.strm.avail_out === 0) {
-      return BS_FINISH_STARTED;
-    }
+  if (last) {
     return BS_FINISH_DONE;
   }
-  if (s.strstart > s.block_start) {
-    flush_block_only(s, false);
-    if (s.strm.avail_out === 0) {
-      return BS_NEED_MORE;
+  if (flush !== Z_NO_FLUSH$2 && flush !== Z_FINISH$3 && s.strm.avail_in === 0 && s.strstart === s.block_start) {
+    return BS_BLOCK_DONE;
+  }
+  have = s.window_size - s.strstart;
+  if (s.strm.avail_in > have && s.block_start >= s.w_size) {
+    s.block_start -= s.w_size;
+    s.strstart -= s.w_size;
+    s.window.set(s.window.subarray(s.w_size, s.w_size + s.strstart), 0);
+    if (s.matches < 2) {
+      s.matches++;
+    }
+    have += s.w_size;
+    if (s.insert > s.strstart) {
+      s.insert = s.strstart;
     }
   }
-  return BS_NEED_MORE;
+  if (have > s.strm.avail_in) {
+    have = s.strm.avail_in;
+  }
+  if (have) {
+    read_buf(s.strm, s.window, s.strstart, have);
+    s.strstart += have;
+    s.insert += have > s.w_size - s.insert ? s.w_size - s.insert : have;
+  }
+  if (s.high_water < s.strstart) {
+    s.high_water = s.strstart;
+  }
+  have = s.bi_valid + 42 >> 3;
+  have = s.pending_buf_size - have > 65535 ? 65535 : s.pending_buf_size - have;
+  min_block = have > s.w_size ? s.w_size : have;
+  left = s.strstart - s.block_start;
+  if (left >= min_block || (left || flush === Z_FINISH$3) && flush !== Z_NO_FLUSH$2 && s.strm.avail_in === 0 && left <= have) {
+    len2 = left > have ? have : left;
+    last = flush === Z_FINISH$3 && s.strm.avail_in === 0 && len2 === left ? 1 : 0;
+    _tr_stored_block(s, s.block_start, len2, last);
+    s.block_start += len2;
+    flush_pending(s.strm);
+  }
+  return last ? BS_FINISH_STARTED : BS_NEED_MORE;
 };
 var deflate_fast = (s, flush) => {
   let hash_head;
@@ -2175,7 +2249,7 @@ var deflate_fast = (s, flush) => {
     }
     return BS_FINISH_DONE;
   }
-  if (s.last_lit) {
+  if (s.sym_next) {
     flush_block_only(s, false);
     if (s.strm.avail_out === 0) {
       return BS_NEED_MORE;
@@ -2261,7 +2335,7 @@ var deflate_slow = (s, flush) => {
     }
     return BS_FINISH_DONE;
   }
-  if (s.last_lit) {
+  if (s.sym_next) {
     flush_block_only(s, false);
     if (s.strm.avail_out === 0) {
       return BS_NEED_MORE;
@@ -2323,7 +2397,7 @@ var deflate_rle = (s, flush) => {
     }
     return BS_FINISH_DONE;
   }
-  if (s.last_lit) {
+  if (s.sym_next) {
     flush_block_only(s, false);
     if (s.strm.avail_out === 0) {
       return BS_NEED_MORE;
@@ -2362,7 +2436,7 @@ var deflate_huff = (s, flush) => {
     }
     return BS_FINISH_DONE;
   }
-  if (s.last_lit) {
+  if (s.sym_next) {
     flush_block_only(s, false);
     if (s.strm.avail_out === 0) {
       return BS_NEED_MORE;
@@ -2458,10 +2532,10 @@ function DeflateState() {
   this.heap_max = 0;
   this.depth = new Uint16Array(2 * L_CODES + 1);
   zero(this.depth);
-  this.l_buf = 0;
+  this.sym_buf = 0;
   this.lit_bufsize = 0;
-  this.last_lit = 0;
-  this.d_buf = 0;
+  this.sym_next = 0;
+  this.sym_end = 0;
   this.opt_len = 0;
   this.static_len = 0;
   this.matches = 0;
@@ -2469,8 +2543,18 @@ function DeflateState() {
   this.bi_buf = 0;
   this.bi_valid = 0;
 }
+var deflateStateCheck = (strm) => {
+  if (!strm) {
+    return 1;
+  }
+  const s = strm.state;
+  if (!s || s.strm !== strm || s.status !== INIT_STATE && s.status !== GZIP_STATE && s.status !== EXTRA_STATE && s.status !== NAME_STATE && s.status !== COMMENT_STATE && s.status !== HCRC_STATE && s.status !== BUSY_STATE && s.status !== FINISH_STATE) {
+    return 1;
+  }
+  return 0;
+};
 var deflateResetKeep = (strm) => {
-  if (!strm || !strm.state) {
+  if (deflateStateCheck(strm)) {
     return err(strm, Z_STREAM_ERROR$2);
   }
   strm.total_in = strm.total_out = 0;
@@ -2481,9 +2565,9 @@ var deflateResetKeep = (strm) => {
   if (s.wrap < 0) {
     s.wrap = -s.wrap;
   }
-  s.status = s.wrap ? INIT_STATE : BUSY_STATE;
+  s.status = s.wrap === 2 ? GZIP_STATE : s.wrap ? INIT_STATE : BUSY_STATE;
   strm.adler = s.wrap === 2 ? 0 : 1;
-  s.last_flush = Z_NO_FLUSH$2;
+  s.last_flush = -2;
   _tr_init(s);
   return Z_OK$3;
 };
@@ -2495,10 +2579,7 @@ var deflateReset = (strm) => {
   return ret;
 };
 var deflateSetHeader = (strm, head) => {
-  if (!strm || !strm.state) {
-    return Z_STREAM_ERROR$2;
-  }
-  if (strm.state.wrap !== 2) {
+  if (deflateStateCheck(strm) || strm.state.wrap !== 2) {
     return Z_STREAM_ERROR$2;
   }
   strm.state.gzhead = head;
@@ -2519,7 +2600,7 @@ var deflateInit2 = (strm, level, method, windowBits, memLevel, strategy) => {
     wrap = 2;
     windowBits -= 16;
   }
-  if (memLevel < 1 || memLevel > MAX_MEM_LEVEL || method !== Z_DEFLATED$2 || windowBits < 8 || windowBits > 15 || level < 0 || level > 9 || strategy < 0 || strategy > Z_FIXED) {
+  if (memLevel < 1 || memLevel > MAX_MEM_LEVEL || method !== Z_DEFLATED$2 || windowBits < 8 || windowBits > 15 || level < 0 || level > 9 || strategy < 0 || strategy > Z_FIXED || windowBits === 8 && wrap !== 1) {
     return err(strm, Z_STREAM_ERROR$2);
   }
   if (windowBits === 8) {
@@ -2528,6 +2609,7 @@ var deflateInit2 = (strm, level, method, windowBits, memLevel, strategy) => {
   const s = new DeflateState();
   strm.state = s;
   s.strm = strm;
+  s.status = INIT_STATE;
   s.wrap = wrap;
   s.gzhead = null;
   s.w_bits = windowBits;
@@ -2543,8 +2625,8 @@ var deflateInit2 = (strm, level, method, windowBits, memLevel, strategy) => {
   s.lit_bufsize = 1 << memLevel + 6;
   s.pending_buf_size = s.lit_bufsize * 4;
   s.pending_buf = new Uint8Array(s.pending_buf_size);
-  s.d_buf = 1 * s.lit_bufsize;
-  s.l_buf = (1 + 2) * s.lit_bufsize;
+  s.sym_buf = s.lit_bufsize;
+  s.sym_end = (s.lit_bufsize - 1) * 3;
   s.level = level;
   s.strategy = strategy;
   s.method = method;
@@ -2554,184 +2636,15 @@ var deflateInit = (strm, level) => {
   return deflateInit2(strm, level, Z_DEFLATED$2, MAX_WBITS$1, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY$1);
 };
 var deflate$2 = (strm, flush) => {
-  let beg, val;
-  if (!strm || !strm.state || flush > Z_BLOCK$1 || flush < 0) {
+  if (deflateStateCheck(strm) || flush > Z_BLOCK$1 || flush < 0) {
     return strm ? err(strm, Z_STREAM_ERROR$2) : Z_STREAM_ERROR$2;
   }
   const s = strm.state;
-  if (!strm.output || !strm.input && strm.avail_in !== 0 || s.status === FINISH_STATE && flush !== Z_FINISH$3) {
+  if (!strm.output || strm.avail_in !== 0 && !strm.input || s.status === FINISH_STATE && flush !== Z_FINISH$3) {
     return err(strm, strm.avail_out === 0 ? Z_BUF_ERROR$1 : Z_STREAM_ERROR$2);
   }
-  s.strm = strm;
   const old_flush = s.last_flush;
   s.last_flush = flush;
-  if (s.status === INIT_STATE) {
-    if (s.wrap === 2) {
-      strm.adler = 0;
-      put_byte(s, 31);
-      put_byte(s, 139);
-      put_byte(s, 8);
-      if (!s.gzhead) {
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, 0);
-        put_byte(s, s.level === 9 ? 2 : s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ? 4 : 0);
-        put_byte(s, OS_CODE);
-        s.status = BUSY_STATE;
-      } else {
-        put_byte(s, (s.gzhead.text ? 1 : 0) + (s.gzhead.hcrc ? 2 : 0) + (!s.gzhead.extra ? 0 : 4) + (!s.gzhead.name ? 0 : 8) + (!s.gzhead.comment ? 0 : 16));
-        put_byte(s, s.gzhead.time & 255);
-        put_byte(s, s.gzhead.time >> 8 & 255);
-        put_byte(s, s.gzhead.time >> 16 & 255);
-        put_byte(s, s.gzhead.time >> 24 & 255);
-        put_byte(s, s.level === 9 ? 2 : s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ? 4 : 0);
-        put_byte(s, s.gzhead.os & 255);
-        if (s.gzhead.extra && s.gzhead.extra.length) {
-          put_byte(s, s.gzhead.extra.length & 255);
-          put_byte(s, s.gzhead.extra.length >> 8 & 255);
-        }
-        if (s.gzhead.hcrc) {
-          strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending, 0);
-        }
-        s.gzindex = 0;
-        s.status = EXTRA_STATE;
-      }
-    } else {
-      let header = Z_DEFLATED$2 + (s.w_bits - 8 << 4) << 8;
-      let level_flags = -1;
-      if (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2) {
-        level_flags = 0;
-      } else if (s.level < 6) {
-        level_flags = 1;
-      } else if (s.level === 6) {
-        level_flags = 2;
-      } else {
-        level_flags = 3;
-      }
-      header |= level_flags << 6;
-      if (s.strstart !== 0) {
-        header |= PRESET_DICT;
-      }
-      header += 31 - header % 31;
-      s.status = BUSY_STATE;
-      putShortMSB(s, header);
-      if (s.strstart !== 0) {
-        putShortMSB(s, strm.adler >>> 16);
-        putShortMSB(s, strm.adler & 65535);
-      }
-      strm.adler = 1;
-    }
-  }
-  if (s.status === EXTRA_STATE) {
-    if (s.gzhead.extra) {
-      beg = s.pending;
-      while (s.gzindex < (s.gzhead.extra.length & 65535)) {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            break;
-          }
-        }
-        put_byte(s, s.gzhead.extra[s.gzindex] & 255);
-        s.gzindex++;
-      }
-      if (s.gzhead.hcrc && s.pending > beg) {
-        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (s.gzindex === s.gzhead.extra.length) {
-        s.gzindex = 0;
-        s.status = NAME_STATE;
-      }
-    } else {
-      s.status = NAME_STATE;
-    }
-  }
-  if (s.status === NAME_STATE) {
-    if (s.gzhead.name) {
-      beg = s.pending;
-      do {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            val = 1;
-            break;
-          }
-        }
-        if (s.gzindex < s.gzhead.name.length) {
-          val = s.gzhead.name.charCodeAt(s.gzindex++) & 255;
-        } else {
-          val = 0;
-        }
-        put_byte(s, val);
-      } while (val !== 0);
-      if (s.gzhead.hcrc && s.pending > beg) {
-        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (val === 0) {
-        s.gzindex = 0;
-        s.status = COMMENT_STATE;
-      }
-    } else {
-      s.status = COMMENT_STATE;
-    }
-  }
-  if (s.status === COMMENT_STATE) {
-    if (s.gzhead.comment) {
-      beg = s.pending;
-      do {
-        if (s.pending === s.pending_buf_size) {
-          if (s.gzhead.hcrc && s.pending > beg) {
-            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-          }
-          flush_pending(strm);
-          beg = s.pending;
-          if (s.pending === s.pending_buf_size) {
-            val = 1;
-            break;
-          }
-        }
-        if (s.gzindex < s.gzhead.comment.length) {
-          val = s.gzhead.comment.charCodeAt(s.gzindex++) & 255;
-        } else {
-          val = 0;
-        }
-        put_byte(s, val);
-      } while (val !== 0);
-      if (s.gzhead.hcrc && s.pending > beg) {
-        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
-      }
-      if (val === 0) {
-        s.status = HCRC_STATE;
-      }
-    } else {
-      s.status = HCRC_STATE;
-    }
-  }
-  if (s.status === HCRC_STATE) {
-    if (s.gzhead.hcrc) {
-      if (s.pending + 2 > s.pending_buf_size) {
-        flush_pending(strm);
-      }
-      if (s.pending + 2 <= s.pending_buf_size) {
-        put_byte(s, strm.adler & 255);
-        put_byte(s, strm.adler >> 8 & 255);
-        strm.adler = 0;
-        s.status = BUSY_STATE;
-      }
-    } else {
-      s.status = BUSY_STATE;
-    }
-  }
   if (s.pending !== 0) {
     flush_pending(strm);
     if (strm.avail_out === 0) {
@@ -2744,8 +2657,188 @@ var deflate$2 = (strm, flush) => {
   if (s.status === FINISH_STATE && strm.avail_in !== 0) {
     return err(strm, Z_BUF_ERROR$1);
   }
+  if (s.status === INIT_STATE && s.wrap === 0) {
+    s.status = BUSY_STATE;
+  }
+  if (s.status === INIT_STATE) {
+    let header = Z_DEFLATED$2 + (s.w_bits - 8 << 4) << 8;
+    let level_flags = -1;
+    if (s.strategy >= Z_HUFFMAN_ONLY || s.level < 2) {
+      level_flags = 0;
+    } else if (s.level < 6) {
+      level_flags = 1;
+    } else if (s.level === 6) {
+      level_flags = 2;
+    } else {
+      level_flags = 3;
+    }
+    header |= level_flags << 6;
+    if (s.strstart !== 0) {
+      header |= PRESET_DICT;
+    }
+    header += 31 - header % 31;
+    putShortMSB(s, header);
+    if (s.strstart !== 0) {
+      putShortMSB(s, strm.adler >>> 16);
+      putShortMSB(s, strm.adler & 65535);
+    }
+    strm.adler = 1;
+    s.status = BUSY_STATE;
+    flush_pending(strm);
+    if (s.pending !== 0) {
+      s.last_flush = -1;
+      return Z_OK$3;
+    }
+  }
+  if (s.status === GZIP_STATE) {
+    strm.adler = 0;
+    put_byte(s, 31);
+    put_byte(s, 139);
+    put_byte(s, 8);
+    if (!s.gzhead) {
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, 0);
+      put_byte(s, s.level === 9 ? 2 : s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ? 4 : 0);
+      put_byte(s, OS_CODE);
+      s.status = BUSY_STATE;
+      flush_pending(strm);
+      if (s.pending !== 0) {
+        s.last_flush = -1;
+        return Z_OK$3;
+      }
+    } else {
+      put_byte(s, (s.gzhead.text ? 1 : 0) + (s.gzhead.hcrc ? 2 : 0) + (!s.gzhead.extra ? 0 : 4) + (!s.gzhead.name ? 0 : 8) + (!s.gzhead.comment ? 0 : 16));
+      put_byte(s, s.gzhead.time & 255);
+      put_byte(s, s.gzhead.time >> 8 & 255);
+      put_byte(s, s.gzhead.time >> 16 & 255);
+      put_byte(s, s.gzhead.time >> 24 & 255);
+      put_byte(s, s.level === 9 ? 2 : s.strategy >= Z_HUFFMAN_ONLY || s.level < 2 ? 4 : 0);
+      put_byte(s, s.gzhead.os & 255);
+      if (s.gzhead.extra && s.gzhead.extra.length) {
+        put_byte(s, s.gzhead.extra.length & 255);
+        put_byte(s, s.gzhead.extra.length >> 8 & 255);
+      }
+      if (s.gzhead.hcrc) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending, 0);
+      }
+      s.gzindex = 0;
+      s.status = EXTRA_STATE;
+    }
+  }
+  if (s.status === EXTRA_STATE) {
+    if (s.gzhead.extra) {
+      let beg = s.pending;
+      let left = (s.gzhead.extra.length & 65535) - s.gzindex;
+      while (s.pending + left > s.pending_buf_size) {
+        let copy2 = s.pending_buf_size - s.pending;
+        s.pending_buf.set(s.gzhead.extra.subarray(s.gzindex, s.gzindex + copy2), s.pending);
+        s.pending = s.pending_buf_size;
+        if (s.gzhead.hcrc && s.pending > beg) {
+          strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+        }
+        s.gzindex += copy2;
+        flush_pending(strm);
+        if (s.pending !== 0) {
+          s.last_flush = -1;
+          return Z_OK$3;
+        }
+        beg = 0;
+        left -= copy2;
+      }
+      let gzhead_extra = new Uint8Array(s.gzhead.extra);
+      s.pending_buf.set(gzhead_extra.subarray(s.gzindex, s.gzindex + left), s.pending);
+      s.pending += left;
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+      s.gzindex = 0;
+    }
+    s.status = NAME_STATE;
+  }
+  if (s.status === NAME_STATE) {
+    if (s.gzhead.name) {
+      let beg = s.pending;
+      let val;
+      do {
+        if (s.pending === s.pending_buf_size) {
+          if (s.gzhead.hcrc && s.pending > beg) {
+            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+          }
+          flush_pending(strm);
+          if (s.pending !== 0) {
+            s.last_flush = -1;
+            return Z_OK$3;
+          }
+          beg = 0;
+        }
+        if (s.gzindex < s.gzhead.name.length) {
+          val = s.gzhead.name.charCodeAt(s.gzindex++) & 255;
+        } else {
+          val = 0;
+        }
+        put_byte(s, val);
+      } while (val !== 0);
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+      s.gzindex = 0;
+    }
+    s.status = COMMENT_STATE;
+  }
+  if (s.status === COMMENT_STATE) {
+    if (s.gzhead.comment) {
+      let beg = s.pending;
+      let val;
+      do {
+        if (s.pending === s.pending_buf_size) {
+          if (s.gzhead.hcrc && s.pending > beg) {
+            strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+          }
+          flush_pending(strm);
+          if (s.pending !== 0) {
+            s.last_flush = -1;
+            return Z_OK$3;
+          }
+          beg = 0;
+        }
+        if (s.gzindex < s.gzhead.comment.length) {
+          val = s.gzhead.comment.charCodeAt(s.gzindex++) & 255;
+        } else {
+          val = 0;
+        }
+        put_byte(s, val);
+      } while (val !== 0);
+      if (s.gzhead.hcrc && s.pending > beg) {
+        strm.adler = crc32_1(strm.adler, s.pending_buf, s.pending - beg, beg);
+      }
+    }
+    s.status = HCRC_STATE;
+  }
+  if (s.status === HCRC_STATE) {
+    if (s.gzhead.hcrc) {
+      if (s.pending + 2 > s.pending_buf_size) {
+        flush_pending(strm);
+        if (s.pending !== 0) {
+          s.last_flush = -1;
+          return Z_OK$3;
+        }
+      }
+      put_byte(s, strm.adler & 255);
+      put_byte(s, strm.adler >> 8 & 255);
+      strm.adler = 0;
+    }
+    s.status = BUSY_STATE;
+    flush_pending(strm);
+    if (s.pending !== 0) {
+      s.last_flush = -1;
+      return Z_OK$3;
+    }
+  }
   if (strm.avail_in !== 0 || s.lookahead !== 0 || flush !== Z_NO_FLUSH$2 && s.status !== FINISH_STATE) {
-    let bstate = s.strategy === Z_HUFFMAN_ONLY ? deflate_huff(s, flush) : s.strategy === Z_RLE ? deflate_rle(s, flush) : configuration_table[s.level].func(s, flush);
+    let bstate = s.level === 0 ? deflate_stored(s, flush) : s.strategy === Z_HUFFMAN_ONLY ? deflate_huff(s, flush) : s.strategy === Z_RLE ? deflate_rle(s, flush) : configuration_table[s.level].func(s, flush);
     if (bstate === BS_FINISH_STARTED || bstate === BS_FINISH_DONE) {
       s.status = FINISH_STATE;
     }
@@ -2802,19 +2895,16 @@ var deflate$2 = (strm, flush) => {
   return s.pending !== 0 ? Z_OK$3 : Z_STREAM_END$3;
 };
 var deflateEnd = (strm) => {
-  if (!strm || !strm.state) {
+  if (deflateStateCheck(strm)) {
     return Z_STREAM_ERROR$2;
   }
   const status = strm.state.status;
-  if (status !== INIT_STATE && status !== EXTRA_STATE && status !== NAME_STATE && status !== COMMENT_STATE && status !== HCRC_STATE && status !== BUSY_STATE && status !== FINISH_STATE) {
-    return err(strm, Z_STREAM_ERROR$2);
-  }
   strm.state = null;
   return status === BUSY_STATE ? err(strm, Z_DATA_ERROR$2) : Z_OK$3;
 };
 var deflateSetDictionary = (strm, dictionary2) => {
   let dictLength = dictionary2.length;
-  if (!strm || !strm.state) {
+  if (deflateStateCheck(strm)) {
     return Z_STREAM_ERROR$2;
   }
   const s = strm.state;
@@ -3222,8 +3312,8 @@ var deflate_1$1 = {
   gzip: gzip_1$1,
   constants: constants$1
 };
-var BAD$1 = 30;
-var TYPE$1 = 12;
+var BAD$1 = 16209;
+var TYPE$1 = 16191;
 var inffast = function inflate_fast(strm, start) {
   let _in;
   let last;
@@ -3600,12 +3690,10 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
   let mask;
   let next;
   let base = null;
-  let base_index = 0;
-  let end;
+  let match;
   const count = new Uint16Array(MAXBITS + 1);
   const offs = new Uint16Array(MAXBITS + 1);
   let extra = null;
-  let extra_index = 0;
   let here_bits, here_op, here_val;
   for (len2 = 0; len2 <= MAXBITS; len2++) {
     count[len2] = 0;
@@ -3658,17 +3746,15 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
   }
   if (type === CODES$1) {
     base = extra = work;
-    end = 19;
+    match = 20;
   } else if (type === LENS$1) {
     base = lbase;
-    base_index -= 257;
     extra = lext;
-    extra_index -= 257;
-    end = 256;
+    match = 257;
   } else {
     base = dbase;
     extra = dext;
-    end = -1;
+    match = 0;
   }
   huff = 0;
   sym = 0;
@@ -3684,12 +3770,12 @@ var inflate_table = (type, lens, lens_index, codes, table, table_index, work, op
   }
   for (; ; ) {
     here_bits = len2 - drop;
-    if (work[sym] < end) {
+    if (work[sym] + 1 < match) {
       here_op = 0;
       here_val = work[sym];
-    } else if (work[sym] > end) {
-      here_op = extra[extra_index + work[sym]];
-      here_val = base[base_index + work[sym]];
+    } else if (work[sym] >= match) {
+      here_op = extra[work[sym] - match];
+      here_val = base[work[sym] - match];
     } else {
       here_op = 32 + 64;
       here_val = 0;
@@ -3764,38 +3850,38 @@ var {
   Z_BUF_ERROR,
   Z_DEFLATED
 } = constants$2;
-var HEAD = 1;
-var FLAGS = 2;
-var TIME = 3;
-var OS = 4;
-var EXLEN = 5;
-var EXTRA = 6;
-var NAME = 7;
-var COMMENT = 8;
-var HCRC = 9;
-var DICTID = 10;
-var DICT = 11;
-var TYPE = 12;
-var TYPEDO = 13;
-var STORED = 14;
-var COPY_ = 15;
-var COPY = 16;
-var TABLE = 17;
-var LENLENS = 18;
-var CODELENS = 19;
-var LEN_ = 20;
-var LEN = 21;
-var LENEXT = 22;
-var DIST = 23;
-var DISTEXT = 24;
-var MATCH = 25;
-var LIT = 26;
-var CHECK = 27;
-var LENGTH = 28;
-var DONE = 29;
-var BAD = 30;
-var MEM = 31;
-var SYNC = 32;
+var HEAD = 16180;
+var FLAGS = 16181;
+var TIME = 16182;
+var OS = 16183;
+var EXLEN = 16184;
+var EXTRA = 16185;
+var NAME = 16186;
+var COMMENT = 16187;
+var HCRC = 16188;
+var DICTID = 16189;
+var DICT = 16190;
+var TYPE = 16191;
+var TYPEDO = 16192;
+var STORED = 16193;
+var COPY_ = 16194;
+var COPY = 16195;
+var TABLE = 16196;
+var LENLENS = 16197;
+var CODELENS = 16198;
+var LEN_ = 16199;
+var LEN = 16200;
+var LENEXT = 16201;
+var DIST = 16202;
+var DISTEXT = 16203;
+var MATCH = 16204;
+var LIT = 16205;
+var CHECK = 16206;
+var LENGTH = 16207;
+var DONE = 16208;
+var BAD = 16209;
+var MEM = 16210;
+var SYNC = 16211;
 var ENOUGH_LENS = 852;
 var ENOUGH_DISTS = 592;
 var MAX_WBITS = 15;
@@ -3804,6 +3890,7 @@ var zswap32 = (q) => {
   return (q >>> 24 & 255) + (q >>> 8 & 65280) + ((q & 65280) << 8) + ((q & 255) << 24);
 };
 function InflateState() {
+  this.strm = null;
   this.mode = 0;
   this.last = false;
   this.wrap = 0;
@@ -3840,8 +3927,18 @@ function InflateState() {
   this.back = 0;
   this.was = 0;
 }
+var inflateStateCheck = (strm) => {
+  if (!strm) {
+    return 1;
+  }
+  const state = strm.state;
+  if (!state || state.strm !== strm || state.mode < HEAD || state.mode > SYNC) {
+    return 1;
+  }
+  return 0;
+};
 var inflateResetKeep = (strm) => {
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   const state = strm.state;
@@ -3853,6 +3950,7 @@ var inflateResetKeep = (strm) => {
   state.mode = HEAD;
   state.last = 0;
   state.havedict = 0;
+  state.flags = -1;
   state.dmax = 32768;
   state.head = null;
   state.hold = 0;
@@ -3864,7 +3962,7 @@ var inflateResetKeep = (strm) => {
   return Z_OK$1;
 };
 var inflateReset = (strm) => {
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   const state = strm.state;
@@ -3875,7 +3973,7 @@ var inflateReset = (strm) => {
 };
 var inflateReset2 = (strm, windowBits) => {
   let wrap;
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   const state = strm.state;
@@ -3883,7 +3981,7 @@ var inflateReset2 = (strm, windowBits) => {
     wrap = 0;
     windowBits = -windowBits;
   } else {
-    wrap = (windowBits >> 4) + 1;
+    wrap = (windowBits >> 4) + 5;
     if (windowBits < 48) {
       windowBits &= 15;
     }
@@ -3904,7 +4002,9 @@ var inflateInit2 = (strm, windowBits) => {
   }
   const state = new InflateState();
   strm.state = state;
+  state.strm = strm;
   state.window = null;
+  state.mode = HEAD;
   const ret = inflateReset2(strm, windowBits);
   if (ret !== Z_OK$1) {
     strm.state = null;
@@ -4004,7 +4104,7 @@ var inflate$2 = (strm, flush) => {
   let opts;
   let n;
   const order = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
-  if (!strm || !strm.state || !strm.output || !strm.input && strm.avail_in !== 0) {
+  if (inflateStateCheck(strm) || !strm.output || !strm.input && strm.avail_in !== 0) {
     return Z_STREAM_ERROR$1;
   }
   state = strm.state;
@@ -4039,6 +4139,9 @@ var inflate$2 = (strm, flush) => {
             bits += 8;
           }
           if (state.wrap & 2 && hold === 35615) {
+            if (state.wbits === 0) {
+              state.wbits = 15;
+            }
             state.check = 0;
             hbuf[0] = hold & 255;
             hbuf[1] = hold >>> 8 & 255;
@@ -4048,7 +4151,6 @@ var inflate$2 = (strm, flush) => {
             state.mode = FLAGS;
             break;
           }
-          state.flags = 0;
           if (state.head) {
             state.head.done = false;
           }
@@ -4067,12 +4169,14 @@ var inflate$2 = (strm, flush) => {
           len2 = (hold & 15) + 8;
           if (state.wbits === 0) {
             state.wbits = len2;
-          } else if (len2 > state.wbits) {
+          }
+          if (len2 > 15 || len2 > state.wbits) {
             strm.msg = "invalid window size";
             state.mode = BAD;
             break;
           }
           state.dmax = 1 << state.wbits;
+          state.flags = 0;
           strm.adler = state.check = 1;
           state.mode = hold & 512 ? DICTID : TYPE;
           hold = 0;
@@ -4101,7 +4205,7 @@ var inflate$2 = (strm, flush) => {
           if (state.head) {
             state.head.text = hold >> 8 & 1;
           }
-          if (state.flags & 512) {
+          if (state.flags & 512 && state.wrap & 4) {
             hbuf[0] = hold & 255;
             hbuf[1] = hold >>> 8 & 255;
             state.check = crc32_1(state.check, hbuf, 2, 0);
@@ -4121,7 +4225,7 @@ var inflate$2 = (strm, flush) => {
           if (state.head) {
             state.head.time = hold;
           }
-          if (state.flags & 512) {
+          if (state.flags & 512 && state.wrap & 4) {
             hbuf[0] = hold & 255;
             hbuf[1] = hold >>> 8 & 255;
             hbuf[2] = hold >>> 16 & 255;
@@ -4144,7 +4248,7 @@ var inflate$2 = (strm, flush) => {
             state.head.xflags = hold & 255;
             state.head.os = hold >> 8;
           }
-          if (state.flags & 512) {
+          if (state.flags & 512 && state.wrap & 4) {
             hbuf[0] = hold & 255;
             hbuf[1] = hold >>> 8 & 255;
             state.check = crc32_1(state.check, hbuf, 2, 0);
@@ -4166,7 +4270,7 @@ var inflate$2 = (strm, flush) => {
             if (state.head) {
               state.head.extra_len = hold;
             }
-            if (state.flags & 512) {
+            if (state.flags & 512 && state.wrap & 4) {
               hbuf[0] = hold & 255;
               hbuf[1] = hold >>> 8 & 255;
               state.check = crc32_1(state.check, hbuf, 2, 0);
@@ -4191,7 +4295,7 @@ var inflate$2 = (strm, flush) => {
                 }
                 state.head.extra.set(input.subarray(next, next + copy2), len2);
               }
-              if (state.flags & 512) {
+              if (state.flags & 512 && state.wrap & 4) {
                 state.check = crc32_1(state.check, input, copy2, next);
               }
               have -= copy2;
@@ -4216,7 +4320,7 @@ var inflate$2 = (strm, flush) => {
                 state.head.name += String.fromCharCode(len2);
               }
             } while (len2 && copy2 < have);
-            if (state.flags & 512) {
+            if (state.flags & 512 && state.wrap & 4) {
               state.check = crc32_1(state.check, input, copy2, next);
             }
             have -= copy2;
@@ -4241,7 +4345,7 @@ var inflate$2 = (strm, flush) => {
                 state.head.comment += String.fromCharCode(len2);
               }
             } while (len2 && copy2 < have);
-            if (state.flags & 512) {
+            if (state.flags & 512 && state.wrap & 4) {
               state.check = crc32_1(state.check, input, copy2, next);
             }
             have -= copy2;
@@ -4263,7 +4367,7 @@ var inflate$2 = (strm, flush) => {
               hold += input[next++] << bits;
               bits += 8;
             }
-            if (hold !== (state.check & 65535)) {
+            if (state.wrap & 4 && hold !== (state.check & 65535)) {
               strm.msg = "header crc mismatch";
               state.mode = BAD;
               break;
@@ -4801,11 +4905,11 @@ var inflate$2 = (strm, flush) => {
             _out -= left;
             strm.total_out += _out;
             state.total += _out;
-            if (_out) {
+            if (state.wrap & 4 && _out) {
               strm.adler = state.check = state.flags ? crc32_1(state.check, output, _out, put - _out) : adler32_1(state.check, output, _out, put - _out);
             }
             _out = left;
-            if ((state.flags ? hold : zswap32(hold)) !== state.check) {
+            if (state.wrap & 4 && (state.flags ? hold : zswap32(hold)) !== state.check) {
               strm.msg = "incorrect data check";
               state.mode = BAD;
               break;
@@ -4824,7 +4928,7 @@ var inflate$2 = (strm, flush) => {
               hold += input[next++] << bits;
               bits += 8;
             }
-            if (hold !== (state.total & 4294967295)) {
+            if (state.wrap & 4 && hold !== (state.total & 4294967295)) {
               strm.msg = "incorrect length check";
               state.mode = BAD;
               break;
@@ -4861,7 +4965,7 @@ var inflate$2 = (strm, flush) => {
   strm.total_in += _in;
   strm.total_out += _out;
   state.total += _out;
-  if (state.wrap && _out) {
+  if (state.wrap & 4 && _out) {
     strm.adler = state.check = state.flags ? crc32_1(state.check, output, _out, strm.next_out - _out) : adler32_1(state.check, output, _out, strm.next_out - _out);
   }
   strm.data_type = state.bits + (state.last ? 64 : 0) + (state.mode === TYPE ? 128 : 0) + (state.mode === LEN_ || state.mode === COPY_ ? 256 : 0);
@@ -4871,7 +4975,7 @@ var inflate$2 = (strm, flush) => {
   return ret;
 };
 var inflateEnd = (strm) => {
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   let state = strm.state;
@@ -4882,7 +4986,7 @@ var inflateEnd = (strm) => {
   return Z_OK$1;
 };
 var inflateGetHeader = (strm, head) => {
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   const state = strm.state;
@@ -4898,7 +5002,7 @@ var inflateSetDictionary = (strm, dictionary2) => {
   let state;
   let dictid;
   let ret;
-  if (!strm || !strm.state) {
+  if (inflateStateCheck(strm)) {
     return Z_STREAM_ERROR$1;
   }
   state = strm.state;
