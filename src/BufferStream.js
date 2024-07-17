@@ -9,7 +9,28 @@ function toInt(val) {
 }
 
 function toFloat(val) {
-    if (typeof val == "string") {
+    if (isNaN(val)) {
+        if (val instanceof ArrayBuffer) {
+            // convert an ArrayBuffer to int (https://stackoverflow.com/a/31219659)
+            if (val.byteLength > 0) {
+                try {
+                    var view = new DataView(val);
+                    var intValue = view.getInt32(0);
+                    var floatValue = parseFloat(intValue);
+                    console.warn(val, " converted to ", floatValue);
+                    return floatValue;
+                } catch (error) {
+                    console.error("Error in ArrayBuffer (int -> float)", error);
+                }
+            } else {
+                console.warn("Empty ArrayBuffer", val);
+                return 0;
+            }
+        } else {
+            console.warn("toFloat val", val, typeof val);
+            throw new Error("Not a number: " + val);
+        }
+    } else if (typeof val == "string") {
         return parseFloat(val);
     } else return val;
 }
@@ -56,6 +77,24 @@ class BufferStream {
     }
 
     writeUint16(value) {
+        // called from writeBytes for in UnsignedShort
+        if (value instanceof ArrayBuffer) {
+            // Ensure the ArrayBuffer is at least 4 bytes and is 2 bytes
+            if (value.byteLength < 4 && value.byteLength == 2) {
+                // convert the arrayBuffer to uint16
+                var view = new DataView(value);
+                try {
+                    var intValue = view.getUint16(0); // use also ',true' or not for littleEndian ?
+                    value = intValue;
+                } catch (error) {
+                    console.error(
+                        "error in converting ArrayBuffer to int",
+                        error
+                    );
+                }
+            }
+            // Case of 1 or 3 bytes ? possible ?
+        }
         this.checkSize(2);
         this.view.setUint16(this.offset, toInt(value), this.isLittleEndian);
         return this.increment(2);

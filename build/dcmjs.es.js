@@ -9765,7 +9765,27 @@ function toInt(val) {
     return val;
 }
 function toFloat(val) {
-  if (typeof val == "string") {
+  if (isNaN(val)) {
+    if (val instanceof ArrayBuffer) {
+      if (val.byteLength > 0) {
+        try {
+          var view = new DataView(val);
+          var intValue = view.getInt32(0);
+          var floatValue = parseFloat(intValue);
+          console.warn(val, " converted to ", floatValue);
+          return floatValue;
+        } catch (error) {
+          console.error("Error in ArrayBuffer (int -> float)", error);
+        }
+      } else {
+        console.warn("Empty ArrayBuffer", val);
+        return 0;
+      }
+    } else {
+      console.warn("toFloat val", val, typeof val);
+      throw new Error("Not a number: " + val);
+    }
+  } else if (typeof val == "string") {
     return parseFloat(val);
   } else
     return val;
@@ -9804,6 +9824,17 @@ var BufferStream = class {
     return this.increment(1);
   }
   writeUint16(value) {
+    if (value instanceof ArrayBuffer) {
+      if (value.byteLength < 4 && value.byteLength == 2) {
+        var view = new DataView(value);
+        try {
+          var intValue = view.getUint16(0);
+          value = intValue;
+        } catch (error) {
+          console.error("error in converting ArrayBuffer to int", error);
+        }
+      }
+    }
     this.checkSize(2);
     this.view.setUint16(this.offset, toInt(value), this.isLittleEndian);
     return this.increment(2);
@@ -64593,7 +64624,7 @@ var DicomMetaDictionary = class {
         } else {
           naturalDataset[naturalName] = data2.Value;
         }
-        if (naturalDataset[naturalName].length === 1) {
+        if (naturalDataset[naturalName] && naturalDataset[naturalName].length === 1) {
           const sqZero = naturalDataset[naturalName][0];
           if (sqZero && typeof sqZero === "object" && !sqZero.length) {
             naturalDataset[naturalName] = addAccessors_default(naturalDataset[naturalName], sqZero);
@@ -64641,12 +64672,25 @@ var DicomMetaDictionary = class {
             }
           }
           let vr = ValueRepresentation.createByTypeString(dataItem.vr);
-          dataItem.Value = DicomMetaDictionary.denaturalizeValue(dataItem.Value);
+          if (name == "ReferencedPerformedProcedureStepSequence") {
+            if (dataValue !== void 0 && Array.isArray(dataValue) && dataValue.length > 0) {
+              const sp0 = dataValue[0];
+              dataItem.Value = DicomMetaDictionary.denaturalizeValue(sp0);
+            } else {
+              dataItem.Value = [];
+            }
+          } else {
+            dataItem.Value = DicomMetaDictionary.denaturalizeValue(dataItem.Value);
+          }
           if (entry.vr == "SQ") {
             var unnaturalValues = [];
             for (let datasetIndex = 0; datasetIndex < dataItem.Value.length; datasetIndex++) {
               const nestedDataset = dataItem.Value[datasetIndex];
-              unnaturalValues.push(DicomMetaDictionary.denaturalizeDataset(nestedDataset, nameMap));
+              if (nestedDataset != null) {
+                unnaturalValues.push(DicomMetaDictionary.denaturalizeDataset(nestedDataset, nameMap));
+              } else {
+                console.warn("Skip empty data at index", datasetIndex);
+              }
             }
             dataItem.Value = unnaturalValues;
           }
@@ -64666,7 +64710,9 @@ var DicomMetaDictionary = class {
       } else {
         const validMetaNames = ["_vrMap", "_meta"];
         if (validMetaNames.indexOf(name) == -1) {
-          log_default.warn("Unknown name in dataset", name, ":", dataset[name]);
+          if (name !== "imageId") {
+            log_default.warn("Unknown name in dataset", name, ":", dataset[name]);
+          }
         }
       }
     });
@@ -65714,7 +65760,7 @@ var DicomDict = class {
       this.dict[tag].Value = values;
     }
   }
-  write(writeOptions = {allowInvalidVRLength: false}) {
+  write(writeOptions = {allowInvalidVRLength: true}) {
     var metaSyntax = EXPLICIT_LITTLE_ENDIAN2;
     var fileStream = new WriteBufferStream(4096, true);
     fileStream.writeUint8Repeat(0, 128);
@@ -66310,7 +66356,21 @@ function datasetToDict(dataset) {
   return dicomDict;
 }
 function datasetToBuffer(dataset) {
-  return Buffer.from(datasetToDict(dataset).write());
+  var dsDict = datasetToDict(dataset);
+  for (let key in dsDict) {
+    if (dsDict[key] && dsDict[key].Value && dsDict[key].Value instanceof ArrayBuffer) {
+      console.warn(`Removing property ${key} as it is an ArrayBuffer`);
+      delete dsDict[key];
+    }
+  }
+  let buffer;
+  try {
+    buffer = Buffer.from(dsDict.write());
+  } catch (e) {
+    console.error("BAD BUFFER", e);
+    buffer = null;
+  }
+  return buffer;
 }
 function datasetToBlob(dataset) {
   const buffer = datasetToBuffer(dataset);
