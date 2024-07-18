@@ -124,6 +124,19 @@ class DicomMessage {
                 const cleanTagString = readInfo.tag.toCleanString();
                 if (cleanTagString === "00080005") {
                     if (readInfo.values.length > 0) {
+                        console.log("SpecificCharacterSet", readInfo.values);
+                        let vals = readInfo.values;
+                        // go through the values and if a value is "" remove it from the array
+                        for (let i = vals.length - 1; i >= 0; i--) {
+                            if (vals[i] === "") {
+                                vals.splice(i, 1);
+                            }
+                        }
+                        readInfo.values = vals;
+                        console.log(
+                            "SpecificCharacterSet cleanup",
+                            readInfo.values
+                        );
                         let coding = readInfo.values[0];
                         coding = coding.replace(/[_ ]/g, "-").toLowerCase();
                         if (coding in encodingMapping) {
