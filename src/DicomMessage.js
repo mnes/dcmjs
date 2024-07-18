@@ -122,48 +122,48 @@ class DicomMessage {
                     options
                 );
                 const cleanTagString = readInfo.tag.toCleanString();
-                if (cleanTagString === "00080005") {
-                    if (readInfo.values.length > 0) {
-                        console.log("SpecificCharacterSet", readInfo.values);
-                        let vals = readInfo.values;
-                        // go through the values and if a value is "" remove it from the array
-                        for (let i = vals.length - 1; i >= 0; i--) {
-                            if (vals[i] === "") {
-                                vals.splice(i, 1);
-                            }
-                        }
-                        readInfo.values = vals;
-                        console.log(
-                            "SpecificCharacterSet cleanup",
-                            readInfo.values
-                        );
-                        let coding = readInfo.values[0];
-                        coding = coding.replace(/[_ ]/g, "-").toLowerCase();
-                        if (coding in encodingMapping) {
-                            coding = encodingMapping[coding];
-                            bufferStream.setDecoder(new TextDecoder(coding));
-                        } else if (ignoreErrors) {
-                            log.warn(
-                                `Unsupported character set: ${coding}, using default character set`
-                            );
-                        } else {
-                            throw Error(`Unsupported character set: ${coding}`);
-                        }
-                    }
-                    if (readInfo.values.length > 1) {
-                        if (ignoreErrors) {
-                            log.warn(
-                                "Using multiple character sets is not supported, proceeding with just the first character set",
-                                readInfo.values
-                            );
-                        } else {
-                            throw Error(
-                                `Using multiple character sets is not supported: ${readInfo.values}`
-                            );
-                        }
-                    }
-                    readInfo.values = ["ISO_IR 192"]; // change SpecificCharacterSet to UTF-8
-                }
+                // if (cleanTagString === "00080005") {
+                //     if (readInfo.values.length > 0) {
+                //         console.log("SpecificCharacterSet", readInfo.values);
+                //         let vals = readInfo.values;
+                //         // go through the values and if a value is "" remove it from the array
+                //         for (let i = vals.length - 1; i >= 0; i--) {
+                //             if (vals[i] === "") {
+                //                 vals.splice(i, 1);
+                //             }
+                //         }
+                //         readInfo.values = vals;
+                //         console.log(
+                //             "SpecificCharacterSet cleanup",
+                //             readInfo.values
+                //         );
+                //         let coding = readInfo.values[0];
+                //         coding = coding.replace(/[_ ]/g, "-").toLowerCase();
+                //         if (coding in encodingMapping) {
+                //             coding = encodingMapping[coding];
+                //             bufferStream.setDecoder(new TextDecoder(coding));
+                //         } else if (ignoreErrors) {
+                //             log.warn(
+                //                 `Unsupported character set: ${coding}, using default character set`
+                //             );
+                //         } else {
+                //             throw Error(`Unsupported character set: ${coding}`);
+                //         }
+                //     }
+                //     if (readInfo.values.length > 1) {
+                //         if (ignoreErrors) {
+                //             log.warn(
+                //                 "Using multiple character sets is not supported, proceeding with just the first character set",
+                //                 readInfo.values
+                //             );
+                //         } else {
+                //             throw Error(
+                //                 `Using multiple character sets is not supported: ${readInfo.values}`
+                //             );
+                //         }
+                //     }
+                //     readInfo.values = ["ISO_IR 192"]; // change SpecificCharacterSet to UTF-8
+                // }
 
                 dict[cleanTagString] = ValueRepresentation.addTagAccessors({
                     vr: readInfo.vr.type
