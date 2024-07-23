@@ -247,14 +247,27 @@ class BufferStream {
         return vr;
     }
 
+    // readEncodedString(length) {
+    //     if (this.offset + length >= this.buffer.byteLength) {
+    //         length = this.buffer.byteLength - this.offset;
+    //     }
+    //     const view = new DataView(this.buffer, this.offset, length);
+    //     const result = this.decoder.decode(view);
+    //     this.increment(length);
+    //     return result;
+    // }
     readEncodedString(length) {
-        if (this.offset + length >= this.buffer.byteLength) {
-            length = this.buffer.byteLength - this.offset;
+        var chars = [];
+        var start = this.offset;
+        var end = this.offset + length;
+        if (end >= this.buffer.byteLength) {
+            end = this.buffer.byteLength;
         }
-        const view = new DataView(this.buffer, this.offset, length);
-        const result = this.decoder.decode(view);
-        this.increment(length);
-        return result;
+        for (var i = start; i < end; ++i) {
+            chars.push(String.fromCharCode(this.view.getUint8(i)));
+            this.increment(1);
+        }
+        return chars.join("");
     }
 
     readHex(length) {
