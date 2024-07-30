@@ -159,7 +159,10 @@ class DicomMetaDictionary {
                     naturalDataset[naturalName] = data.Value;
                 }
 
-                if (naturalDataset[naturalName].length === 1) {
+                if (
+                    naturalDataset[naturalName] &&
+                    naturalDataset[naturalName].length === 1
+                ) {
                     const sqZero = naturalDataset[naturalName][0];
                     if (
                         sqZero &&
@@ -238,9 +241,26 @@ class DicomMetaDictionary {
                         dataItem.vr
                     );
 
-                    dataItem.Value = DicomMetaDictionary.denaturalizeValue(
-                        dataItem.Value
-                    );
+                    // Ensure the dataValue array is not empty
+                    if (name == "ReferencedPerformedProcedureStepSequence") {
+                        if (
+                            dataValue !== undefined &&
+                            Array.isArray(dataValue) &&
+                            dataValue.length > 0
+                        ) {
+                            const sp0 = dataValue[0];
+                            dataItem.Value =
+                                DicomMetaDictionary.denaturalizeValue(sp0);
+                        } else {
+                            // dataValue array is empty or undefined, use empty array
+                            dataItem.Value = [];
+                        }
+                    } else {
+                        // A tag other than ReferencedPerformedProcedureStepSequence
+                        dataItem.Value = DicomMetaDictionary.denaturalizeValue(
+                            dataItem.Value
+                        );
+                    }
 
                     if (entry.vr == "SQ") {
                         var unnaturalValues = [];
@@ -250,12 +270,20 @@ class DicomMetaDictionary {
                             datasetIndex++
                         ) {
                             const nestedDataset = dataItem.Value[datasetIndex];
-                            unnaturalValues.push(
-                                DicomMetaDictionary.denaturalizeDataset(
-                                    nestedDataset,
-                                    nameMap
-                                )
-                            );
+                            // Only try to convert data item if not null or undefined
+                            if (nestedDataset != null) {
+                                unnaturalValues.push(
+                                    DicomMetaDictionary.denaturalizeDataset(
+                                        nestedDataset,
+                                        nameMap
+                                    )
+                                );
+                            } else {
+                                console.warn(
+                                    "Skip empty data at index",
+                                    datasetIndex
+                                );
+                            }
                         }
                         dataItem.Value = unnaturalValues;
                     }
@@ -279,12 +307,15 @@ class DicomMetaDictionary {
             } else {
                 const validMetaNames = ["_vrMap", "_meta"];
                 if (validMetaNames.indexOf(name) == -1) {
-                    log.warn(
-                        "Unknown name in dataset",
-                        name,
-                        ":",
-                        dataset[name]
-                    );
+                    // Warn only if unknown name other than imageId (which is common and not a problem)
+                    if (name !== "imageId") {
+                        log.warn(
+                            "Unknown name in dataset",
+                            name,
+                            ":",
+                            dataset[name]
+                        );
+                    }
                 }
             }
         });

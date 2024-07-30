@@ -31,7 +31,26 @@ function datasetToDict(dataset) {
 }
 
 function datasetToBuffer(dataset) {
-    return Buffer.from(datasetToDict(dataset).write());
+    var dsDict = datasetToDict(dataset);
+    // Remove any props from dsDict where the value is ArrayBuffer
+    for (let key in dsDict) {
+        if (
+            dsDict[key] &&
+            dsDict[key].Value &&
+            dsDict[key].Value instanceof ArrayBuffer
+        ) {
+            console.warn(`Removing property ${key} as it is an ArrayBuffer`);
+            delete dsDict[key];
+        }
+    }
+    let buffer;
+    try {
+        buffer = Buffer.from(dsDict.write());
+    } catch (e) {
+        console.error("BAD BUFFER", e);
+        buffer = null; // Return null if buffer creation fails
+    }
+    return buffer;
 }
 
 function datasetToBlob(dataset) {

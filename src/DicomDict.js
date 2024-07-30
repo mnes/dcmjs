@@ -21,7 +21,7 @@ class DicomDict {
         }
     }
 
-    write(writeOptions = { allowInvalidVRLength: false }) {
+    write(writeOptions = { allowInvalidVRLength: true }) {
         var metaSyntax = EXPLICIT_LITTLE_ENDIAN;
         var fileStream = new WriteBufferStream(4096, true);
         fileStream.writeUint8Repeat(0, 128);
