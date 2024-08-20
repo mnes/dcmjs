@@ -31,7 +31,9 @@ function datasetToDict(dataset) {
 }
 
 function datasetToBuffer(dataset) {
+    console.log("datasetToBuffer", dataset);
     var dsDict = datasetToDict(dataset);
+    console.log("datasetToDict", dsDict);
     // Remove any props from dsDict where the value is ArrayBuffer
     for (let key in dsDict) {
         if (
@@ -54,6 +56,7 @@ function datasetToBuffer(dataset) {
 }
 
 function datasetToBlob(dataset) {
+    console.warn("dcmjs LOCAL DEVELOPMENT!!");
     const buffer = datasetToBuffer(dataset);
     return new Blob([buffer], { type: "application/dicom" });
 }
