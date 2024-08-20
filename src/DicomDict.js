@@ -27,6 +27,8 @@ class DicomDict {
         fileStream.writeUint8Repeat(0, 128);
         fileStream.writeAsciiString("DICM");
 
+        console.log("fileStream1", fileStream.getBuffer(), fileStream);
+
         var metaStream = new WriteBufferStream(1024);
         if (!this.meta["00020010"]) {
             this.meta["00020010"] = {
@@ -34,7 +36,9 @@ class DicomDict {
                 Value: [EXPLICIT_LITTLE_ENDIAN]
             };
         }
+        console.log("DicomMessage1", DicomMessage);
         DicomMessage.write(this.meta, metaStream, metaSyntax, writeOptions);
+        console.log("DicomMessage2", DicomMessage);
         DicomMessage.writeTagObject(
             fileStream,
             "00020000",
@@ -43,11 +47,16 @@ class DicomDict {
             metaSyntax,
             writeOptions
         );
+        console.log("DicomMessage3", DicomMessage);
         fileStream.concat(metaStream);
+        console.log("fileStream2", fileStream.getBuffer(), fileStream);
 
         var useSyntax = this.meta["00020010"].Value[0];
         DicomMessage.write(this.dict, fileStream, useSyntax, writeOptions);
-        return fileStream.getBuffer();
+        console.log("DicomMessage4", DicomMessage);
+        const fileStreamBuffer = fileStream.getBuffer();
+        console.log("fileStream3", fileStreamBuffer, fileStream);
+        return fileStreamBuffer;
     }
 
     /** Helper method to avoid circular dependencies */

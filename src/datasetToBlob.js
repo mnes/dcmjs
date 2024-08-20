@@ -47,18 +47,23 @@ function datasetToBuffer(dataset) {
     }
     let buffer;
     try {
-        buffer = Buffer.from(dsDict.write());
+        const dsWrite = dsDict.write();
+        console.log("dsWrite", dsWrite);
+        buffer = Buffer.from(dsWrite);
     } catch (e) {
         console.error("BAD BUFFER", e);
         buffer = null; // Return null if buffer creation fails
     }
+    console.log("datasetToBuffer, FINAL buffer", buffer);
     return buffer;
 }
 
 function datasetToBlob(dataset) {
-    console.warn("dcmjs LOCAL DEVELOPMENT!!");
+    console.warn("dcmjs LOCAL DEVELOPMENT!! datasetToBlob", dataset);
     const buffer = datasetToBuffer(dataset);
-    return new Blob([buffer], { type: "application/dicom" });
+    const blob = new Blob([buffer], { type: "application/dicom" });
+    console.log("datasetToBlob, FINAL blob", blob);
+    return blob;
 }
 
 export { datasetToBlob, datasetToBuffer, datasetToDict };
