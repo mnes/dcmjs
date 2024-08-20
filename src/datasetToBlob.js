@@ -35,16 +35,16 @@ function datasetToBuffer(dataset) {
     var dsDict = datasetToDict(dataset);
     console.log("datasetToDict", dsDict);
     // Remove any props from dsDict where the value is ArrayBuffer
-    for (let key in dsDict) {
-        if (
-            dsDict[key] &&
-            dsDict[key].Value &&
-            dsDict[key].Value instanceof ArrayBuffer
-        ) {
-            console.warn(`Removing property ${key} as it is an ArrayBuffer`);
-            delete dsDict[key];
-        }
-    }
+    // for (let key in dsDict) {
+    //     if (
+    //         dsDict[key] &&
+    //         dsDict[key].Value &&
+    //         dsDict[key].Value instanceof ArrayBuffer
+    //     ) {
+    //         console.warn(`Removing property ${key} as it is an ArrayBuffer`);
+    //         delete dsDict[key];
+    //     }
+    // }
     let buffer;
     try {
         const dsWrite = dsDict.write();

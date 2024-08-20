@@ -36,9 +36,9 @@ class DicomDict {
                 Value: [EXPLICIT_LITTLE_ENDIAN]
             };
         }
-        console.log("DicomMessage1", DicomMessage);
+        // console.log("DicomMessage1", DicomMessage);
         DicomMessage.write(this.meta, metaStream, metaSyntax, writeOptions);
-        console.log("DicomMessage2", DicomMessage);
+        // console.log("DicomMessage2", DicomMessage);
         DicomMessage.writeTagObject(
             fileStream,
             "00020000",
@@ -47,7 +47,7 @@ class DicomDict {
             metaSyntax,
             writeOptions
         );
-        console.log("DicomMessage3", DicomMessage);
+        // console.log("DicomMessage3", DicomMessage);
         fileStream.concat(metaStream);
         console.log("fileStream2", fileStream.getBuffer(), fileStream);
 
